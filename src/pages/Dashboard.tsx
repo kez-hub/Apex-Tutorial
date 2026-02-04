@@ -106,8 +106,8 @@ export default function Dashboard() {
                   className="group overflow-hidden border-border/50 shadow-card transition-all hover:shadow-elevated animate-fade-in"
                   style={{ animationDelay: `${index * 0.1}s` }}
                 >
-                  <CardContent className="flex gap-4 p-4">
-                    <div className="relative aspect-video w-40 flex-shrink-0 overflow-hidden rounded-lg">
+                  <CardContent className="flex flex-col sm:flex-row gap-4 p-4">
+                    <div className="relative aspect-video w-full sm:w-40 flex-shrink-0 overflow-hidden rounded-lg">
                       <img
                         src={course.thumbnail}
                         alt={course.title}
@@ -136,8 +136,13 @@ export default function Dashboard() {
                         </div>
                         <Progress value={course.progress} className="h-2" />
                       </div>
+                      <div className="mt-3 sm:hidden">
+                        <Button variant="gradient" size="sm" className="w-full" asChild>
+                          <Link to={`/courses/${course.id}`}>Continue</Link>
+                        </Button>
+                      </div>
                     </div>
-                    <div className="flex items-center">
+                    <div className="hidden sm:flex items-center">
                       <Button variant="gradient" size="sm" asChild>
                         <Link to={`/courses/${course.id}`}>Continue</Link>
                       </Button>
