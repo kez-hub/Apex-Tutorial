@@ -41,11 +41,50 @@ export default function Schedule() {
   const { toast } = useToast();
   const [alarms, setAlarms] = useState<LearningAlarm[]>(initialAlarms);
   const [isOpen, setIsOpen] = useState(false);
+  const [notificationPermission, setNotificationPermission] = useState<NotificationPermission>("default");
   const [newAlarm, setNewAlarm] = useState<Partial<LearningAlarm>>({
     time: "09:00",
     days: [],
     enabled: true,
   });
+
+  // Check notification permission on mount
+  useEffect(() => {
+    if ("Notification" in window) {
+      setNotificationPermission(Notification.permission);
+    }
+  }, []);
+
+  // Request notification permission
+  const requestNotificationPermission = async () => {
+    if ("Notification" in window) {
+      const permission = await Notification.requestPermission();
+      setNotificationPermission(permission);
+      if (permission === "granted") {
+        toast({
+          title: "Notifications enabled! 🔔",
+          description: "You'll receive alerts for your learning reminders.",
+        });
+      } else if (permission === "denied") {
+        toast({
+          title: "Notifications blocked",
+          description: "You can enable them in your browser settings.",
+          variant: "destructive",
+        });
+      }
+    }
+  };
+
+  // Send browser notification
+  const sendNotification = (title: string, body: string) => {
+    if ("Notification" in window && Notification.permission === "granted") {
+      new Notification(title, {
+        body,
+        icon: "/favicon.ico",
+        tag: "learning-reminder",
+      });
+    }
+  };
 
   // Check for due alarms
   useEffect(() => {
@@ -57,12 +96,25 @@ export default function Schedule() {
       alarms.forEach((alarm) => {
         if (alarm.enabled && alarm.time === currentTime && alarm.days.includes(currentDay)) {
           const course = alarm.courseId ? courses.find((c) => c.id === alarm.courseId) : null;
+          const message = course 
+            ? `It's time to study: ${course.title}`
+            : "Your scheduled learning time has arrived!";
+          
+          // Show toast notification
           toast({
             title: "⏰ Time to Learn!",
-            description: course 
-              ? `It's time to study: ${course.title}`
-              : "Your scheduled learning time has arrived!",
+            description: message,
           });
+          
+          // Send browser notification
+          sendNotification("⏰ Time to Learn!", message);
+          
+          // Play notification sound
+          try {
+            const audio = new Audio("data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2telegsAY4DW15iIb2xoZYC+3tK4h2A8MGZ/q9nNo4ZnUTtEbrXX1bWLg4GDrLWsk4p6d3eCh4uHfXd0dXmAhIiLiYV/fX99fX19fX1+f4CCg4SFhYWFhYWEg4KBgH9+fn5+fn5+fn5+fn5+fn5+fn5/f39/f4CAgYGBgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKB");
+            audio.volume = 0.5;
+            audio.play().catch(() => {});
+          } catch {}
         }
       });
     };
@@ -131,6 +183,26 @@ export default function Schedule() {
       <Navbar isAuthenticated />
 
       <main className="container mx-auto px-4 py-8">
+        {/* Notification Permission Banner */}
+        {notificationPermission !== "granted" && (
+          <Card className="mb-6 border-border/50 bg-muted/50 animate-fade-in">
+            <CardContent className="flex flex-col sm:flex-row items-start sm:items-center gap-4 p-4">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
+                <Bell className="h-5 w-5 text-primary" />
+              </div>
+              <div className="flex-1">
+                <h3 className="font-semibold">Enable Notifications</h3>
+                <p className="text-sm text-muted-foreground">
+                  Get browser alerts when it's time to learn
+                </p>
+              </div>
+              <Button variant="gradient" size="sm" onClick={requestNotificationPermission}>
+                Enable Alerts
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Header */}
         <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between animate-fade-in">
           <div>

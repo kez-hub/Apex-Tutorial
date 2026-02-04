@@ -1,3 +1,4 @@
+import { useState, useRef } from "react";
 import { Link } from "react-router-dom";
 import { 
   User, 
@@ -7,7 +8,8 @@ import {
   Award, 
   Calendar,
   Edit2,
-  Settings
+  Settings,
+  Camera
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -18,8 +20,13 @@ import { Separator } from "@/components/ui/separator";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { courses, currentUser } from "@/lib/data";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Profile() {
+  const { toast } = useToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [avatarUrl, setAvatarUrl] = useState(currentUser.avatar);
+  
   const enrolledCourses = courses.filter((course) => course.enrolled);
   const totalProgress = enrolledCourses.reduce((sum, course) => sum + (course.progress || 0), 0) / enrolledCourses.length;
 
@@ -28,6 +35,34 @@ export default function Profile() {
     { label: "Hours Learned", value: 48, icon: Clock },
     { label: "Certificates", value: 2, icon: Award },
   ];
+
+  const handleAvatarClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        toast({
+          title: "File too large",
+          description: "Please select an image under 5MB.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setAvatarUrl(e.target?.result as string);
+        toast({
+          title: "Avatar updated! 🎉",
+          description: "Your profile picture has been changed.",
+        });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -38,11 +73,26 @@ export default function Profile() {
         <Card className="mb-8 overflow-hidden border-border/50 shadow-card animate-fade-in">
           <div className="h-32 gradient-primary" />
           <CardContent className="relative px-6 pb-6">
-            <div className="flex flex-col items-start gap-6 sm:flex-row sm:items-end">
-              <Avatar className="relative -mt-16 h-32 w-32 border-4 border-card shadow-elevated">
-                <AvatarImage src={currentUser.avatar} alt={currentUser.name} />
-                <AvatarFallback className="text-4xl">{currentUser.name.charAt(0)}</AvatarFallback>
-              </Avatar>
+          <div className="flex flex-col items-start gap-6 sm:flex-row sm:items-end">
+              <div className="relative -mt-16 group">
+                <Avatar className="h-32 w-32 border-4 border-card shadow-elevated cursor-pointer" onClick={handleAvatarClick}>
+                  <AvatarImage src={avatarUrl} alt={currentUser.name} />
+                  <AvatarFallback className="text-4xl">{currentUser.name.charAt(0)}</AvatarFallback>
+                </Avatar>
+                <button
+                  onClick={handleAvatarClick}
+                  className="absolute bottom-1 right-1 flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-md transition-transform hover:scale-110"
+                >
+                  <Camera className="h-4 w-4" />
+                </button>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleFileChange}
+                />
+              </div>
               
               <div className="flex-1">
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -102,15 +152,15 @@ export default function Profile() {
                   {enrolledCourses.map((course) => (
                     <div
                       key={course.id}
-                      className="flex items-center gap-4 rounded-lg border border-border/50 p-4 transition-colors hover:bg-muted/50"
+                      className="flex flex-col sm:flex-row sm:items-center gap-4 rounded-lg border border-border/50 p-4 transition-colors hover:bg-muted/50"
                     >
                       <img
                         src={course.thumbnail}
                         alt={course.title}
-                        className="h-16 w-24 rounded-lg object-cover"
+                        className="h-32 w-full sm:h-16 sm:w-24 rounded-lg object-cover"
                       />
-                      <div className="flex-1">
-                        <Link to={`/courses/${course.id}`} className="font-semibold hover:text-primary transition-colors">
+                      <div className="flex-1 min-w-0">
+                        <Link to={`/courses/${course.id}`} className="font-semibold hover:text-primary transition-colors line-clamp-2">
                           {course.title}
                         </Link>
                         <p className="text-sm text-muted-foreground">{course.instructor}</p>
@@ -122,7 +172,7 @@ export default function Profile() {
                           <Progress value={course.progress} className="h-1.5" />
                         </div>
                       </div>
-                      <Button variant="outline" size="sm" asChild>
+                      <Button variant="outline" size="sm" className="w-full sm:w-auto" asChild>
                         <Link to={`/courses/${course.id}`}>Continue</Link>
                       </Button>
                     </div>

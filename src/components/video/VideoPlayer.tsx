@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Play, Pause, Volume2, VolumeX, Maximize, SkipBack, SkipForward } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
@@ -13,6 +13,8 @@ interface VideoPlayerProps {
 
 export function VideoPlayer({ src, poster, title, className }: VideoPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const hideControlsTimeout = useRef<NodeJS.Timeout | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -20,6 +22,47 @@ export function VideoPlayer({ src, poster, title, className }: VideoPlayerProps)
   const [volume, setVolume] = useState(1);
   const [isMuted, setIsMuted] = useState(false);
   const [showControls, setShowControls] = useState(true);
+
+  // Auto-hide controls when playing
+  useEffect(() => {
+    if (isPlaying) {
+      hideControlsTimeout.current = setTimeout(() => {
+        setShowControls(false);
+      }, 2500);
+    } else {
+      setShowControls(true);
+    }
+
+    return () => {
+      if (hideControlsTimeout.current) {
+        clearTimeout(hideControlsTimeout.current);
+      }
+    };
+  }, [isPlaying]);
+
+  const handleMouseMove = () => {
+    setShowControls(true);
+    if (hideControlsTimeout.current) {
+      clearTimeout(hideControlsTimeout.current);
+    }
+    if (isPlaying) {
+      hideControlsTimeout.current = setTimeout(() => {
+        setShowControls(false);
+      }, 2500);
+    }
+  };
+
+  const handleClick = () => {
+    setShowControls(true);
+    if (hideControlsTimeout.current) {
+      clearTimeout(hideControlsTimeout.current);
+    }
+    if (isPlaying) {
+      hideControlsTimeout.current = setTimeout(() => {
+        setShowControls(false);
+      }, 2500);
+    }
+  };
 
   const togglePlay = () => {
     if (videoRef.current) {
@@ -95,12 +138,15 @@ export function VideoPlayer({ src, poster, title, className }: VideoPlayerProps)
 
   return (
     <div
+      ref={containerRef}
       className={cn(
-        "relative aspect-video w-full overflow-hidden rounded-xl bg-foreground/95 group",
+        "relative w-full overflow-hidden rounded-xl bg-foreground/95 group",
+        "aspect-[16/9] min-h-[300px] sm:min-h-[400px] lg:min-h-[500px]",
         className
       )}
-      onMouseEnter={() => setShowControls(true)}
-      onMouseLeave={() => setShowControls(isPlaying ? false : true)}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={() => isPlaying && setShowControls(false)}
+      onClick={handleClick}
     >
       <video
         ref={videoRef}
