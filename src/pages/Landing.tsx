@@ -43,8 +43,8 @@ export default function Landing() {
               
               <h1 className="font-heading text-4xl font-bold leading-tight text-foreground md:text-5xl lg:text-6xl">
                 Unlock Your
-                <span className="text-gradient"> Learning </span>
-                Potential
+                <span className="text-gradient bg-clip-text text-transparent" style={{ backgroundImage: 'var(--gradient-primary)' }}> Learning </span>
+                <span className="block mt-2">Potential</span>
               </h1>
               
               <p className="max-w-lg text-lg text-muted-foreground">
