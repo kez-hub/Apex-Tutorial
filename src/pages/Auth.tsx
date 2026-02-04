@@ -181,7 +181,6 @@ export default function Auth() {
             <div className="flex h-10 w-10 items-center justify-center rounded-lg gradient-primary">
               <BookOpen className="h-6 w-6 text-primary-foreground" />
             </div>
-            <span className="font-heading text-2xl font-bold">LearnHub</span>
           </Link>
 
           <div className="animate-fade-in">
