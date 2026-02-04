@@ -1,0 +1,243 @@
+import { useState } from "react";
+import { Link, useSearchParams, useNavigate } from "react-router-dom";
+import { BookOpen, Mail, Lock, User, ArrowRight, Eye, EyeOff } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
+
+export default function Auth() {
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const isSignup = searchParams.get("mode") === "signup";
+  const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    
+    // Simulate auth delay
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    // Navigate to dashboard after "auth"
+    navigate("/dashboard");
+  };
+
+  const socialProviders = [
+    {
+      name: "Google",
+      icon: (
+        <svg className="h-5 w-5" viewBox="0 0 24 24">
+          <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+          <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+          <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
+          <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+        </svg>
+      ),
+    },
+    {
+      name: "Facebook",
+      icon: (
+        <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+        </svg>
+      ),
+    },
+    {
+      name: "Twitter",
+      icon: (
+        <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+        </svg>
+      ),
+    },
+  ];
+
+  return (
+    <div className="min-h-screen gradient-hero flex">
+      {/* Left side - Form */}
+      <div className="flex flex-1 flex-col justify-center px-4 py-12 sm:px-6 lg:flex-none lg:px-20 xl:px-24">
+        <div className="mx-auto w-full max-w-sm lg:w-96">
+          {/* Logo */}
+          <Link to="/" className="mb-8 flex items-center gap-2">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg gradient-primary">
+              <BookOpen className="h-6 w-6 text-primary-foreground" />
+            </div>
+            <span className="font-heading text-2xl font-bold">LearnHub</span>
+          </Link>
+
+          <div className="animate-fade-in">
+            <h2 className="font-heading text-2xl font-bold tracking-tight">
+              {isSignup ? "Create your account" : "Welcome back"}
+            </h2>
+            <p className="mt-2 text-sm text-muted-foreground">
+              {isSignup ? (
+                <>
+                  Already have an account?{" "}
+                  <Link to="/auth" className="font-medium text-primary hover:underline">
+                    Sign in
+                  </Link>
+                </>
+              ) : (
+                <>
+                  Don't have an account?{" "}
+                  <Link to="/auth?mode=signup" className="font-medium text-primary hover:underline">
+                    Sign up
+                  </Link>
+                </>
+              )}
+            </p>
+          </div>
+
+          {/* Social Login Buttons */}
+          <div className="mt-8 grid grid-cols-3 gap-3 animate-fade-in" style={{ animationDelay: "0.1s" }}>
+            {socialProviders.map((provider) => (
+              <Button key={provider.name} variant="outline" className="w-full">
+                {provider.icon}
+                <span className="sr-only">{provider.name}</span>
+              </Button>
+            ))}
+          </div>
+
+          <div className="relative my-8 animate-fade-in" style={{ animationDelay: "0.2s" }}>
+            <div className="absolute inset-0 flex items-center">
+              <Separator className="w-full" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-background px-2 text-muted-foreground">
+                Or continue with email
+              </span>
+            </div>
+          </div>
+
+          {/* Form */}
+          <form onSubmit={handleSubmit} className="space-y-5 animate-fade-in" style={{ animationDelay: "0.3s" }}>
+            {isSignup && (
+              <div className="space-y-2">
+                <Label htmlFor="name">Full Name</Label>
+                <div className="relative">
+                  <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    id="name"
+                    type="text"
+                    placeholder="John Doe"
+                    className="pl-10"
+                    required
+                  />
+                </div>
+              </div>
+            )}
+
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="you@example.com"
+                  className="pl-10"
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="password">Password</Label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="••••••••"
+                  className="pl-10 pr-10"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+            </div>
+
+            {!isSignup && (
+              <div className="flex items-center justify-end">
+                <Link
+                  to="#"
+                  className="text-sm font-medium text-primary hover:underline"
+                >
+                  Forgot password?
+                </Link>
+              </div>
+            )}
+
+            <Button type="submit" variant="gradient" className="w-full" size="lg" disabled={isLoading}>
+              {isLoading ? (
+                <span className="flex items-center gap-2">
+                  <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                  </svg>
+                  Processing...
+                </span>
+              ) : (
+                <>
+                  {isSignup ? "Create account" : "Sign in"}
+                  <ArrowRight className="h-4 w-4" />
+                </>
+              )}
+            </Button>
+          </form>
+
+          {isSignup && (
+            <p className="mt-6 text-center text-xs text-muted-foreground animate-fade-in" style={{ animationDelay: "0.4s" }}>
+              By signing up, you agree to our{" "}
+              <a href="#" className="text-primary hover:underline">
+                Terms of Service
+              </a>{" "}
+              and{" "}
+              <a href="#" className="text-primary hover:underline">
+                Privacy Policy
+              </a>
+              .
+            </p>
+          )}
+        </div>
+      </div>
+
+      {/* Right side - Image */}
+      <div className="relative hidden w-0 flex-1 lg:block">
+        <div className="absolute inset-0 gradient-primary opacity-90" />
+        <img
+          className="absolute inset-0 h-full w-full object-cover"
+          src="https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=1920&h=1080&fit=crop"
+          alt="Students learning"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-primary/90 via-primary/50 to-transparent" />
+        
+        <div className="absolute bottom-0 left-0 right-0 p-12">
+          <blockquote className="space-y-4 text-primary-foreground">
+            <p className="text-xl font-medium leading-relaxed">
+              "LearnHub transformed my career. I went from complete beginner to landing my dream job in just 6 months."
+            </p>
+            <footer className="flex items-center gap-4">
+              <img
+                src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=80&h=80&fit=crop"
+                alt="Sarah Chen"
+                className="h-12 w-12 rounded-full border-2 border-primary-foreground/30"
+              />
+              <div>
+                <p className="font-semibold">Sarah Chen</p>
+                <p className="text-sm text-primary-foreground/80">Software Engineer at Google</p>
+              </div>
+            </footer>
+          </blockquote>
+        </div>
+      </div>
+    </div>
+  );
+}

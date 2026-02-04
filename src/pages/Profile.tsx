@@ -1,0 +1,227 @@
+import { Link } from "react-router-dom";
+import { 
+  User, 
+  Mail, 
+  BookOpen, 
+  Clock, 
+  Award, 
+  Calendar,
+  Edit2,
+  Settings
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Progress } from "@/components/ui/progress";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { Navbar } from "@/components/layout/Navbar";
+import { Footer } from "@/components/layout/Footer";
+import { courses, currentUser } from "@/lib/data";
+
+export default function Profile() {
+  const enrolledCourses = courses.filter((course) => course.enrolled);
+  const totalProgress = enrolledCourses.reduce((sum, course) => sum + (course.progress || 0), 0) / enrolledCourses.length;
+
+  const stats = [
+    { label: "Courses Enrolled", value: enrolledCourses.length, icon: BookOpen },
+    { label: "Hours Learned", value: 48, icon: Clock },
+    { label: "Certificates", value: 2, icon: Award },
+  ];
+
+  return (
+    <div className="min-h-screen bg-background">
+      <Navbar isAuthenticated />
+
+      <main className="container mx-auto px-4 py-8">
+        {/* Profile Header */}
+        <Card className="mb-8 overflow-hidden border-border/50 shadow-card animate-fade-in">
+          <div className="h-32 gradient-primary" />
+          <CardContent className="relative px-6 pb-6">
+            <div className="flex flex-col items-start gap-6 sm:flex-row sm:items-end">
+              <Avatar className="relative -mt-16 h-32 w-32 border-4 border-card shadow-elevated">
+                <AvatarImage src={currentUser.avatar} alt={currentUser.name} />
+                <AvatarFallback className="text-4xl">{currentUser.name.charAt(0)}</AvatarFallback>
+              </Avatar>
+              
+              <div className="flex-1">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <h1 className="font-heading text-2xl font-bold">{currentUser.name}</h1>
+                    <div className="mt-1 flex items-center gap-2 text-muted-foreground">
+                      <Mail className="h-4 w-4" />
+                      <span>{currentUser.email}</span>
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button variant="outline" size="sm">
+                      <Edit2 className="h-4 w-4" />
+                      Edit Profile
+                    </Button>
+                    <Button variant="outline" size="sm">
+                      <Settings className="h-4 w-4" />
+                      Settings
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <div className="grid gap-8 lg:grid-cols-3">
+          {/* Main Content */}
+          <div className="lg:col-span-2 space-y-8">
+            {/* Stats */}
+            <div className="grid gap-4 sm:grid-cols-3">
+              {stats.map((stat, index) => (
+                <Card key={stat.label} className="border-border/50 shadow-card animate-fade-in" style={{ animationDelay: `${index * 0.1}s` }}>
+                  <CardContent className="flex items-center gap-4 p-6">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10">
+                      <stat.icon className="h-6 w-6 text-primary" />
+                    </div>
+                    <div>
+                      <p className="font-heading text-2xl font-bold">{stat.value}</p>
+                      <p className="text-sm text-muted-foreground">{stat.label}</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+
+            {/* Enrolled Courses */}
+            <Card className="border-border/50 shadow-card animate-fade-in" style={{ animationDelay: "0.2s" }}>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <BookOpen className="h-5 w-5 text-primary" />
+                  Enrolled Courses
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {enrolledCourses.map((course) => (
+                    <div
+                      key={course.id}
+                      className="flex items-center gap-4 rounded-lg border border-border/50 p-4 transition-colors hover:bg-muted/50"
+                    >
+                      <img
+                        src={course.thumbnail}
+                        alt={course.title}
+                        className="h-16 w-24 rounded-lg object-cover"
+                      />
+                      <div className="flex-1">
+                        <Link to={`/courses/${course.id}`} className="font-semibold hover:text-primary transition-colors">
+                          {course.title}
+                        </Link>
+                        <p className="text-sm text-muted-foreground">{course.instructor}</p>
+                        <div className="mt-2">
+                          <div className="mb-1 flex items-center justify-between text-xs">
+                            <span className="text-muted-foreground">Progress</span>
+                            <span className="font-medium text-primary">{course.progress}%</span>
+                          </div>
+                          <Progress value={course.progress} className="h-1.5" />
+                        </div>
+                      </div>
+                      <Button variant="outline" size="sm" asChild>
+                        <Link to={`/courses/${course.id}`}>Continue</Link>
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Sidebar */}
+          <div className="space-y-6">
+            {/* Overall Progress */}
+            <Card className="border-border/50 shadow-card animate-fade-in" style={{ animationDelay: "0.3s" }}>
+              <CardHeader>
+                <CardTitle className="text-lg">Learning Progress</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="mb-4 text-center">
+                  <div className="relative mx-auto h-32 w-32">
+                    <svg className="h-full w-full -rotate-90" viewBox="0 0 100 100">
+                      <circle
+                        cx="50"
+                        cy="50"
+                        r="40"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="8"
+                        className="text-muted"
+                      />
+                      <circle
+                        cx="50"
+                        cy="50"
+                        r="40"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="8"
+                        strokeLinecap="round"
+                        strokeDasharray={`${totalProgress * 2.51} 251`}
+                        className="text-primary transition-all duration-500"
+                      />
+                    </svg>
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <span className="font-heading text-3xl font-bold">{Math.round(totalProgress)}%</span>
+                    </div>
+                  </div>
+                </div>
+                <p className="text-center text-sm text-muted-foreground">
+                  Keep going! You're making great progress.
+                </p>
+              </CardContent>
+            </Card>
+
+            {/* Learning Schedule */}
+            <Card className="border-border/50 shadow-card animate-fade-in" style={{ animationDelay: "0.4s" }}>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <Calendar className="h-5 w-5 text-primary" />
+                  Learning Schedule
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {currentUser.learningSchedule ? (
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground">Time</span>
+                      <span className="font-semibold">{currentUser.learningSchedule.time}</span>
+                    </div>
+                    <Separator />
+                    <div>
+                      <span className="text-sm text-muted-foreground">Days</span>
+                      <div className="mt-2 flex flex-wrap gap-1">
+                        {currentUser.learningSchedule.days.map((day) => (
+                          <Badge key={day} variant="secondary" className="text-xs">
+                            {day.slice(0, 3)}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                    <Separator />
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground">Status</span>
+                      <Badge className={currentUser.learningSchedule.enabled ? "bg-accent" : "bg-muted"}>
+                        {currentUser.learningSchedule.enabled ? "Active" : "Inactive"}
+                      </Badge>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground">No schedule set</p>
+                )}
+                <Button variant="outline" className="mt-4 w-full" asChild>
+                  <Link to="/schedule">Manage Schedule</Link>
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </main>
+
+      <Footer />
+    </div>
+  );
+}
