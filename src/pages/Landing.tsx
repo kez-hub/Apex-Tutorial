@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { ArrowRight, Play, BookOpen, Users, Award, CheckCircle } from "lucide-react";
+import { ArrowRight, BookOpen, Users, Award, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
@@ -42,8 +42,8 @@ export default function Landing() {
               </div>
               
               <h1 className="font-heading text-4xl font-bold leading-tight text-foreground md:text-5xl lg:text-6xl">
-                Unlock Your
-                <span className="text-gradient bg-clip-text text-transparent" style={{ backgroundImage: 'var(--gradient-primary)' }}> Learning </span>
+                Unlock Your{" "}
+                <span className="text-primary">Learning</span>
                 <span className="block mt-2">Potential</span>
               </h1>
               
@@ -58,10 +58,6 @@ export default function Landing() {
                     Get Started Free
                     <ArrowRight className="h-5 w-5" />
                   </Link>
-                </Button>
-                <Button variant="outline" size="xl" className="gap-2">
-                  <Play className="h-5 w-5 fill-primary text-primary" />
-                  Watch Demo
                 </Button>
               </div>
               
