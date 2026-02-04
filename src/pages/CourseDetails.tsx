@@ -19,6 +19,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
+import { VideoPlayer } from "@/components/video/VideoPlayer";
 import { courses } from "@/lib/data";
 import { useToast } from "@/hooks/use-toast";
 
@@ -138,13 +139,21 @@ export default function CourseDetails() {
             {/* Enrollment Card */}
             <div className="animate-slide-in-right">
               <Card className="sticky top-24 overflow-hidden border-border/50 shadow-elevated">
-                <div className="aspect-video overflow-hidden">
-                  <img
-                    src={course.thumbnail}
-                    alt={course.title}
-                    className="h-full w-full object-cover"
+                {isEnrolled ? (
+                  <VideoPlayer
+                    src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
+                    poster={course.thumbnail}
+                    title={`Lesson 1: Introduction to ${course.title}`}
                   />
-                </div>
+                ) : (
+                  <div className="aspect-video overflow-hidden">
+                    <img
+                      src={course.thumbnail}
+                      alt={course.title}
+                      className="h-full w-full object-cover"
+                    />
+                  </div>
+                )}
                 <CardContent className="p-6">
                   {isEnrolled ? (
                     <>

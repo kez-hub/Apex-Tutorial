@@ -55,10 +55,10 @@ export default function Dashboard() {
   const getCourseById = (id: string) => courses.find((c) => c.id === id);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background overflow-x-hidden">
       <Navbar isAuthenticated />
 
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-4 py-8 overflow-hidden">
         {/* Welcome Section */}
         <div className="mb-8 animate-fade-in">
           <h1 className="font-heading text-3xl font-bold">
