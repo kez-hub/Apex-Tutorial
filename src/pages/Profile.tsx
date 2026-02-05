@@ -19,13 +19,20 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
-import { courses, currentUser } from "@/lib/data";
+import { courses } from "@/lib/data";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function Profile() {
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [avatarUrl, setAvatarUrl] = useState(currentUser.avatar);
+  const { user } = useAuth();
+  
+  const userName = user?.user_metadata?.full_name || user?.email?.split("@")[0] || "User";
+  const userEmail = user?.email || "";
+  const defaultAvatar = user?.user_metadata?.avatar_url || "";
+  
+  const [avatarUrl, setAvatarUrl] = useState(defaultAvatar);
   
   const enrolledCourses = courses.filter((course) => course.enrolled);
   const totalProgress = enrolledCourses.reduce((sum, course) => sum + (course.progress || 0), 0) / enrolledCourses.length;
@@ -76,8 +83,8 @@ export default function Profile() {
           <div className="flex flex-col items-start gap-6 sm:flex-row sm:items-end">
               <div className="relative -mt-16 group">
                 <Avatar className="h-32 w-32 border-4 border-card shadow-elevated cursor-pointer" onClick={handleAvatarClick}>
-                  <AvatarImage src={avatarUrl} alt={currentUser.name} />
-                  <AvatarFallback className="text-4xl">{currentUser.name.charAt(0)}</AvatarFallback>
+                  <AvatarImage src={avatarUrl} alt={userName} />
+                  <AvatarFallback className="text-4xl">{userName.charAt(0).toUpperCase()}</AvatarFallback>
                 </Avatar>
                 <button
                   onClick={handleAvatarClick}
@@ -97,10 +104,10 @@ export default function Profile() {
               <div className="flex-1">
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                   <div>
-                    <h1 className="font-heading text-2xl font-bold">{currentUser.name}</h1>
+                    <h1 className="font-heading text-2xl font-bold">{userName}</h1>
                     <div className="mt-1 flex items-center gap-2 text-muted-foreground">
                       <Mail className="h-4 w-4" />
-                      <span>{currentUser.email}</span>
+                      <span>{userEmail}</span>
                     </div>
                   </div>
                   <div className="flex gap-2">
@@ -234,34 +241,7 @@ export default function Profile() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                {currentUser.learningSchedule ? (
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">Time</span>
-                      <span className="font-semibold">{currentUser.learningSchedule.time}</span>
-                    </div>
-                    <Separator />
-                    <div>
-                      <span className="text-sm text-muted-foreground">Days</span>
-                      <div className="mt-2 flex flex-wrap gap-1">
-                        {currentUser.learningSchedule.days.map((day) => (
-                          <Badge key={day} variant="secondary" className="text-xs">
-                            {day.slice(0, 3)}
-                          </Badge>
-                        ))}
-                      </div>
-                    </div>
-                    <Separator />
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">Status</span>
-                      <Badge className={currentUser.learningSchedule.enabled ? "bg-accent" : "bg-muted"}>
-                        {currentUser.learningSchedule.enabled ? "Active" : "Inactive"}
-                      </Badge>
-                    </div>
-                  </div>
-                ) : (
-                  <p className="text-sm text-muted-foreground">No schedule set</p>
-                )}
+                <p className="text-sm text-muted-foreground">Set up your learning schedule to receive reminders.</p>
                 <Button variant="outline" className="mt-4 w-full" asChild>
                   <Link to="/schedule">Manage Schedule</Link>
                 </Button>
