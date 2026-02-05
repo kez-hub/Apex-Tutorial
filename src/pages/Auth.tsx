@@ -84,10 +84,7 @@ export default function Auth() {
             });
           }
         } else {
-          toast({
-            title: "Check your email! 📧",
-            description: "We've sent you a confirmation link to verify your email address.",
-          });
+          navigate(`/confirm-email?email=${encodeURIComponent(email)}`);
         }
       } else {
         const { error } = await signIn(email, password);
