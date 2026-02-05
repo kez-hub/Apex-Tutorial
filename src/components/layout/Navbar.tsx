@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { BookOpen, Menu, X, User, Bell, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -10,7 +10,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { currentUser } from "@/lib/data";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface NavbarProps {
   isAuthenticated?: boolean;
@@ -19,6 +19,17 @@ interface NavbarProps {
 export function Navbar({ isAuthenticated = false }: NavbarProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user, signOut } = useAuth();
+
+  const userName = user?.user_metadata?.full_name || user?.email?.split("@")[0] || "User";
+  const userEmail = user?.email || "";
+  const userAvatar = user?.user_metadata?.avatar_url || "";
+
+  const handleLogout = async () => {
+    await signOut();
+    navigate("/");
+  };
 
   const navLinks = isAuthenticated
     ? [
@@ -74,20 +85,20 @@ export function Navbar({ isAuthenticated = false }: NavbarProps) {
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" className="relative h-9 w-9 rounded-full">
                       <Avatar className="h-9 w-9">
-                        <AvatarImage src={currentUser.avatar} alt={currentUser.name} />
-                        <AvatarFallback>{currentUser.name.charAt(0)}</AvatarFallback>
+                        <AvatarImage src={userAvatar} alt={userName} />
+                        <AvatarFallback>{userName.charAt(0).toUpperCase()}</AvatarFallback>
                       </Avatar>
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-56">
                     <div className="flex items-center gap-2 p-2">
                       <Avatar className="h-8 w-8">
-                        <AvatarImage src={currentUser.avatar} alt={currentUser.name} />
-                        <AvatarFallback>{currentUser.name.charAt(0)}</AvatarFallback>
+                        <AvatarImage src={userAvatar} alt={userName} />
+                        <AvatarFallback>{userName.charAt(0).toUpperCase()}</AvatarFallback>
                       </Avatar>
                       <div className="flex flex-col">
-                        <p className="text-sm font-medium">{currentUser.name}</p>
-                        <p className="text-xs text-muted-foreground">{currentUser.email}</p>
+                        <p className="text-sm font-medium">{userName}</p>
+                        <p className="text-xs text-muted-foreground">{userEmail}</p>
                       </div>
                     </div>
                     <DropdownMenuSeparator />
@@ -104,11 +115,9 @@ export function Navbar({ isAuthenticated = false }: NavbarProps) {
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem asChild>
-                      <Link to="/" className="flex items-center gap-2 cursor-pointer text-destructive">
+                    <DropdownMenuItem onClick={handleLogout} className="flex items-center gap-2 cursor-pointer text-destructive">
                         <LogOut className="h-4 w-4" />
                         Log out
-                      </Link>
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
@@ -163,7 +172,10 @@ export function Navbar({ isAuthenticated = false }: NavbarProps) {
                   </Link>
                   <Link
                     to="/"
-                    onClick={() => setIsMobileMenuOpen(false)}
+                    onClick={() => {
+                      setIsMobileMenuOpen(false);
+                      handleLogout();
+                    }}
                     className="text-sm font-medium text-destructive"
                   >
                     Log out

@@ -12,7 +12,7 @@ import { z } from "zod";
 const authSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
   password: z.string().min(6, "Password must be at least 6 characters"),
-  name: z.string().min(2, "Name must be at least 2 characters").optional(),
+  name: z.string().min(1, "First name is required").optional(),
 });
 
 export default function Auth() {
@@ -230,13 +230,13 @@ export default function Auth() {
           <form onSubmit={handleSubmit} className="space-y-5 animate-fade-in" style={{ animationDelay: "0.3s" }}>
             {isSignup && (
               <div className="space-y-2">
-                <Label htmlFor="name">Full Name</Label>
+                <Label htmlFor="name">First Name</Label>
                 <div className="relative">
                   <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                   <Input
                     id="name"
                     type="text"
-                    placeholder="John Doe"
+                    placeholder="John"
                     className="pl-10"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
