@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useSearchParams, useNavigate } from "react-router-dom";
-import { BookOpen, Mail, Lock, User, ArrowRight, Eye, EyeOff } from "lucide-react";
+import { Mail, Lock, User, ArrowRight, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -176,13 +176,6 @@ export default function Auth() {
       {/* Left side - Form */}
       <div className="flex flex-1 flex-col justify-center px-4 py-12 sm:px-6 lg:flex-none lg:px-20 xl:px-24">
         <div className="mx-auto w-full max-w-sm lg:w-96">
-          {/* Logo */}
-          <Link to="/" className="mb-8 flex items-center gap-2">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg gradient-primary">
-              <BookOpen className="h-6 w-6 text-primary-foreground" />
-            </div>
-          </Link>
-
           <div className="animate-fade-in">
             <h2 className="font-heading text-2xl font-bold tracking-tight">
               {isSignup ? "Create your account" : "Welcome back"}
