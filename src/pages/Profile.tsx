@@ -15,10 +15,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
+import { EditProfileDialog } from "@/components/profile/EditProfileDialog";
 import { courses } from "@/lib/data";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
@@ -27,12 +26,20 @@ export default function Profile() {
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { user } = useAuth();
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
   
   const userName = user?.user_metadata?.full_name || user?.email?.split("@")[0] || "User";
   const userEmail = user?.email || "";
   const defaultAvatar = user?.user_metadata?.avatar_url || "";
   
   const [avatarUrl, setAvatarUrl] = useState(defaultAvatar);
+  
+  const handleProfileUpdate = () => {
+    setRefreshKey((prev) => prev + 1);
+    // Force reload user data
+    window.location.reload();
+  };
   
   const enrolledCourses = courses.filter((course) => course.enrolled);
   const totalProgress = enrolledCourses.reduce((sum, course) => sum + (course.progress || 0), 0) / enrolledCourses.length;
@@ -111,7 +118,7 @@ export default function Profile() {
                     </div>
                   </div>
                   <div className="flex gap-2">
-                    <Button variant="outline" size="sm">
+                    <Button variant="outline" size="sm" onClick={() => setEditDialogOpen(true)}>
                       <Edit2 className="h-4 w-4" />
                       Edit Profile
                     </Button>
@@ -252,6 +259,14 @@ export default function Profile() {
       </main>
 
       <Footer />
+
+      <EditProfileDialog
+        open={editDialogOpen}
+        onOpenChange={setEditDialogOpen}
+        currentName={userName}
+        currentEmail={userEmail}
+        onProfileUpdate={handleProfileUpdate}
+      />
     </div>
   );
 }

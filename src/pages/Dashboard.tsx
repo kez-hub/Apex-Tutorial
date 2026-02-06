@@ -15,9 +15,13 @@ import { Badge } from "@/components/ui/badge";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { CourseCard } from "@/components/courses/CourseCard";
-import { courses, currentUser, learningAlarms } from "@/lib/data";
+import { courses, learningAlarms } from "@/lib/data";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function Dashboard() {
+  const { user } = useAuth();
+  const userName = user?.user_metadata?.full_name || user?.email?.split("@")[0] || "User";
+  
   const enrolledCourses = courses.filter((course) => course.enrolled);
   const upcomingAlarms = learningAlarms.filter((alarm) => alarm.enabled);
 
@@ -62,7 +66,7 @@ export default function Dashboard() {
         {/* Welcome Section */}
         <div className="mb-8 animate-fade-in">
           <h1 className="font-heading text-3xl font-bold">
-            Welcome back, {currentUser.name.split(" ")[0]}! 👋
+            Welcome back, {userName.split(" ")[0]}! 👋
           </h1>
           <p className="mt-2 text-muted-foreground">
             Continue your learning journey and achieve your goals.

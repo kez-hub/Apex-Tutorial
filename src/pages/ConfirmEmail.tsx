@@ -75,13 +75,6 @@
              </Button>
            )}
  
-           {/* Back to Sign In */}
-           <Button asChild variant="outline" className="w-full">
-             <Link to="/auth">
-               <ArrowLeft className="w-4 h-4 mr-2" />
-               Back to Sign In
-             </Link>
-           </Button>
  
            {/* Help Text */}
            <p className="text-xs text-muted-foreground mt-6">
