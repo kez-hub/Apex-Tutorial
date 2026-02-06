@@ -86,24 +86,39 @@ export default function Schedule() {
     }
   };
 
+  // Track which alarms have already fired to prevent duplicates
+  const [firedAlarms, setFiredAlarms] = useState<Set<string>>(new Set());
+
   // Check for due alarms
   useEffect(() => {
     const checkAlarms = () => {
       const now = new Date();
       const currentTime = now.toTimeString().slice(0, 5);
       const currentDay = DAYS[now.getDay() === 0 ? 6 : now.getDay() - 1];
+      const alarmKey = `${currentTime}-${currentDay}`;
 
       alarms.forEach((alarm) => {
-        if (alarm.enabled && alarm.time === currentTime && alarm.days.includes(currentDay)) {
+        const uniqueKey = `${alarm.id}-${alarmKey}`;
+        
+        if (
+          alarm.enabled && 
+          alarm.time === currentTime && 
+          alarm.days.includes(currentDay) &&
+          !firedAlarms.has(uniqueKey)
+        ) {
           const course = alarm.courseId ? courses.find((c) => c.id === alarm.courseId) : null;
           const message = course 
             ? `It's time to study: ${course.title}`
             : "Your scheduled learning time has arrived!";
           
+          // Mark as fired
+          setFiredAlarms((prev) => new Set([...prev, uniqueKey]));
+          
           // Show toast notification
           toast({
             title: "⏰ Time to Learn!",
             description: message,
+            duration: 10000,
           });
           
           // Send browser notification
@@ -119,9 +134,31 @@ export default function Schedule() {
       });
     };
 
-    const interval = setInterval(checkAlarms, 60000);
+    // Check immediately on mount
+    checkAlarms();
+    
+    // Then check every 10 seconds for better accuracy
+    const interval = setInterval(checkAlarms, 10000);
     return () => clearInterval(interval);
-  }, [alarms, toast]);
+  }, [alarms, toast, firedAlarms]);
+  
+  // Reset fired alarms at midnight
+  useEffect(() => {
+    const resetAtMidnight = () => {
+      const now = new Date();
+      const midnight = new Date(now);
+      midnight.setHours(24, 0, 0, 0);
+      const msUntilMidnight = midnight.getTime() - now.getTime();
+      
+      return setTimeout(() => {
+        setFiredAlarms(new Set());
+        resetAtMidnight();
+      }, msUntilMidnight);
+    };
+    
+    const timeout = resetAtMidnight();
+    return () => clearTimeout(timeout);
+  }, []);
 
   const handleAddAlarm = () => {
     if (!newAlarm.time || newAlarm.days?.length === 0) {
