@@ -141,7 +141,7 @@ export function VideoPlayer({ src, poster, title, className }: VideoPlayerProps)
       ref={containerRef}
       className={cn(
         "relative w-full overflow-hidden rounded-xl bg-foreground/95 group",
-        "aspect-[16/9] min-h-[300px] sm:min-h-[400px] lg:min-h-[500px]",
+        "aspect-[16/9]",
         className
       )}
       onMouseMove={handleMouseMove}
