@@ -11,8 +11,8 @@ export default function Landing() {
 
   const stats = [
     { icon: BookOpen, value: "500+", label: "Courses" },
-    { icon: Users, value: "50K+", label: "Students" },
-    { icon: Award, value: "100+", label: "Instructors" },
+    { icon: Users, value: "30K+", label: "Students" },
+    { icon: Award, value: "60+", label: "Instructors" },
   ];
 
   const features = [
@@ -105,7 +105,7 @@ export default function Landing() {
                     <img src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=40&h=40&fit=crop" className="h-8 w-8 rounded-full border-2 border-card" alt="" />
                   </div>
                   <div>
-                    <p className="font-heading font-semibold">50K+</p>
+                    <p className="font-heading font-semibold">30K+</p>
                     <p className="text-sm text-muted-foreground">Active learners</p>
                   </div>
                 </div>

@@ -141,7 +141,7 @@ export default function CourseDetails() {
               <Card className="sticky top-24 overflow-hidden border-border/50 shadow-elevated">
                 {isEnrolled ? (
                   <VideoPlayer
-                    src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
+                    src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4"
                     poster={course.thumbnail}
                     title={`Lesson 1: Introduction to ${course.title}`}
                   />
