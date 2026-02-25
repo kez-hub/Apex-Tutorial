@@ -10,7 +10,7 @@ export default function Landing() {
   const featuredCourses = courses.slice(0, 3);
 
   const stats = [
-    { icon: BookOpen, value: "500+", label: "Courses" },
+    { icon: BookOpen, value: "60+", label: "Courses" },
     { icon: Users, value: "30K+", label: "Students" },
     { icon: Award, value: "60+", label: "Instructors" },
   ];
