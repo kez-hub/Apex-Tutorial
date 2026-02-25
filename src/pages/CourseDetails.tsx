@@ -73,12 +73,12 @@ export default function CourseDetails() {
   ];
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background overflow-x-hidden">
       <Navbar isAuthenticated />
 
       {/* Hero Section */}
       <section className="relative overflow-hidden gradient-hero border-b border-border">
-        <div className="container mx-auto px-4 py-12">
+        <div className="container mx-auto px-4 py-12 overflow-hidden">
           <Button variant="ghost" size="sm" asChild className="mb-6">
             <Link to="/courses">
               <ArrowLeft className="h-4 w-4" />
@@ -138,7 +138,7 @@ export default function CourseDetails() {
 
             {/* Enrollment Card */}
             <div className="animate-slide-in-right">
-              <Card className="sticky top-24 overflow-hidden border-border/50 shadow-elevated">
+              <Card className="sticky top-24 overflow-hidden border-border/50 shadow-elevated max-w-full">
                 {isEnrolled ? (
                   <VideoPlayer
                     src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4"
