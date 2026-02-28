@@ -73,16 +73,19 @@ export function CourseCard({ course }: CourseCardProps) {
             </div>
           </div>
 
-          {/* Rating and Students */}
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-1">
-              <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
-              <span className="text-sm font-medium">{course.rating}</span>
+          {/* Rating, Students & Price */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-1">
+                <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
+                <span className="text-sm font-medium">{course.rating}</span>
+              </div>
+              <div className="flex items-center gap-1 text-muted-foreground">
+                <Users className="h-3.5 w-3.5" />
+                <span className="text-xs">{course.students.toLocaleString()}</span>
+              </div>
             </div>
-            <div className="flex items-center gap-1 text-muted-foreground">
-              <Users className="h-3.5 w-3.5" />
-              <span className="text-xs">{course.students.toLocaleString()} students</span>
-            </div>
+            <span className="text-lg font-bold text-primary">${course.price}</span>
           </div>
         </CardContent>
 
