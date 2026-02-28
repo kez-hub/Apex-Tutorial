@@ -174,8 +174,7 @@ export default function CourseDetails() {
                   ) : (
                     <>
                       <div className="mb-4 flex items-baseline gap-2">
-                        <span className="font-heading text-3xl font-bold">Free</span>
-                        <span className="text-muted-foreground line-through">$99.99</span>
+                        <span className="font-heading text-3xl font-bold">${course.price}</span>
                       </div>
                       <Button 
                         variant="gradient" 
