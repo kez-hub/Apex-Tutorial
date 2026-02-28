@@ -166,7 +166,18 @@ export default function CourseDetails() {
                           <Progress value={course.progress} className="h-3" />
                         </div>
                       )}
-                      <Button variant="gradient" className="w-full" size="lg">
+                      <Button 
+                        variant="gradient" 
+                        className="w-full" 
+                        size="lg"
+                        onClick={() => {
+                          const videoEl = document.querySelector('video');
+                          if (videoEl) {
+                            videoEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            videoEl.play();
+                          }
+                        }}
+                      >
                         <PlayCircle className="h-5 w-5" />
                         Continue Learning
                       </Button>
