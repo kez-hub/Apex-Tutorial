@@ -12,7 +12,8 @@ import {
   DialogClose,
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import { updateProfile } from "firebase/auth";
+import { auth } from "@/lib/firebase";
 
 interface EditProfileDialogProps {
   open: boolean;
@@ -45,11 +46,11 @@ export function EditProfileDialog({
 
     setIsLoading(true);
     try {
-      const { error } = await supabase.auth.updateUser({
-        data: { full_name: name.trim() },
+      if (!auth.currentUser) throw new Error("No user logged in");
+      
+      await updateProfile(auth.currentUser, {
+        displayName: name.trim(),
       });
-
-      if (error) throw error;
 
       toast({
         title: "Profile updated! 🎉",

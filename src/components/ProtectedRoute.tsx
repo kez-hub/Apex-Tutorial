@@ -6,7 +6,7 @@ interface ProtectedRouteProps {
 }
 
 export function ProtectedRoute({ children }: ProtectedRouteProps) {
-  const { user, loading } = useAuth();
+  const { user, userData, loading } = useAuth();
   const location = useLocation();
 
   if (loading) {
@@ -19,6 +19,12 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
 
   if (!user) {
     return <Navigate to="/auth" state={{ from: location }} replace />;
+  }
+  
+  // If the user's data has loaded but they are not verified, kick them back to confirm
+  // (We skip this check if they are ALREADY on the confirm-email screen to avoid loops)
+  if (userData && !userData.isVerified && location.pathname !== '/confirm-email') {
+    return <Navigate to={`/confirm-email?email=${encodeURIComponent(user.email || "")}`} replace />;
   }
 
   return <>{children}</>;

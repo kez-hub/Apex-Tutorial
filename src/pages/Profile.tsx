@@ -25,13 +25,13 @@ import { useAuth } from "@/contexts/AuthContext";
 export default function Profile() {
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { user } = useAuth();
+  const { user, userData } = useAuth();
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
   
-  const userName = user?.user_metadata?.full_name || user?.email?.split("@")[0] || "User";
+  const userName = user?.displayName || user?.email?.split("@")[0] || "User";
   const userEmail = user?.email || "";
-  const defaultAvatar = user?.user_metadata?.avatar_url || "";
+  const defaultAvatar = user?.photoURL || "";
   
   const [avatarUrl, setAvatarUrl] = useState(defaultAvatar);
   
@@ -41,13 +41,16 @@ export default function Profile() {
     window.location.reload();
   };
   
-  const enrolledCourses = courses.filter((course) => course.enrolled);
-  const totalProgress = enrolledCourses.reduce((sum, course) => sum + (course.progress || 0), 0) / enrolledCourses.length;
+  const enrolledCourseIds = userData?.enrolledCourses || [];
+  const enrolledCourses = courses.filter((course) => enrolledCourseIds.includes(course.id));
+  const totalProgress = enrolledCourses.length > 0 
+    ? enrolledCourses.reduce((sum, course) => sum + (course.progress || 0), 0) / enrolledCourses.length 
+    : 0;
 
   const stats = [
     { label: "Courses Enrolled", value: enrolledCourses.length, icon: BookOpen },
-    { label: "Hours Learned", value: 48, icon: Clock },
-    { label: "Certificates", value: 2, icon: Award },
+    { label: "Hours Learned", value: userData?.hoursLearned || 0, icon: Clock },
+    { label: "Certificates", value: 0, icon: Award },
   ];
 
   const handleAvatarClick = () => {

@@ -15,6 +15,12 @@ import Profile from "./pages/Profile";
 import Schedule from "./pages/Schedule";
 import NotFound from "./pages/NotFound";
 import ConfirmEmail from "./pages/ConfirmEmail";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import TermsOfService from "./pages/TermsOfService";
+import Notifications from "./pages/Notifications";
+import HelpCenter from "./pages/HelpCenter";
+import ContactUs from "./pages/ContactUs";
+import FAQ from "./pages/FAQ";
 
 const queryClient = new QueryClient();
 
@@ -35,6 +41,12 @@ const App = () => (
             <Route path="/courses/:id" element={<CourseDetails />} />
             <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
             <Route path="/schedule" element={<ProtectedRoute><Schedule /></ProtectedRoute>} />
+            <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
+            <Route path="/privacy" element={<PrivacyPolicy />} />
+            <Route path="/terms" element={<TermsOfService />} />
+            <Route path="/help" element={<HelpCenter />} />
+            <Route path="/contact" element={<ContactUs />} />
+            <Route path="/faq" element={<FAQ />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

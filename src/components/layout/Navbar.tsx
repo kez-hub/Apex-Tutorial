@@ -21,17 +21,18 @@ export function Navbar({ isAuthenticated = false }: NavbarProps) {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
+  const isAuthed = !!user;
 
-  const userName = user?.user_metadata?.full_name || user?.email?.split("@")[0] || "User";
+  const userName = user?.displayName || user?.email?.split("@")[0] || "User";
   const userEmail = user?.email || "";
-  const userAvatar = user?.user_metadata?.avatar_url || "";
+  const userAvatar = user?.photoURL || "";
 
   const handleLogout = async () => {
     await signOut();
     navigate("/");
   };
 
-  const navLinks = isAuthenticated
+  const navLinks = isAuthed
     ? [
         { href: "/dashboard", label: "Dashboard" },
         { href: "/courses", label: "Courses" },
@@ -49,12 +50,10 @@ export function Navbar({ isAuthenticated = false }: NavbarProps) {
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
-          <Link to={isAuthenticated ? "/dashboard" : "/"} className="flex items-center gap-2">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg gradient-primary">
-              <BookOpen className="h-5 w-5 text-primary-foreground" />
-            </div>
+          <Link to={isAuthed ? "/dashboard" : "/"} className="flex items-center gap-2">
+            <img src="/logo.jpeg" alt="Apex Tutorial" className="h-9 w-9 rounded-lg object-cover" />
             <span className="font-heading text-xl font-bold text-foreground">
-              LearnHub
+              Apex Tutorial
             </span>
           </Link>
 
@@ -75,7 +74,7 @@ export function Navbar({ isAuthenticated = false }: NavbarProps) {
 
           {/* Desktop Auth/User */}
           <div className="hidden items-center gap-4 md:flex">
-            {isAuthenticated ? (
+            {isAuthed ? (
               <>
                 <Button variant="ghost" size="icon" className="relative">
                   <Bell className="h-5 w-5" />
@@ -161,7 +160,7 @@ export function Navbar({ isAuthenticated = false }: NavbarProps) {
                   {link.label}
                 </Link>
               ))}
-              {isAuthenticated ? (
+              {isAuthed ? (
                 <>
                   <Link
                     to="/profile"

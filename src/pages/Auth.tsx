@@ -1,18 +1,27 @@
 import { useState, useEffect } from "react";
 import { Link, useSearchParams, useNavigate } from "react-router-dom";
-import { Mail, Lock, User, ArrowRight, Eye, EyeOff } from "lucide-react";
+import { Mail, Lock, User, ArrowRight, Eye, EyeOff, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { z } from "zod";
 
 const authSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
   password: z.string().min(6, "Password must be at least 6 characters"),
-  name: z.string().min(1, "First name is required").optional(),
+  name: z.string().min(1, "Full name is required").optional(),
+  department: z.string().min(1, "Please select a department").optional(),
+  whatsapp: z.string().regex(/^\d{11}$/, "WhatsApp number must be exactly 11 digits").optional(),
 });
 
 export default function Auth() {
@@ -24,6 +33,8 @@ export default function Auth() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
+  const [department, setDepartment] = useState("");
+  const [whatsapp, setWhatsapp] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
   
   const { signIn, signUp, signInWithGoogle, user, loading } = useAuth();
@@ -31,10 +42,10 @@ export default function Auth() {
 
   // Redirect if already authenticated
   useEffect(() => {
-    if (!loading && user) {
+    if (!loading && user && !isSignup) {
       navigate("/dashboard");
     }
-  }, [user, loading, navigate]);
+  }, [user, loading, navigate, isSignup]);
 
   const validateForm = () => {
     try {
@@ -42,6 +53,8 @@ export default function Auth() {
         email,
         password,
         name: isSignup ? name : undefined,
+        department: isSignup ? department : undefined,
+        whatsapp: isSignup ? whatsapp : undefined,
       });
       setErrors({});
       return true;
@@ -68,7 +81,7 @@ export default function Auth() {
     
     try {
       if (isSignup) {
-        const { error } = await signUp(email, password, name);
+        const { error } = await signUp(email, password, name, department, whatsapp);
         if (error) {
           if (error.message.includes("already registered")) {
             toast({
@@ -140,24 +153,6 @@ export default function Auth() {
         </svg>
       ),
     },
-    {
-      name: "Facebook",
-      onClick: () => toast({ title: "Coming soon", description: "Facebook login will be available soon." }),
-      icon: (
-        <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
-          <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
-        </svg>
-      ),
-    },
-    {
-      name: "Twitter",
-      onClick: () => toast({ title: "Coming soon", description: "Twitter login will be available soon." }),
-      icon: (
-        <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
-          <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-        </svg>
-      ),
-    },
   ];
 
   if (loading) {
@@ -197,7 +192,7 @@ export default function Auth() {
           </div>
 
           {/* Social Login Buttons */}
-          <div className="mt-8 grid grid-cols-3 gap-3 animate-fade-in" style={{ animationDelay: "0.1s" }}>
+          <div className="mt-8 grid grid-cols-1 gap-3 animate-fade-in" style={{ animationDelay: "0.1s" }}>
             {socialProviders.map((provider) => (
               <Button 
                 key={provider.name} 
@@ -227,13 +222,13 @@ export default function Auth() {
           <form onSubmit={handleSubmit} className="space-y-5 animate-fade-in" style={{ animationDelay: "0.3s" }}>
             {isSignup && (
               <div className="space-y-2">
-                <Label htmlFor="name">First Name</Label>
+                <Label htmlFor="name">Full Name</Label>
                 <div className="relative">
                   <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                   <Input
                     id="name"
                     type="text"
-                    placeholder="John"
+                    placeholder="John Doe"
                     className="pl-10"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
@@ -264,6 +259,70 @@ export default function Auth() {
                 <p className="text-sm text-destructive">{errors.email}</p>
               )}
             </div>
+
+            {isSignup && (
+              <div className="space-y-2">
+                <Label htmlFor="department">Department</Label>
+                <Select value={department} onValueChange={setDepartment}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select your department" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Biological Science(s)">Biological Science(s)</SelectItem>
+                    <SelectItem value="Biochemistry">Biochemistry</SelectItem>
+                    <SelectItem value="Microbiology">Microbiology</SelectItem>
+                    <SelectItem value="Pure and Industrial Chemistry">Pure and Industrial Chemistry</SelectItem>
+                    <SelectItem value="Faculty of Physical Sciences">Faculty of Physical Sciences</SelectItem>
+                    <SelectItem value="Computer Science">Computer Science</SelectItem>
+                    <SelectItem value="Geology">Geology</SelectItem>
+                    <SelectItem value="Mathematics">Mathematics</SelectItem>
+                    <SelectItem value="Industrial Physics">Industrial Physics</SelectItem>
+                    <SelectItem value="Physics">Physics</SelectItem>
+                    <SelectItem value="Statistics">Statistics</SelectItem>
+                    <SelectItem value="Nursing Science">Nursing Science</SelectItem>
+                    <SelectItem value="Medical Laboratory Science">Medical Laboratory Science</SelectItem>
+                    <SelectItem value="Anatomy">Anatomy</SelectItem>
+                    <SelectItem value="Physiology">Physiology</SelectItem>
+                    <SelectItem value="Medicine and Surgery">Medicine and Surgery</SelectItem>
+                    <SelectItem value="Faculty of Engineering">Faculty of Engineering</SelectItem>
+                    <SelectItem value="Civil Engineering">Civil Engineering</SelectItem>
+                    <SelectItem value="Electrical/Electronic Engineering">Electrical/Electronic Engineering</SelectItem>
+                    <SelectItem value="Mechanical Engineering">Mechanical Engineering</SelectItem>
+                    <SelectItem value="Agricultural Economics and Extension">Agricultural Economics and Extension</SelectItem>
+                    <SelectItem value="Animal Science">Animal Science</SelectItem>
+                    <SelectItem value="Crop Science And Horticulture">Crop Science And Horticulture</SelectItem>
+                    <SelectItem value="Soil Science">Soil Science</SelectItem>
+                    <SelectItem value="Fishery & Aquaculture">Fishery & Aquaculture</SelectItem>
+                    <SelectItem value="Food Science & Technology">Food Science & Technology</SelectItem>
+                  </SelectContent>
+                </Select>
+                {errors.department && (
+                  <p className="text-sm text-destructive">{errors.department}</p>
+                )}
+              </div>
+            )}
+
+            {isSignup && (
+              <div className="space-y-2">
+                <Label htmlFor="whatsapp">WhatsApp Number</Label>
+                <div className="relative">
+                  <Phone className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    id="whatsapp"
+                    type="tel"
+                    placeholder="08012345678"
+                    className="pl-10"
+                    maxLength={11}
+                    value={whatsapp}
+                    onChange={(e) => setWhatsapp(e.target.value.replace(/\D/g, '').slice(0, 11))}
+                    required
+                  />
+                </div>
+                {errors.whatsapp && (
+                  <p className="text-sm text-destructive">{errors.whatsapp}</p>
+                )}
+              </div>
+            )}
 
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
@@ -349,7 +408,7 @@ export default function Auth() {
         <div className="absolute bottom-0 left-0 right-0 p-12">
           <blockquote className="space-y-4 text-primary-foreground">
             <p className="text-xl font-medium leading-relaxed">
-              "LearnHub transformed my career. I went from complete beginner to landing my dream job in just 6 months."
+              "Apex Tutorial transformed my career. I went from complete beginner to landing my dream job in just 6 months."
             </p>
             <footer className="flex items-center gap-4">
               <img

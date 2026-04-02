@@ -1,13 +1,34 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
-import { User, Session } from "@supabase/supabase-js";
-import { supabase } from "@/integrations/supabase/client";
+import { 
+  User, onAuthStateChanged, signInWithEmailAndPassword, 
+  createUserWithEmailAndPassword, signOut as firebaseSignOut, 
+  GoogleAuthProvider, signInWithPopup, updateProfile
+} from "firebase/auth";
+import { doc, getDoc, onSnapshot, runTransaction, updateDoc } from "firebase/firestore";
+import { auth, db } from "@/lib/firebase";
+import emailjs from "@emailjs/browser";
+import { LearningAlarm } from "@/lib/data";
+
+export interface UserData {
+  full_name?: string;
+  department?: string;
+  whatsapp?: string;
+  tutorialId: string;
+  enrolledCourses: string[];
+  hoursLearned: number;
+  learningStreak: number;
+  alarms: LearningAlarm[];
+  createdAt?: string;
+  isVerified: boolean;
+  verificationCode?: string;
+}
 
 interface AuthContextType {
   user: User | null;
-  session: Session | null;
+  userData: UserData | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
-  signUp: (email: string, password: string, fullName: string) => Promise<{ error: Error | null }>;
+  signUp: (email: string, password: string, fullName: string, department?: string, whatsapp?: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
   signInWithGoogle: () => Promise<{ error: Error | null }>;
 }
@@ -16,72 +37,157 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
+  const [userData, setUserData] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Set up auth state listener FIRST
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
+    const unsubscribeAuth = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+      
+      if (!currentUser) {
+        setUserData(null);
         setLoading(false);
       }
-    );
-
-    // THEN check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
     });
 
-    return () => subscription.unsubscribe();
+    return () => unsubscribeAuth();
   }, []);
 
+  useEffect(() => {
+    if (user) {
+      const unsubscribeDoc = onSnapshot(doc(db, "users", user.uid), (docSnap) => {
+        if (docSnap.exists()) {
+          setUserData(docSnap.data() as UserData);
+        } else {
+          setUserData({
+            tutorialId: "",
+            enrolledCourses: [],
+            hoursLearned: 0,
+            learningStreak: 0,
+            alarms: [],
+            isVerified: false
+          });
+        }
+        setLoading(false);
+      }, (error) => {
+        console.error("Error fetching user data:", error);
+        setLoading(false);
+      });
+      return () => unsubscribeDoc();
+    }
+  }, [user]);
+
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-    return { error: error as Error | null };
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      return { error: null };
+    } catch (e) {
+      return { error: e as Error };
+    }
   };
 
-  const signUp = async (email: string, password: string, fullName: string) => {
-    const redirectUrl = `${window.location.origin}/`;
-    
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: redirectUrl,
-        data: {
-          full_name: fullName,
-        },
-      },
+  const createUserDataAtomic = async (userObj: User, fullName: string, email: string, department?: string, whatsapp?: string) => {
+    const userDocRef = doc(db, "users", userObj.uid);
+    const counterDocRef = doc(db, "metadata", "counters");
+
+    // Generate random 6 digit numeric code
+    const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+
+    await runTransaction(db, async (transaction) => {
+      const counterDoc = await transaction.get(counterDocRef);
+      let currentCount = 0;
+      
+      if (counterDoc.exists()) {
+        currentCount = counterDoc.data().userCount || 0;
+      }
+      
+      const newCount = currentCount + 1;
+      const tutorialId = "APEX-" + String(newCount).padStart(3, "0");
+      
+      transaction.set(counterDocRef, { userCount: newCount }, { merge: true });
+      
+      transaction.set(userDocRef, {
+        email,
+        full_name: fullName,
+        tutorialId,
+        department: department || "",
+        whatsapp: whatsapp || "",
+        enrolledCourses: [],
+        hoursLearned: 0,
+        learningStreak: 0,
+        alarms: [],
+        isVerified: false,
+        verificationCode,
+        createdAt: new Date().toISOString(),
+      });
     });
-    return { error: error as Error | null };
+
+    return verificationCode;
+  };
+
+  const signUp = async (email: string, password: string, fullName: string, department?: string, whatsapp?: string) => {
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const userObj = userCredential.user;
+      
+      await updateProfile(userObj, { displayName: fullName });
+            
+      const vCode = await createUserDataAtomic(userObj, fullName, email, department, whatsapp);
+      
+      const emailParams = {
+        passcode: vCode,
+        time: new Date(Date.now() + 15 * 60000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        email: email,
+      };
+
+      try {
+        await emailjs.send(
+          "service_29d3d1f",
+          "template_pyppw0d",
+          emailParams,
+          "SVWb5wSsyH14FfE4I"
+        );
+        console.log("OTP Email dispatched effectively.");
+      } catch (err) {
+        console.error("Failed to send EmailJS OTP", err);
+      }
+      
+      return { error: null };
+    } catch (e) {
+      return { error: e as Error };
+    }
   };
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    await firebaseSignOut(auth);
   };
 
   const signInWithGoogle = async () => {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: `${window.location.origin}/dashboard`,
-      },
-    });
-    return { error: error as Error | null };
+    try {
+      const provider = new GoogleAuthProvider();
+      const userCredential = await signInWithPopup(auth, provider);
+      const userObj = userCredential.user;
+      
+      const docRef = doc(db, "users", userObj.uid);
+      const docSnap = await getDoc(docRef);
+      
+      if (!docSnap.exists()) {
+        await createUserDataAtomic(userObj, userObj.displayName || "Google User", userObj.email || "");
+        // Google users are pre-verified via Google's OAuth
+        await updateDoc(docRef, { isVerified: true });
+      }
+
+      return { error: null };
+    } catch (e) {
+      return { error: e as Error };
+    }
   };
 
   return (
     <AuthContext.Provider
       value={{
         user,
-        session,
+        userData,
         loading,
         signIn,
         signUp,

@@ -1,7 +1,11 @@
 import { Link } from "react-router-dom";
 import { BookOpen, Facebook, Twitter, Instagram, Youtube } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 
 export function Footer() {
+  const { user } = useAuth();
+  
+  if (user) return null;
   return (
     <footer className="border-t border-border bg-card">
       <div className="container mx-auto px-4 py-12">
@@ -9,10 +13,8 @@ export function Footer() {
           {/* Brand */}
           <div className="space-y-4">
             <Link to="/" className="flex items-center gap-2">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg gradient-primary">
-                <BookOpen className="h-5 w-5 text-primary-foreground" />
-              </div>
-              <span className="font-heading text-xl font-bold">LearnHub</span>
+              <img src="/logo.jpeg" alt="Apex Tutorial" className="h-9 w-9 rounded-lg object-cover" />
+              <span className="font-heading text-xl font-bold">Apex Tutorial</span>
             </Link>
             <p className="text-sm text-muted-foreground">
               Empowering learners worldwide with quality education and flexible learning experiences.
@@ -65,19 +67,19 @@ export function Footer() {
             <h4 className="mb-4 font-heading font-semibold">Support</h4>
             <ul className="space-y-2 text-sm">
               <li>
-                <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
+                <Link to="/help" className="text-muted-foreground hover:text-primary transition-colors">
                   Help Center
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
+                <Link to="/contact" className="text-muted-foreground hover:text-primary transition-colors">
                   Contact Us
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
+                <Link to="/faq" className="text-muted-foreground hover:text-primary transition-colors">
                   FAQs
-                </a>
+                </Link>
               </li>
               <li>
                 <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
@@ -92,14 +94,14 @@ export function Footer() {
             <h4 className="mb-4 font-heading font-semibold">Legal</h4>
             <ul className="space-y-2 text-sm">
               <li>
-                <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
+                <Link to="/privacy" className="text-muted-foreground hover:text-primary transition-colors">
                   Privacy Policy
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
+                <Link to="/terms" className="text-muted-foreground hover:text-primary transition-colors">
                   Terms of Service
-                </a>
+                </Link>
               </li>
               <li>
                 <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
@@ -111,7 +113,7 @@ export function Footer() {
         </div>
 
         <div className="mt-8 border-t border-border pt-8 text-center text-sm text-muted-foreground">
-          <p>© 2026 LearnHub. All rights reserved.</p>
+          <p>© 2026 Apex Tutorial. All rights reserved.</p>
         </div>
       </div>
     </footer>
