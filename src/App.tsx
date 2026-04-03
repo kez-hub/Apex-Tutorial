@@ -32,16 +32,11 @@ const queryClient = new QueryClient();
 
 const GlobalPaymentHandler = () => {
   const { user, userData } = useAuth();
-  const [showModal, setShowModal] = React.useState(false);
+  
+  // The modal should be open if student is logged in, verified, but hasn't paid
+  const shouldShow = !!(user && userData && userData.isVerified && !userData.hasPaid && userData.role === 'student');
 
-  React.useEffect(() => {
-    // Show modal if user is logged in, verified, but hasn't paid AND IS A STUDENT
-    if (user && userData && userData.isVerified && !userData.hasPaid && userData.role === 'student') {
-      setShowModal(true);
-    }
-  }, [user, userData]);
-
-  return <PaymentModal isOpen={showModal} onClose={() => setShowModal(false)} />;
+  return <PaymentModal isOpen={shouldShow} onClose={() => {}} />;
 };
 
 const App = () => (

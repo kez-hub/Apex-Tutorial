@@ -11,6 +11,7 @@ export interface Course {
   rating: number;
   students: number;
   thumbnail: string;
+  instructorId?: string;
   progress?: number;
   enrolled?: boolean;
 }
@@ -307,6 +308,10 @@ export const learningAlarms: LearningAlarm[] = [
 
 export const categories = [
   "All",
+  "Chemistry",
+  "Physics",
+  "Mathematics",
+  "Biology",
   "Development",
   "Data Science",
   "Marketing",

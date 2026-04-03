@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { 
   BookOpen, 
@@ -12,16 +13,25 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { CourseCard } from "@/components/courses/CourseCard";
-import { courses } from "@/lib/data";
+import { courses as initialCourses, Course } from "@/lib/data";
 import { useAuth } from "@/contexts/AuthContext";
+import { useCourses } from "@/hooks/useCourses";
+import { AddCourseModal } from "@/components/courses/AddCourseModal";
 
 export default function Dashboard() {
   const { user, userData } = useAuth();
+  const { courses, loading } = useCourses();
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [courseToEdit, setCourseToEdit] = useState<Course | null>(null);
   const userName = user?.displayName || user?.email?.split("@")[0] || "User";
   
   const enrolledCourseIds = userData?.enrolledCourses || [];
   const enrolledCourses = courses.filter((course) => enrolledCourseIds.includes(course.id));
   const upcomingAlarms = userData?.alarms?.filter((alarm) => alarm.enabled) || [];
+  
+  const filteredDashboardCourses = courses
+    .filter((c) => !enrolledCourseIds.includes(c.id))
+    .slice(0, 6);
 
   const stats = [
     {
@@ -57,6 +67,15 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-background overflow-x-hidden">
       <Navbar isAuthenticated />
+
+      <AddCourseModal 
+        isOpen={isAddModalOpen} 
+        onOpenChange={(open) => {
+          setIsAddModalOpen(open);
+          if (!open) setCourseToEdit(null);
+        }} 
+        initialData={courseToEdit}
+      />
 
       <main className="container mx-auto px-4 py-8 overflow-hidden">
         {/* Welcome Section */}
@@ -104,14 +123,33 @@ export default function Dashboard() {
             </Button>
           </div>
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {courses
-              .filter((c) => !enrolledCourseIds.includes(c.id))
-              .slice(0, 6)
-              .map((course, index) => (
-                <div key={course.id} className="animate-fade-in" style={{ animationDelay: `${index * 0.1}s` }}>
-                  <CourseCard course={course} />
+            {loading ? (
+              Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="h-[300px] w-full animate-pulse rounded-xl bg-muted" />
+              ))
+            ) : filteredDashboardCourses.length === 0 ? (
+              <div className="col-span-full flex flex-col items-center justify-center py-12 text-center border-2 border-dashed border-border/50 rounded-2xl bg-muted/30">
+                <div className="mb-4 rounded-full bg-background p-4 shadow-sm">
+                  <BookOpen className="h-8 w-8 text-muted-foreground" />
                 </div>
-              ))}
+                <h3 className="font-heading text-xl font-semibold">No course is available</h3>
+                <p className="mt-2 text-muted-foreground max-w-xs">
+                  Check back later or click "Browse All" to see the full catalog.
+                </p>
+              </div>
+            ) : (
+              filteredDashboardCourses.map((course, index) => (
+                <div key={course.id} className="animate-fade-in" style={{ animationDelay: `${index * 0.1}s` }}>
+                  <CourseCard 
+                    course={course} 
+                    onEdit={(c) => {
+                      setCourseToEdit(c);
+                      setIsAddModalOpen(true);
+                    }}
+                  />
+                </div>
+              ))
+            )}
           </div>
         </section>
 
@@ -120,6 +158,7 @@ export default function Dashboard() {
           <button 
             className="fixed bottom-8 right-8 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-elevated hover:scale-110 active:scale-95 transition-all duration-300 animate-fade-in group"
             title="Create New Course"
+            onClick={() => setIsAddModalOpen(true)}
           >
             <Plus className="h-6 w-6 group-hover:rotate-90 transition-transform duration-300" />
           </button>

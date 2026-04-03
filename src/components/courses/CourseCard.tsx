@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
-import { Clock, BookOpen, Star, Users } from "lucide-react";
+import { Clock, BookOpen, Star, Users, MoreVertical, Pencil, Trash } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -7,13 +8,22 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Course } from "@/lib/data";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuTrigger 
+} from "@/components/ui/dropdown-menu";
+import { doc, deleteDoc } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 
 interface CourseCardProps {
   course: Course;
+  onEdit?: (course: Course) => void;
 }
 
-export function CourseCard({ course }: CourseCardProps) {
-  const { userData } = useAuth();
+export function CourseCard({ course, onEdit }: CourseCardProps) {
+  const { user, userData } = useAuth();
   const { toast } = useToast();
 
   const handleCourseClick = (e: React.MouseEvent) => {
@@ -28,6 +38,36 @@ export function CourseCard({ course }: CourseCardProps) {
         variant: "destructive",
       });
     }
+  };
+
+  const isOwner = userData?.role === 'instructor' && course.instructorId === user?.uid;
+
+  const handleDelete = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (!window.confirm("Are you sure you want to delete this course? This action cannot be undone.")) return;
+
+    try {
+      await deleteDoc(doc(db, "courses", course.id));
+      toast({
+        title: "Course Deleted",
+        description: "The course has been successfully removed from the platform.",
+      });
+    } catch (err) {
+      console.error("Error deleting course:", err);
+      toast({
+        title: "Deletion Failed",
+        description: "You don't have permission to delete this course.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleEditClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (onEdit) onEdit(course);
   };
 
   const levelColors = {
@@ -92,15 +132,40 @@ export function CourseCard({ course }: CourseCardProps) {
             </div>
           </div>
 
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-1">
-              <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
-              <span className="text-sm font-medium">{course.rating}</span>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-1">
+                <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
+                <span className="text-sm font-medium">{course.rating}</span>
+              </div>
+              <div className="flex items-center gap-1 text-muted-foreground">
+                <Users className="h-3.5 w-3.5" />
+                <span className="text-xs">{course.students.toLocaleString()}</span>
+              </div>
             </div>
-            <div className="flex items-center gap-1 text-muted-foreground">
-              <Users className="h-3.5 w-3.5" />
-              <span className="text-xs">{course.students.toLocaleString()}</span>
-            </div>
+
+            {/* Instructor Management Menu - Relocated to Bottom Right */}
+            {isOwner && (
+              <div onClick={(e) => e.preventDefault()}>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                    <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full hover:bg-muted">
+                      <MoreVertical className="h-4 w-4 text-muted-foreground" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-32">
+                    <DropdownMenuItem onClick={handleEditClick} className="cursor-pointer gap-2">
+                      <Pencil className="h-3.5 w-3.5" />
+                      Edit
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={handleDelete} className="cursor-pointer gap-2 text-destructive focus:text-destructive">
+                      <Trash className="h-3.5 w-3.5" />
+                      Delete
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            )}
           </div>
         </CardContent>
 

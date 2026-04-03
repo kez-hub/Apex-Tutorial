@@ -4,6 +4,13 @@ service cloud.firestore {
     match /users/{userId}/{documents=**} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
     }
+    match /courses/{courseId} {
+      // Allow everyone to see the catalog (public read)
+      allow read: if true;
+      // Only instructors can create or edit curriculum
+      allow write: if request.auth != null && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'instructor';
+    }
     match /metadata/counters {
       allow read, write: if request.auth != null;
     }

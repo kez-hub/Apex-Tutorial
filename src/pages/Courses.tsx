@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { Search, Filter, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,13 +11,20 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
+import { Badge } from "@/components/ui/badge";
+import { useAuth } from "@/contexts/AuthContext";
+import { useCourses } from "@/hooks/useCourses";
+import { courses as initialCourses, Course, categories } from "@/lib/data";
+import { AddCourseModal } from "@/components/courses/AddCourseModal";
 import { CourseCard } from "@/components/courses/CourseCard";
-import { courses, categories } from "@/lib/data";
 
 export default function Courses() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [selectedLevel, setSelectedLevel] = useState("All Levels");
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [courseToEdit, setCourseToEdit] = useState<Course | null>(null);
+  const { courses, loading } = useCourses();
 
   const levels = ["All Levels", "Beginner", "Intermediate", "Advanced"];
 
@@ -31,6 +39,15 @@ export default function Courses() {
   return (
     <div className="min-h-screen bg-background">
       <Navbar isAuthenticated />
+
+      <AddCourseModal 
+        isOpen={isAddModalOpen} 
+        onOpenChange={(open) => {
+          setIsAddModalOpen(open);
+          if (!open) setCourseToEdit(null);
+        }} 
+        initialData={courseToEdit}
+      />
 
       <main className="container mx-auto px-4 py-8">
         {/* Header */}
@@ -147,7 +164,13 @@ export default function Courses() {
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {filteredCourses.map((course, index) => (
               <div key={course.id} className="animate-fade-in" style={{ animationDelay: `${index * 0.05}s` }}>
-                <CourseCard course={course} />
+                <CourseCard 
+                  course={course} 
+                  onEdit={(c) => {
+                    setCourseToEdit(c);
+                    setIsAddModalOpen(true);
+                  }}
+                />
               </div>
             ))}
           </div>
