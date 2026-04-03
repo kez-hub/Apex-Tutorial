@@ -32,11 +32,19 @@ const queryClient = new QueryClient();
 
 const GlobalPaymentHandler = () => {
   const { user, userData } = useAuth();
+  const [isDismissed, setIsDismissed] = React.useState(false);
   
   // The modal should be open if student is logged in, verified, but hasn't paid
-  const shouldShow = !!(user && userData && userData.isVerified && !userData.hasPaid && userData.role === 'student');
+  const shouldShow = !!(user && userData && userData.isVerified && !userData.hasPaid && userData.role === 'student' && !isDismissed);
 
-  return <PaymentModal isOpen={shouldShow} onClose={() => {}} />;
+  // Debugging: This will help the user see exactly why the modal is not showing in their browser console
+  React.useEffect(() => {
+    if (user && userData) {
+      console.log(`💳 [PAYMENT CHECK] Role: ${userData.role} | Verified: ${userData.isVerified} | Paid: ${userData.hasPaid} | ShowModal: ${shouldShow} | Dismissed: ${isDismissed}`);
+    }
+  }, [user, userData, shouldShow, isDismissed]);
+
+  return <PaymentModal isOpen={shouldShow} onClose={() => setIsDismissed(true)} />;
 };
 
 const App = () => (

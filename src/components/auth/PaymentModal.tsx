@@ -103,7 +103,7 @@ export function PaymentModal({ isOpen, onClose }: PaymentModalProps) {
       <DialogContent className="sm:max-w-[450px] p-0 overflow-hidden border-none shadow-2xl max-h-[90vh] flex flex-col">
         <button 
           onClick={onClose}
-          className="absolute right-4 top-4 z-50 rounded-full bg-black/20 p-2 text-white/80 hover:bg-black/40 hover:text-white transition-all sm:hidden"
+          className="absolute right-4 top-4 z-50 rounded-full bg-black/20 p-2 text-white/80 hover:bg-black/40 hover:text-white transition-all"
         >
           <X className="h-5 w-5" />
         </button>

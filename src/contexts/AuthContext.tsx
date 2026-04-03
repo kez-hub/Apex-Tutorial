@@ -61,7 +61,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (user) {
       const unsubscribeDoc = onSnapshot(doc(db, "users", user.uid), (docSnap) => {
         if (docSnap.exists()) {
-          setUserData(docSnap.data() as UserData);
+          const data = docSnap.data();
+          setUserData({
+            ...data,
+            // Fallback for legacy accounts missing these fields
+            role: data.role || 'student',
+            hasPaid: data.hasPaid || false,
+            isVerified: data.isVerified || false,
+          } as UserData);
         } else {
           setUserData({
             tutorialId: "",
