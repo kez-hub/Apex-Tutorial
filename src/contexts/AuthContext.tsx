@@ -21,6 +21,9 @@ export interface UserData {
   createdAt?: string;
   isVerified: boolean;
   verificationCode?: string;
+  avatarBase64?: string;
+  bannerBase64?: string;
+  hasPaid: boolean;
 }
 
 interface AuthContextType {
@@ -65,7 +68,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             hoursLearned: 0,
             learningStreak: 0,
             alarms: [],
-            isVerified: false
+            isVerified: false,
+            hasPaid: false
           });
         }
         setLoading(false);
@@ -118,6 +122,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         alarms: [],
         isVerified: false,
         verificationCode,
+        hasPaid: false,
         createdAt: new Date().toISOString(),
       });
     });

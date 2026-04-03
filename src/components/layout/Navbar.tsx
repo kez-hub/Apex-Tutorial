@@ -20,12 +20,12 @@ export function Navbar({ isAuthenticated = false }: NavbarProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, signOut } = useAuth();
+  const { user, userData, signOut } = useAuth();
   const isAuthed = !!user;
 
-  const userName = user?.displayName || user?.email?.split("@")[0] || "User";
+  const userName = userData?.full_name || user?.displayName || user?.email?.split("@")[0] || "User";
   const userEmail = user?.email || "";
-  const userAvatar = user?.photoURL || "";
+  const userAvatar = userData?.avatarBase64 || user?.photoURL || "";
 
   const handleLogout = async () => {
     await signOut();
@@ -76,9 +76,11 @@ export function Navbar({ isAuthenticated = false }: NavbarProps) {
           <div className="hidden items-center gap-4 md:flex">
             {isAuthed ? (
               <>
-                <Button variant="ghost" size="icon" className="relative">
-                  <Bell className="h-5 w-5" />
-                  <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-accent" />
+                <Button variant="ghost" size="icon" className="relative text-foreground hover:text-primary transition-colors" asChild>
+                  <Link to="/notifications">
+                    <Bell className="h-5 w-5" />
+                    <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-accent animate-pulse" />
+                  </Link>
                 </Button>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -107,12 +109,7 @@ export function Navbar({ isAuthenticated = false }: NavbarProps) {
                         Profile
                       </Link>
                     </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link to="/schedule" className="flex items-center gap-2 cursor-pointer">
-                        <Bell className="h-4 w-4" />
-                        Learning Schedule
-                      </Link>
-                    </DropdownMenuItem>
+
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={handleLogout} className="flex items-center gap-2 cursor-pointer text-destructive">
                         <LogOut className="h-4 w-4" />

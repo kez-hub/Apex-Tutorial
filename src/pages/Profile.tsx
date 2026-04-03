@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { 
   User, 
   Mail, 
@@ -17,32 +17,28 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
-import { EditProfileDialog } from "@/components/profile/EditProfileDialog";
 import { courses } from "@/lib/data";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
+import { doc, updateDoc } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 
 export default function Profile() {
   const { toast } = useToast();
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const { user, userData } = useAuth();
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [refreshKey, setRefreshKey] = useState(0);
+  const navigate = useNavigate();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const bannerInputRef = useRef<HTMLInputElement>(null);
   
-  const userName = user?.displayName || user?.email?.split("@")[0] || "User";
+  const userName = userData?.full_name || user?.displayName || user?.email?.split("@")[0] || "User";
   const userEmail = user?.email || "";
-  const defaultAvatar = user?.photoURL || "";
-  
-  const [avatarUrl, setAvatarUrl] = useState(defaultAvatar);
-  
-  const handleProfileUpdate = () => {
-    setRefreshKey((prev) => prev + 1);
-    // Force reload user data
-    window.location.reload();
-  };
-  
+  const [avatarUrl, setAvatarUrl] = useState(userData?.avatarBase64 || user?.photoURL || "");
+  const [bannerUrl, setBannerUrl] = useState(userData?.bannerBase64 || "");
+
+  // Certificate logic: Count enrolled courses that are 100% completed
   const enrolledCourseIds = userData?.enrolledCourses || [];
   const enrolledCourses = courses.filter((course) => enrolledCourseIds.includes(course.id));
+  const certificatesCount = enrolledCourses.filter(c => (c.progress || 0) >= 100).length;
   const totalProgress = enrolledCourses.length > 0 
     ? enrolledCourses.reduce((sum, course) => sum + (course.progress || 0), 0) / enrolledCourses.length 
     : 0;
@@ -50,32 +46,117 @@ export default function Profile() {
   const stats = [
     { label: "Courses Enrolled", value: enrolledCourses.length, icon: BookOpen },
     { label: "Hours Learned", value: userData?.hoursLearned || 0, icon: Clock },
-    { label: "Certificates", value: 0, icon: Award },
+    { label: "Certificates", value: certificatesCount, icon: Award },
   ];
 
   const handleAvatarClick = () => {
     fileInputRef.current?.click();
   };
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (file) {
-      if (file.size > 5 * 1024 * 1024) {
+    if (file && user) {
+      if (file.size > 2 * 1024 * 1024) {
         toast({
           title: "File too large",
-          description: "Please select an image under 5MB.",
+          description: "Please select an image under 2MB for storage efficiency.",
           variant: "destructive",
         });
         return;
       }
       
       const reader = new FileReader();
-      reader.onload = (e) => {
-        setAvatarUrl(e.target?.result as string);
-        toast({
-          title: "Avatar updated! 🎉",
-          description: "Your profile picture has been changed.",
-        });
+      reader.onload = async (e) => {
+        const img = new Image();
+        img.onload = async () => {
+          // Canvas compression: resize to max 300x300
+          const canvas = document.createElement("canvas");
+          const MAX_SIZE = 300;
+          let width = img.width;
+          let height = img.height;
+          
+          if (width > height) {
+            if (width > MAX_SIZE) {
+              height *= MAX_SIZE / width;
+              width = MAX_SIZE;
+            }
+          } else {
+            if (height > MAX_SIZE) {
+              width *= MAX_SIZE / height;
+              height = MAX_SIZE;
+            }
+          }
+          
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext("2d");
+          ctx?.drawImage(img, 0, 0, width, height);
+          
+          const compressedBase64 = canvas.toDataURL("image/jpeg", 0.7);
+          
+          try {
+            const userRef = doc(db, "users", user.uid);
+            await updateDoc(userRef, { avatarBase64: compressedBase64 });
+            setAvatarUrl(compressedBase64);
+            toast({
+              title: "Avatar synced! ☁️",
+              description: "Your profile picture is now saved in the database.",
+            });
+          } catch (err: any) {
+             toast({
+              title: "Storage Error",
+              description: "Failed to save profile picture bits to Firestore.",
+              variant: "destructive"
+            });
+          }
+        };
+        img.src = e.target?.result as string;
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleBannerChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file && user) {
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        const img = new Image();
+        img.onload = async () => {
+          const canvas = document.createElement("canvas");
+          const MAX_WIDTH = 1200;
+          let width = img.width;
+          let height = img.height;
+          
+          if (width > MAX_WIDTH) {
+            height *= MAX_WIDTH / width;
+            width = MAX_WIDTH;
+          }
+          
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext("2d");
+          ctx?.drawImage(img, 0, 0, width, height);
+          
+          const compressedBase64 = canvas.toDataURL("image/jpeg", 0.6);
+          
+          try {
+            const userRef = doc(db, "users", user.uid);
+            await updateDoc(userRef, { bannerBase64: compressedBase64 });
+            setBannerUrl(compressedBase64);
+            toast({
+              title: "Banner updated! 🌅",
+              description: "Your new cover image has been saved.",
+            });
+          } catch (err: any) {
+             toast({
+              title: "Banner Error",
+              description: "Failed to save banner bits to Firestore.",
+              variant: "destructive"
+            });
+          }
+        };
+        img.src = e.target?.result as string;
       };
       reader.readAsDataURL(file);
     }
@@ -87,8 +168,27 @@ export default function Profile() {
 
       <main className="container mx-auto px-4 py-8">
         {/* Profile Header */}
-        <Card className="mb-8 overflow-hidden border-border/50 shadow-card animate-fade-in">
-          <div className="h-32 gradient-primary" />
+        <Card className="mb-8 overflow-hidden border-border/50 shadow-card animate-fade-in relative">
+          <div className="h-32 relative overflow-hidden group/banner">
+            {bannerUrl ? (
+              <img src={bannerUrl} alt="Banner" className="w-full h-full object-cover" />
+            ) : (
+              <div className="h-full w-full gradient-primary" />
+            )}
+            <button 
+              onClick={() => bannerInputRef.current?.click()}
+              className="absolute top-2 right-2 bg-black/40 hover:bg-black/60 text-white p-2 rounded-full opacity-0 group-hover/banner:opacity-100 transition-opacity"
+            >
+              <Camera className="h-4 w-4" />
+            </button>
+            <input
+              ref={bannerInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleBannerChange}
+            />
+          </div>
           <CardContent className="relative px-6 pb-6">
           <div className="flex flex-col items-start gap-6 sm:flex-row sm:items-end">
               <div className="relative -mt-16 group">
@@ -121,11 +221,11 @@ export default function Profile() {
                     </div>
                   </div>
                   <div className="flex gap-2">
-                    <Button variant="outline" size="sm" onClick={() => setEditDialogOpen(true)}>
+                    <Button variant="outline" size="sm" onClick={() => navigate("/profile/edit")}>
                       <Edit2 className="h-4 w-4" />
                       Edit Profile
                     </Button>
-                    <Button variant="outline" size="sm">
+                    <Button variant="outline" size="sm" onClick={() => navigate("/settings")}>
                       <Settings className="h-4 w-4" />
                       Settings
                     </Button>
@@ -263,13 +363,6 @@ export default function Profile() {
 
       <Footer />
 
-      <EditProfileDialog
-        open={editDialogOpen}
-        onOpenChange={setEditDialogOpen}
-        currentName={userName}
-        currentEmail={userEmail}
-        onProfileUpdate={handleProfileUpdate}
-      />
     </div>
   );
 }

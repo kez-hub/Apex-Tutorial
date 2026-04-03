@@ -84,6 +84,9 @@
     --border: 217 33% 17%;
     --input: 217 33% 17%;
     --ring: 243 75% 65%;
+
+    /* Dark Mode Gradients */
+    --gradient-hero: linear-gradient(180deg, hsl(222 47% 11%) 0%, hsl(222 47% 8%) 100%);
   }
 }
 

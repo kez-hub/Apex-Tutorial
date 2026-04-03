@@ -24,6 +24,30 @@ const authSchema = z.object({
   whatsapp: z.string().regex(/^\d{11}$/, "WhatsApp number must be exactly 11 digits").optional(),
 });
 
+function getFriendlyErrorMessage(errorMsg: string) {
+  if (errorMsg.includes("auth/invalid-credential") || errorMsg.includes("auth/user-not-found") || errorMsg.includes("auth/wrong-password")) {
+    return "The email or password you entered is incorrect. Please try again.";
+  }
+  if (errorMsg.includes("auth/email-already-in-use")) {
+    return "An account with this email address already exists. Please navigate to 'Sign In' instead.";
+  }
+  if (errorMsg.includes("auth/weak-password")) {
+    return "Your password is too weak. Please use a stronger password with at least 6 characters.";
+  }
+  if (errorMsg.includes("auth/network-request-failed")) {
+    return "Network error. Please check your internet connection and try again.";
+  }
+  if (errorMsg.includes("auth/too-many-requests")) {
+    return "Too many failed attempts. For your security, please wait a few minutes before trying again.";
+  }
+  if (errorMsg.includes("auth/popup-closed-by-user")) {
+    return "Sign in popup was closed before completion.";
+  }
+  
+  // Return a cleaned up version of the unknown error
+  return errorMsg.replace(/Firebase:/g, "").replace(/Error/g, "").replace(/\(.*?\)/g, "").trim() || "An unexpected error occurred. Please try again.";
+}
+
 export default function Auth() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -83,38 +107,22 @@ export default function Auth() {
       if (isSignup) {
         const { error } = await signUp(email, password, name, department, whatsapp);
         if (error) {
-          if (error.message.includes("already registered")) {
-            toast({
-              title: "Account exists",
-              description: "An account with this email already exists. Please sign in instead.",
-              variant: "destructive",
-            });
-          } else {
-            toast({
-              title: "Sign up failed",
-              description: error.message,
-              variant: "destructive",
-            });
-          }
+          toast({
+            title: "Sign up failed",
+            description: getFriendlyErrorMessage(error.message),
+            variant: "destructive",
+          });
         } else {
           navigate(`/confirm-email?email=${encodeURIComponent(email)}`);
         }
       } else {
         const { error } = await signIn(email, password);
         if (error) {
-          if (error.message.includes("Invalid login credentials")) {
-            toast({
-              title: "Invalid credentials",
-              description: "Please check your email and password and try again.",
-              variant: "destructive",
-            });
-          } else {
-            toast({
-              title: "Sign in failed",
-              description: error.message,
-              variant: "destructive",
-            });
-          }
+          toast({
+            title: "Sign in failed",
+            description: getFriendlyErrorMessage(error.message),
+            variant: "destructive",
+          });
         } else {
           navigate("/dashboard");
         }
@@ -131,7 +139,7 @@ export default function Auth() {
       if (error) {
         toast({
           title: "Google sign in failed",
-          description: error.message,
+          description: getFriendlyErrorMessage(error.message),
           variant: "destructive",
         });
       }

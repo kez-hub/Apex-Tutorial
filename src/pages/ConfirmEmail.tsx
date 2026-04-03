@@ -4,7 +4,7 @@ import { Mail, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { doc, updateDoc } from "firebase/firestore";
+import { doc, updateDoc, addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -45,6 +45,15 @@ export default function ConfirmEmail() {
         // Correct OTP! Let's update the database
         await updateDoc(doc(db, "users", user.uid), {
           isVerified: true
+        });
+
+        // 2. Add Welcome Notification
+        await addDoc(collection(db, "users", user.uid, "notifications"), {
+          title: "Welcome to Apex Tutorials!",
+          message: "Your account is officially verified and your dashboard is ready.",
+          type: "welcome",
+          isRead: false,
+          createdAt: serverTimestamp(),
         });
         
         toast({

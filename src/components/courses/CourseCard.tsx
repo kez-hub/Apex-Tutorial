@@ -5,12 +5,28 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Course } from "@/lib/data";
+import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
 
 interface CourseCardProps {
   course: Course;
 }
 
 export function CourseCard({ course }: CourseCardProps) {
+  const { userData } = useAuth();
+  const { toast } = useToast();
+
+  const handleCourseClick = (e: React.MouseEvent) => {
+    if (!userData?.hasPaid && !course.enrolled) {
+      e.preventDefault();
+      toast({
+        title: "Payment Required ₦",
+        description: "You need to unlock all courses to access this content. Check your dashboard for the 'Pay Now' button.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const levelColors = {
     Beginner: "bg-accent/10 text-accent border-accent/20",
     Intermediate: "bg-secondary/10 text-secondary border-secondary/20",
@@ -18,7 +34,7 @@ export function CourseCard({ course }: CourseCardProps) {
   };
 
   return (
-    <Link to={`/courses/${course.id}`}>
+    <Link to={`/courses/${course.id}`} onClick={handleCourseClick}>
       <Card className="group h-full overflow-hidden border-border/50 bg-card shadow-card transition-all duration-300 hover:shadow-elevated hover:-translate-y-1">
         {/* Thumbnail */}
         <div className="relative aspect-video overflow-hidden">
@@ -73,19 +89,15 @@ export function CourseCard({ course }: CourseCardProps) {
             </div>
           </div>
 
-          {/* Rating, Students & Price */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-1">
-                <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
-                <span className="text-sm font-medium">{course.rating}</span>
-              </div>
-              <div className="flex items-center gap-1 text-muted-foreground">
-                <Users className="h-3.5 w-3.5" />
-                <span className="text-xs">{course.students.toLocaleString()}</span>
-              </div>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-1">
+              <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
+              <span className="text-sm font-medium">{course.rating}</span>
             </div>
-            <span className="text-lg font-bold text-primary">${course.price}</span>
+            <div className="flex items-center gap-1 text-muted-foreground">
+              <Users className="h-3.5 w-3.5" />
+              <span className="text-xs">{course.students.toLocaleString()}</span>
+            </div>
           </div>
         </CardContent>
 

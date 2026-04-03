@@ -11,7 +11,6 @@ export interface Course {
   rating: number;
   students: number;
   thumbnail: string;
-  price: number;
   progress?: number;
   enrolled?: boolean;
 }
@@ -51,7 +50,6 @@ export const courses: Course[] = [
     rating: 4.9,
     students: 28500,
     thumbnail: "https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=800&h=450&fit=crop",
-    price: 29.99,
     progress: 45,
     enrolled: true
   },
@@ -68,7 +66,6 @@ export const courses: Course[] = [
     rating: 4.8,
     students: 18200,
     thumbnail: "https://images.unsplash.com/photo-1555949963-aa79dcee981c?w=800&h=450&fit=crop",
-    price: 24.99,
     progress: 20,
     enrolled: true
   },
@@ -85,7 +82,6 @@ export const courses: Course[] = [
     rating: 4.7,
     students: 22000,
     thumbnail: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&h=450&fit=crop",
-    price: 34.99
   },
   {
     id: "4",
@@ -100,7 +96,6 @@ export const courses: Course[] = [
     rating: 4.9,
     students: 19500,
     thumbnail: "https://images.unsplash.com/photo-1561070791-2526d30994b5?w=800&h=450&fit=crop",
-    price: 39.99
   },
   {
     id: "5",
@@ -115,7 +110,6 @@ export const courses: Course[] = [
     rating: 4.8,
     students: 25000,
     thumbnail: "https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=800&h=450&fit=crop",
-    price: 19.99,
     progress: 78,
     enrolled: true
   },
@@ -132,7 +126,6 @@ export const courses: Course[] = [
     rating: 4.6,
     students: 15000,
     thumbnail: "https://images.unsplash.com/photo-1502920917128-1aa500764cbd?w=800&h=450&fit=crop",
-    price: 27.99
   },
   {
     id: "7",
@@ -147,7 +140,6 @@ export const courses: Course[] = [
     rating: 4.7,
     students: 21000,
     thumbnail: "https://images.unsplash.com/photo-1552664730-d307ca884978?w=800&h=450&fit=crop",
-    price: 22.99
   },
   {
     id: "8",
@@ -162,7 +154,6 @@ export const courses: Course[] = [
     rating: 4.8,
     students: 30200,
     thumbnail: "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=800&h=450&fit=crop",
-    price: 44.99
   },
   {
     id: "9",
@@ -177,7 +168,6 @@ export const courses: Course[] = [
     rating: 4.6,
     students: 12500,
     thumbnail: "https://images.unsplash.com/photo-1455390582262-044cdead277a?w=800&h=450&fit=crop",
-    price: 19.99
   },
   {
     id: "10",
@@ -192,7 +182,6 @@ export const courses: Course[] = [
     rating: 4.5,
     students: 16800,
     thumbnail: "https://images.unsplash.com/photo-1518770660439-4636190af475?w=800&h=450&fit=crop",
-    price: 32.99
   },
   {
     id: "11",
@@ -207,7 +196,6 @@ export const courses: Course[] = [
     rating: 4.8,
     students: 19000,
     thumbnail: "https://images.unsplash.com/photo-1475721027785-f74eccf877e2?w=800&h=450&fit=crop",
-    price: 26.99
   },
   {
     id: "12",
@@ -222,7 +210,6 @@ export const courses: Course[] = [
     rating: 4.7,
     students: 24000,
     thumbnail: "https://images.unsplash.com/photo-1507413245164-6160d8298b31?w=800&h=450&fit=crop",
-    price: 34.99
   },
   {
     id: "13",
@@ -237,7 +224,6 @@ export const courses: Course[] = [
     rating: 4.6,
     students: 20500,
     thumbnail: "https://images.unsplash.com/photo-1626785774573-4b799315345d?w=800&h=450&fit=crop",
-    price: 21.99
   },
   {
     id: "14",
@@ -252,7 +238,6 @@ export const courses: Course[] = [
     rating: 4.7,
     students: 17500,
     thumbnail: "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=800&h=450&fit=crop",
-    price: 37.99
   },
   {
     id: "15",
@@ -267,7 +252,6 @@ export const courses: Course[] = [
     rating: 4.5,
     students: 14000,
     thumbnail: "https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=800&h=450&fit=crop",
-    price: 29.99
   },
   {
     id: "16",
@@ -281,8 +265,7 @@ export const courses: Course[] = [
     level: "Intermediate",
     rating: 4.4,
     students: 11000,
-    thumbnail: "https://images.unsplash.com/photo-1532094349884-543bc11b234d?w=800&h=450&fit=crop",
-    price: 24.99
+    thumbnail: "https://images.unsplash.com/photo-1532094349884-543bc11b234d?w=800&h=450&fit=crop"
   }
 ];
 

@@ -155,51 +155,43 @@ export default function CourseDetails() {
                   </div>
                 )}
                 <CardContent className="p-6">
-                  {isEnrolled ? (
-                    <>
-                      {course.progress !== undefined && (
-                        <div className="mb-6">
-                          <div className="mb-2 flex items-center justify-between text-sm">
-                            <span className="text-muted-foreground">Your Progress</span>
-                            <span className="font-semibold text-primary">{course.progress}%</span>
+                    {isEnrolled ? (
+                      <>
+                        {course.progress !== undefined && (
+                          <div className="mb-6">
+                            <div className="mb-2 flex items-center justify-between text-sm">
+                              <span className="text-muted-foreground">Your Progress</span>
+                              <span className="font-semibold text-primary">{course.progress}%</span>
+                            </div>
+                            <Progress value={course.progress} className="h-3" />
                           </div>
-                          <Progress value={course.progress} className="h-3" />
-                        </div>
-                      )}
+                        )}
+                        <Button 
+                          variant="gradient" 
+                          className="w-full" 
+                          size="lg"
+                          onClick={() => {
+                            const videoEl = document.querySelector('video');
+                            if (videoEl) {
+                              videoEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                              videoEl.play();
+                            }
+                          }}
+                        >
+                          <PlayCircle className="h-5 w-5" />
+                          Continue Learning
+                        </Button>
+                      </>
+                    ) : (
                       <Button 
                         variant="gradient" 
                         className="w-full" 
-                        size="lg"
-                        onClick={() => {
-                          const videoEl = document.querySelector('video');
-                          if (videoEl) {
-                            videoEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                            videoEl.play();
-                          }
-                        }}
-                      >
-                        <PlayCircle className="h-5 w-5" />
-                        Continue Learning
-                      </Button>
-                    </>
-                  ) : (
-                    <>
-                      <div className="mb-4 flex items-baseline gap-2">
-                        <span className="font-heading text-3xl font-bold">${course.price}</span>
-                      </div>
-                      <Button 
-                        variant="gradient" 
-                        className="mb-3 w-full" 
                         size="lg"
                         onClick={handleEnroll}
                       >
                         Enroll Now
                       </Button>
-                      <p className="text-center text-xs text-muted-foreground">
-                        30-day money-back guarantee
-                      </p>
-                    </>
-                  )}
+                    )}
 
                   <Separator className="my-6" />
 

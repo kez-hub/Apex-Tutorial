@@ -21,8 +21,27 @@ import Notifications from "./pages/Notifications";
 import HelpCenter from "./pages/HelpCenter";
 import ContactUs from "./pages/ContactUs";
 import FAQ from "./pages/FAQ";
+import EditProfile from "./pages/EditProfile";
+import Settings from "./pages/Settings";
+import { PaymentModal } from "@/components/auth/PaymentModal";
+import { useAuth } from "@/contexts/AuthContext";
+import React from "react";
 
 const queryClient = new QueryClient();
+
+const GlobalPaymentHandler = () => {
+  const { user, userData } = useAuth();
+  const [showModal, setShowModal] = React.useState(false);
+
+  React.useEffect(() => {
+    // Show modal if user is logged in, verified, but hasn't paid
+    if (user && userData && userData.isVerified && !userData.hasPaid) {
+      setShowModal(true);
+    }
+  }, [user, userData]);
+
+  return <PaymentModal isOpen={showModal} onClose={() => setShowModal(false)} />;
+};
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -30,6 +49,7 @@ const App = () => (
       <TooltipProvider>
         <Toaster />
         <Sonner />
+        <GlobalPaymentHandler />
         <BrowserRouter>
           <ScrollToTop />
           <Routes>
@@ -47,6 +67,8 @@ const App = () => (
             <Route path="/help" element={<HelpCenter />} />
             <Route path="/contact" element={<ContactUs />} />
             <Route path="/faq" element={<FAQ />} />
+            <Route path="/profile/edit" element={<ProtectedRoute><EditProfile /></ProtectedRoute>} />
+            <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
