@@ -61,14 +61,16 @@ export default function Landing() {
                 </Button>
               </div>
               
-              <div className="flex items-center gap-6 pt-4">
+              <div className="flex items-center justify-center sm:justify-start gap-10 pt-4">
                 {stats.map((stat) => (
-                  <div key={stat.label} className="text-center">
-                    <div className="flex items-center justify-center gap-1">
-                      <stat.icon className="h-5 w-5 text-primary" />
-                      <span className="font-heading text-2xl font-bold">{stat.value}</span>
+                  <div key={stat.label} className="text-center group">
+                    <div className="flex flex-col items-center justify-center gap-1">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 mb-1 group-hover:bg-primary group-hover:text-white transition-colors duration-300">
+                        <stat.icon className="h-5 w-5" />
+                      </div>
+                      <span className="font-heading text-2xl font-bold leading-none">{stat.value}</span>
                     </div>
-                    <p className="text-sm text-muted-foreground">{stat.label}</p>
+                    <p className="text-xs text-muted-foreground mt-1 uppercase tracking-wider font-medium">{stat.label}</p>
                   </div>
                 ))}
               </div>

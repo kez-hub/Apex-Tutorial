@@ -10,6 +10,7 @@ import {
   BarChart,
   Award,
   ArrowLeft,
+  Lock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -21,13 +22,15 @@ import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { VideoPlayer } from "@/components/video/VideoPlayer";
 import { courses } from "@/lib/data";
+import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 
 export default function CourseDetails() {
   const { id } = useParams<{ id: string }>();
+  const { user, userData } = useAuth();
   const { toast } = useToast();
   const course = courses.find((c) => c.id === id);
-  const [isEnrolled, setIsEnrolled] = useState(course?.enrolled || false);
+  const [isEnrolled, setIsEnrolled] = useState((course?.enrolled || userData?.enrolledCourses?.includes(id || "")) || false);
 
   if (!course) {
     return (
@@ -69,8 +72,40 @@ export default function CourseDetails() {
     { title: "Core Concepts", lessons: 15, duration: "4h 15m" },
     { title: "Advanced Techniques", lessons: 20, duration: "6h 45m" },
     { title: "Real-World Projects", lessons: 12, duration: "8h 30m" },
-    { title: "Best Practices & Tips", lessons: 10, duration: "3h 20m" },
+    { title: "Best Practices & Tips", lessons: 10, duration: "3h 20m" }
   ];
+
+  // Check if user has paid
+  if (user && userData && !userData.hasPaid && !course.enrolled) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar isAuthenticated />
+        <main className="container mx-auto px-4 py-20 flex flex-col items-center justify-center text-center animate-fade-in">
+          <div className="relative mb-8">
+            <div className="absolute inset-0 bg-primary/20 blur-3xl rounded-full" />
+            <div className="relative h-24 w-24 rounded-2xl bg-card border border-border shadow-elevated flex items-center justify-center">
+              <Lock className="h-12 w-12 text-primary" />
+            </div>
+          </div>
+          
+          <h1 className="text-3xl font-bold font-heading mb-4">Course Locked</h1>
+          <p className="text-muted-foreground max-w-md mb-8">
+            You need to make a one-time payment to unlock access to "{course.title}" and all other premium courses on Apex Tutorials.
+          </p>
+          
+          <div className="flex flex-col sm:flex-row gap-4">
+            <Button variant="gradient" size="lg" onClick={() => window.location.href = "/dashboard"}>
+              Back to Dashboard
+            </Button>
+            <Button variant="outline" size="lg" asChild>
+              <Link to="/courses">Browse Other Courses</Link>
+            </Button>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background overflow-x-hidden">

@@ -24,6 +24,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
   DialogTrigger,
   DialogFooter,
   DialogClose,
@@ -34,12 +35,16 @@ import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { learningAlarms as initialAlarms, courses, LearningAlarm } from "@/lib/data";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
+import { doc, updateDoc } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 
 const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
 export default function Schedule() {
   const { toast } = useToast();
-  const [alarms, setAlarms] = useState<LearningAlarm[]>(initialAlarms);
+  const { user, userData } = useAuth();
+  const [alarms, setAlarms] = useState<LearningAlarm[]>(userData?.alarms || []);
   const [isOpen, setIsOpen] = useState(false);
   const [notificationPermission, setNotificationPermission] = useState<NotificationPermission>("default");
   const [newAlarm, setNewAlarm] = useState<Partial<LearningAlarm>>({
@@ -47,6 +52,13 @@ export default function Schedule() {
     days: [],
     enabled: true,
   });
+
+  // Sync alarms with userData from AuthContext
+  useEffect(() => {
+    if (userData?.alarms) {
+      setAlarms(userData.alarms);
+    }
+  }, [userData]);
 
   // Check notification permission on mount
   useEffect(() => {
@@ -160,8 +172,8 @@ export default function Schedule() {
     return () => clearTimeout(timeout);
   }, []);
 
-  const handleAddAlarm = () => {
-    if (!newAlarm.time || newAlarm.days?.length === 0) {
+  const handleAddAlarm = async () => {
+    if (!newAlarm.time || newAlarm.days?.length === 0 || !user) {
       toast({
         title: "Invalid alarm",
         description: "Please select a time and at least one day.",
@@ -174,34 +186,59 @@ export default function Schedule() {
       id: `alarm-${Date.now()}`,
       time: newAlarm.time!,
       days: newAlarm.days!,
-      courseId: newAlarm.courseId,
+      courseId: newAlarm.courseId || "", // Use string instead of undefined/null for Firestore
       enabled: true,
     };
 
-    setAlarms([...alarms, alarm]);
-    setNewAlarm({ time: "09:00", days: [], enabled: true });
-    setIsOpen(false);
-    
-    toast({
-      title: "Reminder set! 🔔",
-      description: `You'll be reminded at ${alarm.time} on ${alarm.days.join(", ")}.`,
-    });
+    try {
+      const updatedAlarms = [...alarms, alarm];
+      const userDocRef = doc(db, "users", user.uid);
+      await updateDoc(userDocRef, { alarms: updatedAlarms });
+      
+      setNewAlarm({ time: "09:00", days: [], enabled: true });
+      setIsOpen(false);
+      
+      toast({
+        title: "Reminder set! 🔔",
+        description: `You'll be reminded at ${alarm.time} on ${alarm.days.join(", ")}.`,
+      });
+    } catch (err) {
+      console.error("Error adding alarm:", err);
+      toast({
+        title: "Error setting reminder",
+        description: "Something went wrong. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
-  const handleDeleteAlarm = (id: string) => {
-    setAlarms(alarms.filter((a) => a.id !== id));
-    toast({
-      title: "Reminder deleted",
-      description: "The learning reminder has been removed.",
-    });
+  const handleDeleteAlarm = async (id: string) => {
+    if (!user) return;
+    try {
+      const updatedAlarms = alarms.filter((a) => a.id !== id);
+      const userDocRef = doc(db, "users", user.uid);
+      await updateDoc(userDocRef, { alarms: updatedAlarms });
+      
+      toast({
+        title: "Reminder deleted",
+        description: "The learning reminder has been removed.",
+      });
+    } catch (err) {
+      console.error("Error deleting alarm:", err);
+    }
   };
 
-  const handleToggleAlarm = (id: string) => {
-    setAlarms(
-      alarms.map((a) =>
+  const handleToggleAlarm = async (id: string) => {
+    if (!user) return;
+    try {
+      const updatedAlarms = alarms.map((a) =>
         a.id === id ? { ...a, enabled: !a.enabled } : a
-      )
-    );
+      );
+      const userDocRef = doc(db, "users", user.uid);
+      await updateDoc(userDocRef, { alarms: updatedAlarms });
+    } catch (err) {
+      console.error("Error toggling alarm:", err);
+    }
   };
 
   const toggleDay = (day: string) => {
@@ -258,6 +295,9 @@ export default function Schedule() {
             <DialogContent className="sm:max-w-md">
               <DialogHeader>
                 <DialogTitle>New Learning Reminder</DialogTitle>
+                <DialogDescription>
+                  Set a time and choose which days you want to be reminded to study.
+                </DialogDescription>
               </DialogHeader>
               
               <div className="space-y-6 py-4">

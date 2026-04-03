@@ -8,7 +8,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, ShieldCheck, Zap, CreditCard } from "lucide-react";
+import { CheckCircle2, ShieldCheck, Zap, CreditCard, X } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { doc, updateDoc } from "firebase/firestore";
@@ -42,43 +42,48 @@ export function PaymentModal({ isOpen, onClose }: PaymentModalProps) {
     };
   }, []);
 
+  const onPaymentSuccess = async (response: any) => {
+    if (!user) return;
+    try {
+      const userDocRef = doc(db, "users", user.uid);
+      await updateDoc(userDocRef, {
+        hasPaid: true,
+        paymentReference: response.reference,
+        paidAt: new Date().toISOString()
+      });
+
+      toast({
+        title: "Payment Successful! 🎉",
+        description: "Welcome to Apex Tutorials! All courses are now unlocked forever.",
+      });
+      
+      onClose();
+    } catch (error) {
+      console.error("Error updating payment status:", error);
+      toast({
+        title: "Database Sync Error",
+        description: "Your payment was successful but we couldn't update your account. Please contact support with ref: " + response.reference,
+        variant: "destructive",
+      });
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
   const handlePayment = () => {
     if (!user || !userData) return;
 
     setIsProcessing(true);
 
     const handler = window.PaystackPop.setup({
-      key: import.meta.env.VITE_PAYSTACK_PUBLIC_KEY || "pk_test_placeholder", // Replace with real key in .env
+      key: import.meta.env.VITE_PAYSTACK_PUBLIC_KEY || "pk_test_placeholder",
       email: user.email,
-      amount: 10000 * 100, // ₦10,000 in kobo
+      amount: 10000 * 100, 
       currency: "NGN",
       ref: `APEX-${user.uid.slice(0, 8)}-${Date.now()}`,
-      callback: async (response: any) => {
-        // Payment successful
-        try {
-          const userDocRef = doc(db, "users", user.uid);
-          await updateDoc(userDocRef, {
-            hasPaid: true,
-            paymentReference: response.reference,
-            paidAt: new Date().toISOString()
-          });
-
-          toast({
-            title: "Payment Successful! 🎉",
-            description: "Welcome to Apex Tutorials! All courses are now unlocked forever.",
-          });
-          
-          onClose();
-        } catch (error) {
-          console.error("Error updating payment status:", error);
-          toast({
-            title: "Something went wrong",
-            description: "Payment was successful but we couldn't update your account. Please contact support.",
-            variant: "destructive",
-          });
-        } finally {
-          setIsProcessing(false);
-        }
+      callback: (response: any) => {
+        // Payment successful - call internal async handler
+        onPaymentSuccess(response);
       },
       onClose: () => {
         setIsProcessing(false);
@@ -95,8 +100,15 @@ export function PaymentModal({ isOpen, onClose }: PaymentModalProps) {
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-[450px] p-0 overflow-hidden border-none shadow-2xl">
-        <div className="gradient-primary p-8 text-white relative overflow-hidden">
+      <DialogContent className="sm:max-w-[450px] p-0 overflow-hidden border-none shadow-2xl max-h-[90vh] flex flex-col">
+        <button 
+          onClick={onClose}
+          className="absolute right-4 top-4 z-50 rounded-full bg-black/20 p-2 text-white/80 hover:bg-black/40 hover:text-white transition-all sm:hidden"
+        >
+          <X className="h-5 w-5" />
+        </button>
+
+        <div className="gradient-primary p-8 text-white relative overflow-hidden flex-shrink-0">
           <div className="absolute top-0 right-0 -mt-4 -mr-4 h-32 w-32 rounded-full bg-white/10 blur-2xl" />
           <div className="relative z-10">
             <Zap className="h-12 w-12 mb-4 text-amber-300 fill-amber-300 animate-pulse" />
@@ -109,7 +121,7 @@ export function PaymentModal({ isOpen, onClose }: PaymentModalProps) {
           </div>
         </div>
 
-        <div className="p-8 bg-card">
+        <div className="p-8 bg-card overflow-y-auto flex-1 custom-scrollbar">
           <div className="space-y-4 mb-8">
             {[
               "Forever Access to 20+ Premium Courses",
