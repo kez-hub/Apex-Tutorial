@@ -17,6 +17,9 @@ export function CourseCard({ course }: CourseCardProps) {
   const { toast } = useToast();
 
   const handleCourseClick = (e: React.MouseEvent) => {
+    // Instructors bypass the payment check
+    if (userData?.role === 'instructor') return;
+
     if (!userData?.hasPaid && !course.enrolled) {
       e.preventDefault();
       toast({

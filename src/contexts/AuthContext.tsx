@@ -24,6 +24,7 @@ export interface UserData {
   avatarBase64?: string;
   bannerBase64?: string;
   hasPaid: boolean;
+  role: 'student' | 'instructor';
 }
 
 interface AuthContextType {
@@ -31,7 +32,7 @@ interface AuthContextType {
   userData: UserData | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
-  signUp: (email: string, password: string, fullName: string, department?: string, whatsapp?: string) => Promise<{ error: Error | null }>;
+  signUp: (email: string, password: string, fullName: string, role?: 'student' | 'instructor', department?: string, whatsapp?: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
   signInWithGoogle: () => Promise<{ error: Error | null }>;
 }
@@ -69,7 +70,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             learningStreak: 0,
             alarms: [],
             isVerified: false,
-            hasPaid: false
+            hasPaid: false,
+            role: 'student'
           });
         }
         setLoading(false);
@@ -90,7 +92,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const createUserDataAtomic = async (userObj: User, fullName: string, email: string, department?: string, whatsapp?: string) => {
+  const createUserDataAtomic = async (userObj: User, fullName: string, email: string, role: 'student' | 'instructor' = 'student', department?: string, whatsapp?: string) => {
     const userDocRef = doc(db, "users", userObj.uid);
     const counterDocRef = doc(db, "metadata", "counters");
 
@@ -123,6 +125,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isVerified: false,
         verificationCode,
         hasPaid: false,
+        role,
         createdAt: new Date().toISOString(),
       });
     });
@@ -130,14 +133,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return verificationCode;
   };
 
-  const signUp = async (email: string, password: string, fullName: string, department?: string, whatsapp?: string) => {
+  const signUp = async (email: string, password: string, fullName: string, role: 'student' | 'instructor' = 'student', department?: string, whatsapp?: string) => {
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const userObj = userCredential.user;
       
       await updateProfile(userObj, { displayName: fullName });
             
-      const vCode = await createUserDataAtomic(userObj, fullName, email, department, whatsapp);
+      const vCode = await createUserDataAtomic(userObj, fullName, email, role, department, whatsapp);
       
       const emailParams = {
         passcode: vCode,
@@ -177,7 +180,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const docSnap = await getDoc(docRef);
       
       if (!docSnap.exists()) {
-        await createUserDataAtomic(userObj, userObj.displayName || "Google User", userObj.email || "");
+        await createUserDataAtomic(userObj, userObj.displayName || "Google User", userObj.email || "", 'student');
         // Google users are pre-verified via Google's OAuth
         await updateDoc(docRef, { isVerified: true });
       }

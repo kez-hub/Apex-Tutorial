@@ -75,8 +75,9 @@ export default function CourseDetails() {
     { title: "Best Practices & Tips", lessons: 10, duration: "3h 20m" }
   ];
 
-  // Check if user has paid
-  if (user && userData && !userData.hasPaid && !course.enrolled) {
+  // Check if user has paid (Instructors bypass)
+  const isInstructor = userData?.role === 'instructor';
+  if (user && userData && !userData.hasPaid && !course.enrolled && !isInstructor) {
     return (
       <div className="min-h-screen bg-background">
         <Navbar isAuthenticated />

@@ -36,8 +36,8 @@ export function Navbar({ isAuthenticated = false }: NavbarProps) {
     ? [
         { href: "/dashboard", label: "Dashboard" },
         { href: "/courses", label: "Courses" },
-        { href: "/schedule", label: "Schedule" },
-      ]
+        userData?.role === 'student' && { href: "/schedule", label: "Schedule" },
+      ].filter(Boolean) as { href: string; label: string }[]
     : [
         { href: "/", label: "Home" },
         { href: "/courses", label: "Courses" },

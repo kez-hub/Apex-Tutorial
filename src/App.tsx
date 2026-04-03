@@ -23,6 +23,7 @@ import ContactUs from "./pages/ContactUs";
 import FAQ from "./pages/FAQ";
 import EditProfile from "./pages/EditProfile";
 import Settings from "./pages/Settings";
+import InstructorSignup from "./pages/InstructorSignup";
 import { PaymentModal } from "@/components/auth/PaymentModal";
 import { useAuth } from "@/contexts/AuthContext";
 import React from "react";
@@ -34,8 +35,8 @@ const GlobalPaymentHandler = () => {
   const [showModal, setShowModal] = React.useState(false);
 
   React.useEffect(() => {
-    // Show modal if user is logged in, verified, but hasn't paid
-    if (user && userData && userData.isVerified && !userData.hasPaid) {
+    // Show modal if user is logged in, verified, but hasn't paid AND IS A STUDENT
+    if (user && userData && userData.isVerified && !userData.hasPaid && userData.role === 'student') {
       setShowModal(true);
     }
   }, [user, userData]);
@@ -55,6 +56,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Landing />} />
             <Route path="/auth" element={<Auth />} />
+            <Route path="/instructor/signup" element={<InstructorSignup />} />
             <Route path="/confirm-email" element={<ConfirmEmail />} />
             <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
             <Route path="/courses" element={<Courses />} />

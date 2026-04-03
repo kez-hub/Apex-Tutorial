@@ -4,7 +4,8 @@ import {
   Clock, 
   Bell, 
   TrendingUp, 
-  ArrowRight
+  ArrowRight,
+  Plus
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -64,31 +65,37 @@ export default function Dashboard() {
             Welcome back, {userName.split(" ")[0]}! 👋
           </h1>
           <p className="mt-2 text-muted-foreground">
-            Continue your learning journey and achieve your goals.
+            {userData?.role === 'instructor' 
+              ? "Manage your courses and inspire your students." 
+              : "Continue your learning journey and achieve your goals."}
           </p>
         </div>
 
-        {/* Stats Grid */}
-        <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {stats.map((stat, index) => (
-            <Card key={stat.title} className="animate-fade-in border-border/50 shadow-card" style={{ animationDelay: `${index * 0.1}s` }}>
-              <CardContent className="flex items-center gap-4 p-6">
-                <div className={`flex h-12 w-12 items-center justify-center rounded-lg ${stat.bgColor}`}>
-                  <stat.icon className={`h-6 w-6 ${stat.color}`} />
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">{stat.title}</p>
-                  <p className="font-heading text-2xl font-bold">{stat.value}</p>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+        {/* Stats Grid - Only shown for students */}
+        {userData?.role === 'student' && (
+          <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {stats.map((stat, index) => (
+              <Card key={stat.title} className="animate-fade-in border-border/50 shadow-card" style={{ animationDelay: `${index * 0.1}s` }}>
+                <CardContent className="flex items-center gap-4 p-6">
+                  <div className={`flex h-12 w-12 items-center justify-center rounded-lg ${stat.bgColor}`}>
+                    <stat.icon className={`h-6 w-6 ${stat.color}`} />
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">{stat.title}</p>
+                    <p className="font-heading text-2xl font-bold">{stat.value}</p>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
 
         {/* Recommended Courses */}
-        <section className="mt-12">
+        <section className="mt-12 pb-20">
           <div className="mb-6 flex items-center justify-between">
-            <h2 className="font-heading text-xl font-semibold">Recommended for You</h2>
+            <h2 className="font-heading text-xl font-semibold">
+              {userData?.role === 'instructor' ? "Courses" : "Recommended for You"}
+            </h2>
             <Button variant="ghost" asChild>
               <Link to="/courses" className="text-primary">
                 Browse All
@@ -98,8 +105,8 @@ export default function Dashboard() {
           </div>
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {courses
-              .filter((c) => !c.enrolled)
-              .slice(0, 3)
+              .filter((c) => !enrolledCourseIds.includes(c.id))
+              .slice(0, 6)
               .map((course, index) => (
                 <div key={course.id} className="animate-fade-in" style={{ animationDelay: `${index * 0.1}s` }}>
                   <CourseCard course={course} />
@@ -107,6 +114,16 @@ export default function Dashboard() {
               ))}
           </div>
         </section>
+
+        {/* Floating Action Button for Instructors */}
+        {userData?.role === 'instructor' && (
+          <button 
+            className="fixed bottom-8 right-8 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-elevated hover:scale-110 active:scale-95 transition-all duration-300 animate-fade-in group"
+            title="Create New Course"
+          >
+            <Plus className="h-6 w-6 group-hover:rotate-90 transition-transform duration-300" />
+          </button>
+        )}
       </main>
 
       <Footer />
