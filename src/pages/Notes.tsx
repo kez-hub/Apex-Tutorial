@@ -48,7 +48,7 @@ interface Note {
 }
 
 export default function Notes() {
-  const { userData } = useAuth();
+  const { user, userData } = useAuth();
   const { notes, loading } = useNotes();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
@@ -57,6 +57,9 @@ export default function Notes() {
   const levels = ["All Levels", "Beginner", "Intermediate", "Advanced"];
 
   const filteredNotes = notes.filter((note) => {
+    // For instructors, only show their own notes
+    const isInstructorNote = !userData || userData.role !== "instructor" || note.instructorId === userData.uid;
+    
     const matchesSearch =
       note.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       note.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -65,7 +68,7 @@ export default function Notes() {
       selectedCategory === "All" || note.category === selectedCategory;
     const matchesLevel =
       selectedLevel === "All Levels" || note.level === selectedLevel;
-    return matchesSearch && matchesCategory && matchesLevel;
+    return isInstructorNote && matchesSearch && matchesCategory && matchesLevel;
   });
 
   const getLevelColor = (level: string) => {
@@ -154,10 +157,14 @@ export default function Notes() {
       <main className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="font-heading text-3xl font-bold mb-2">Study Notes</h1>
+          <h1 className="font-heading text-3xl font-bold mb-2">
+            {userData?.role === "instructor" ? "My Study Notes" : "Study Notes"}
+          </h1>
           <p className="text-muted-foreground">
-            Access comprehensive study materials and resources from expert
-            instructors.
+            {userData?.role === "instructor"
+              ? "Manage and view the study notes you've uploaded for your students."
+              : "Access comprehensive study materials and resources from expert instructors."
+            }
           </p>
         </div>
 

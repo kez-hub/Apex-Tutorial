@@ -75,6 +75,10 @@ export function Navbar({ isAuthenticated = false }: NavbarProps) {
         setUnreadMessages(unreadCount);
       },
       (error) => {
+        // Ignore permission errors during logout when user is no longer authenticated
+        if (error.code === "permission-denied" && !user) {
+          return;
+        }
         console.error("Messages unread count listener error:", error);
       },
     );
@@ -97,6 +101,7 @@ export function Navbar({ isAuthenticated = false }: NavbarProps) {
         userData?.role === "instructor"
           ? { href: "/quiz", label: "Quiz" }
           : { href: "/messages", label: "Messages" },
+        userData?.role === "instructor" && { href: "/notes", label: "Notes" },
         userData?.role === "student" && { href: "/notes", label: "Notes" },
         userData?.role === "student" && { href: "/quiz", label: "Quiz" },
         userData?.role === "student" && {

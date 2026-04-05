@@ -160,6 +160,10 @@ export default function Messages() {
               }
             },
             (error) => {
+              // Ignore permission errors during logout when user is no longer authenticated
+              if (error.code === "permission-denied" && !user) {
+                return;
+              }
               console.error("Conversations listener error:", error);
               toast({
                 title: "Unable to load conversations",
@@ -232,6 +236,10 @@ export default function Messages() {
         setMessages(msgs);
       },
       (error) => {
+        // Ignore permission errors during logout when user is no longer authenticated
+        if (error.code === "permission-denied" && !user) {
+          return;
+        }
         console.error("Messages snapshot error:", error);
         toast({
           title: "Unable to load messages",
@@ -337,7 +345,7 @@ export default function Messages() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-0 min-h-[calc(100vh-18rem)] rounded-lg overflow-hidden border border-border/50">
+          <div className="grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-0 min-h-[calc(100vh-18rem)] rounded-lg overflow-hidden border border-border/50 lg:pb-0 pb-20">
             {/* Conversations List - Hidden on mobile when viewing messages, always visible on desktop */}
             <div
               className={`${
@@ -414,7 +422,7 @@ export default function Messages() {
               <div
                 className={`${
                   showMessageView ? "block" : "hidden"
-                } lg:block flex flex-col bg-card`}
+                } lg:block flex flex-col bg-card relative`}
               >
                 <div className="border-b border-border/30 px-4 py-4 flex items-center gap-3">
                   <Button
@@ -441,7 +449,8 @@ export default function Messages() {
                   </div>
                 </div>
 
-                <ScrollArea className="flex-1 p-4 min-h-0">
+                {/* Messages Area - Add bottom padding on mobile for fixed input */}
+                <ScrollArea className="flex-1 p-4 min-h-0 lg:pb-4 pb-20">
                   {messages.length === 0 ? (
                     <div className="text-center text-muted-foreground py-8">
                       <p>No messages yet.</p>
@@ -481,7 +490,28 @@ export default function Messages() {
                   )}
                 </ScrollArea>
 
-                <div className="border-t border-border/30 bg-card px-4 py-4">
+                {/* Fixed Input Area for Mobile */}
+                <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-card border-t border-border/30 px-4 py-4 z-10">
+                  <div className="flex gap-2 max-w-6xl mx-auto">
+                    <Input
+                      placeholder="Type a message..."
+                      value={newMessage}
+                      onChange={(e) => setNewMessage(e.target.value)}
+                      onKeyPress={handleKeyPress}
+                      className="flex-1 bg-muted/50"
+                    />
+                    <Button
+                      onClick={sendMessage}
+                      disabled={!newMessage.trim()}
+                      size="icon"
+                    >
+                      <Send className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Desktop Input Area */}
+                <div className="hidden lg:block border-t border-border/30 bg-card px-4 py-4">
                   <div className="flex gap-2">
                     <Input
                       placeholder="Type a message..."
