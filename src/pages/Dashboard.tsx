@@ -439,7 +439,9 @@ export default function Dashboard() {
                   title="Videos"
                 >
                   <Video className="h-5 w-5 text-primary" />
-                  <span className="text-sm font-medium">Videos</span>
+                  <span className="text-sm font-medium text-gray-900">
+                    Videos
+                  </span>
                 </button>
 
                 <button
@@ -452,7 +454,9 @@ export default function Dashboard() {
                   title="Quiz"
                 >
                   <ClipboardList className="h-5 w-5 text-secondary" />
-                  <span className="text-sm font-medium">Quiz</span>
+                  <span className="text-sm font-medium text-gray-900">
+                    Quiz
+                  </span>
                 </button>
 
                 <button
@@ -465,7 +469,9 @@ export default function Dashboard() {
                   title="Notes"
                 >
                   <FileText className="h-5 w-5 text-accent" />
-                  <span className="text-sm font-medium">Notes</span>
+                  <span className="text-sm font-medium text-gray-900">
+                    Notes
+                  </span>
                 </button>
               </div>
             )}

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { BookOpen, Menu, X, User, Bell, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/contexts/AuthContext";
+import { collection, query, where, onSnapshot } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 
 interface NavbarProps {
   isAuthenticated?: boolean;
@@ -18,6 +20,7 @@ interface NavbarProps {
 
 export function Navbar({ isAuthenticated = false }: NavbarProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [unreadNotifications, setUnreadNotifications] = useState(0);
   const location = useLocation();
   const navigate = useNavigate();
   const { user, userData, signOut } = useAuth();
@@ -30,6 +33,19 @@ export function Navbar({ isAuthenticated = false }: NavbarProps) {
     "User";
   const userEmail = user?.email || "";
   const userAvatar = userData?.avatarBase64 || user?.photoURL || "";
+
+  useEffect(() => {
+    if (!user) return;
+
+    const notificationsRef = collection(db, "users", user.uid, "notifications");
+    const q = query(notificationsRef, where("isRead", "==", false));
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      setUnreadNotifications(snapshot.size);
+    });
+
+    return () => unsubscribe();
+  }, [user]);
 
   const handleLogout = async () => {
     await signOut();
@@ -100,7 +116,11 @@ export function Navbar({ isAuthenticated = false }: NavbarProps) {
                 >
                   <Link to="/notifications">
                     <Bell className="h-5 w-5" />
-                    <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-accent animate-pulse" />
+                    {unreadNotifications > 0 && (
+                      <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-red-500 text-white text-xs flex items-center justify-center font-bold">
+                        {unreadNotifications > 99 ? "99+" : unreadNotifications}
+                      </span>
+                    )}
                   </Link>
                 </Button>
                 <DropdownMenu>

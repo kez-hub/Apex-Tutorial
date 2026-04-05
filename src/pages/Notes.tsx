@@ -2,7 +2,6 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import {
   FileText,
-  Download,
   Eye,
   BookOpen,
   Clock,
@@ -240,18 +239,11 @@ export default function Notes() {
                     <Button
                       size="sm"
                       variant="outline"
-                      className="flex-1"
+                      className="w-full"
                       onClick={() => handleViewPdf(note.pdfUrl, note.title)}
                     >
                       <Eye className="h-4 w-4 mr-2" />
                       View PDF
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => handleDownloadPdf(note.pdfUrl, note.title)}
-                    >
-                      <Download className="h-4 w-4" />
                     </Button>
                   </div>
                 </CardContent>

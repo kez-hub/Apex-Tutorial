@@ -1,8 +1,17 @@
 import { useState, useRef, useEffect } from "react";
-import { Play, Pause, Volume2, VolumeX, Maximize, SkipBack, SkipForward } from "lucide-react";
+import {
+  Play,
+  Pause,
+  Volume2,
+  VolumeX,
+  Maximize,
+  SkipBack,
+  SkipForward,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { cn } from "@/lib/utils";
+import { getYouTubeEmbedUrl, isYouTubeUrl } from "@/lib/videoUtils";
 
 interface VideoPlayerProps {
   src: string;
@@ -11,7 +20,55 @@ interface VideoPlayerProps {
   className?: string;
 }
 
-export function VideoPlayer({ src, poster, title, className }: VideoPlayerProps) {
+export function VideoPlayer({
+  src,
+  poster,
+  title,
+  className,
+}: VideoPlayerProps) {
+  const isYouTube = isYouTubeUrl(src);
+  const embedUrl = isYouTube ? getYouTubeEmbedUrl(src) : null;
+
+  // YouTube embed rendering
+  if (isYouTube && embedUrl) {
+    return (
+      <div
+        className={cn(
+          "aspect-video w-full bg-black overflow-hidden",
+          className,
+        )}
+      >
+        <iframe
+          width="100%"
+          height="100%"
+          src={embedUrl}
+          title={title || "Video player"}
+          frameBorder="0"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowFullScreen
+          className="w-full h-full"
+        />
+      </div>
+    );
+  }
+
+  // Regular video player for direct video URLs
+  return (
+    <VideoPlayerRegular
+      src={src}
+      poster={poster}
+      title={title}
+      className={className}
+    />
+  );
+}
+
+function VideoPlayerRegular({
+  src,
+  poster,
+  title,
+  className,
+}: VideoPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const hideControlsTimeout = useRef<NodeJS.Timeout | null>(null);
@@ -142,7 +199,7 @@ export function VideoPlayer({ src, poster, title, className }: VideoPlayerProps)
       className={cn(
         "relative w-full overflow-hidden rounded-xl bg-foreground/95 group",
         "aspect-[16/9]",
-        className
+        className,
       )}
       onMouseMove={handleMouseMove}
       onMouseLeave={() => isPlaying && setShowControls(false)}
@@ -174,7 +231,9 @@ export function VideoPlayer({ src, poster, title, className }: VideoPlayerProps)
       {/* Title overlay */}
       {title && (
         <div className="absolute left-0 right-0 top-0 bg-gradient-to-b from-foreground/60 to-transparent p-4">
-          <h3 className="font-heading font-semibold text-primary-foreground">{title}</h3>
+          <h3 className="font-heading font-semibold text-primary-foreground">
+            {title}
+          </h3>
         </div>
       )}
 
@@ -182,7 +241,7 @@ export function VideoPlayer({ src, poster, title, className }: VideoPlayerProps)
       <div
         className={cn(
           "absolute bottom-0 left-0 right-0 bg-gradient-to-t from-foreground/80 to-transparent p-4 transition-opacity duration-300",
-          showControls ? "opacity-100" : "opacity-0"
+          showControls ? "opacity-100" : "opacity-0",
         )}
       >
         {/* Progress bar */}

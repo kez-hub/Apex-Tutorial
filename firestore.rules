@@ -7,6 +7,8 @@ service cloud.firestore {
     match /users/{userId} {
       // Allow authenticated users to read their own document
       allow read: if request.auth != null && request.auth.uid == userId;
+      // Allow authenticated users to read other user profiles (for instructor info)
+      allow read: if request.auth != null;
       // Allow public reads to fetch instructor avatars and names
       allow read: if request.auth == null;
       // Allow authenticated users to update their own data

@@ -2,13 +2,10 @@ import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import {
   Clock,
-  BookOpen,
   Star,
   Users,
   PlayCircle,
   CheckCircle,
-  BarChart,
-  Award,
   ArrowLeft,
   Lock,
   Plus,
@@ -16,6 +13,8 @@ import {
   Edit,
   Trash2,
   Video,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -59,6 +58,7 @@ export default function CourseDetails() {
   const [modules, setModules] = useState<CourseModule[]>([]);
   const [isAddingModule, setIsAddingModule] = useState(false);
   const [editingModule, setEditingModule] = useState<CourseModule | null>(null);
+  const [currentModuleIndex, setCurrentModuleIndex] = useState(0);
   const [instructorProfile, setInstructorProfile] = useState<any>(null);
   const [moduleForm, setModuleForm] = useState({
     title: "",
@@ -317,20 +317,10 @@ export default function CourseDetails() {
   };
 
   const learningPoints = [
-    "Build real-world projects from scratch",
     "Understand core concepts and best practices",
     "Get lifetime access to course materials",
-    "Earn a certificate upon completion",
     "Access to exclusive community",
     "Regular updates with new content",
-  ];
-
-  const curriculum = [
-    { title: "Introduction & Setup", lessons: 8, duration: "1h 30m" },
-    { title: "Core Concepts", lessons: 15, duration: "4h 15m" },
-    { title: "Advanced Techniques", lessons: 20, duration: "6h 45m" },
-    { title: "Real-World Projects", lessons: 12, duration: "8h 30m" },
-    { title: "Best Practices & Tips", lessons: 10, duration: "3h 20m" },
   ];
 
   // Check if user has paid (Instructors bypass)
@@ -422,8 +412,8 @@ export default function CourseDetails() {
                   <span>{course.duration}</span>
                 </div>
                 <div className="flex items-center gap-1 text-muted-foreground">
-                  <BookOpen className="h-4 w-4" />
-                  <span>{course.lessons} lessons</span>
+                  <Video className="h-4 w-4" />
+                  <span>{modules.length} modules</span>
                 </div>
                 <Badge className="bg-primary/10 text-primary border-primary/20">
                   {course.level}
@@ -450,11 +440,60 @@ export default function CourseDetails() {
             <div className="animate-slide-in-right">
               <Card className="sticky top-24 overflow-hidden border-border/50 shadow-elevated max-w-full">
                 {isEnrolled ? (
-                  <VideoPlayer
-                    src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4"
-                    poster={course.thumbnail}
-                    title={`Lesson 1: Introduction to ${course.title}`}
-                  />
+                  <>
+                    <VideoPlayer
+                      src={
+                        modules.length > 0 &&
+                        modules[currentModuleIndex]?.videoUrl
+                          ? modules[currentModuleIndex].videoUrl
+                          : "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4"
+                      }
+                      poster={course.thumbnail}
+                      title={
+                        modules.length > 0
+                          ? `${modules[currentModuleIndex]?.title || `Lesson ${currentModuleIndex + 1}`}`
+                          : `Introduction to ${course.title}`
+                      }
+                    />
+                    {modules.length > 1 && (
+                      <div className="flex items-center justify-between px-4 py-2 bg-muted/50">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() =>
+                            setCurrentModuleIndex(
+                              Math.max(0, currentModuleIndex - 1),
+                            )
+                          }
+                          disabled={currentModuleIndex === 0}
+                          className="flex items-center gap-2"
+                        >
+                          <ChevronLeft className="h-4 w-4" />
+                          Previous
+                        </Button>
+                        <span className="text-sm font-medium">
+                          {currentModuleIndex + 1} of {modules.length}
+                        </span>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() =>
+                            setCurrentModuleIndex(
+                              Math.min(
+                                modules.length - 1,
+                                currentModuleIndex + 1,
+                              ),
+                            )
+                          }
+                          disabled={currentModuleIndex === modules.length - 1}
+                          className="flex items-center gap-2"
+                        >
+                          Next
+                          <ChevronRight className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    )}
+                  </>
                 ) : (
                   <div className="aspect-video overflow-hidden">
                     <img
@@ -485,13 +524,19 @@ export default function CourseDetails() {
                         className="w-full"
                         size="lg"
                         onClick={() => {
-                          const videoEl = document.querySelector("video");
-                          if (videoEl) {
-                            videoEl.scrollIntoView({
+                          const videoPlayer = document.querySelector(
+                            "[class*='aspect-video']",
+                          );
+                          if (videoPlayer) {
+                            videoPlayer.scrollIntoView({
                               behavior: "smooth",
                               block: "center",
                             });
-                            videoEl.play();
+                            // Try to play if it's a regular video element
+                            const videoEl = videoPlayer.querySelector("video");
+                            if (videoEl) {
+                              videoEl.play();
+                            }
                           }
                         }}
                       >
@@ -517,19 +562,7 @@ export default function CourseDetails() {
                     <div className="space-y-2 text-sm">
                       <div className="flex items-center gap-2 text-muted-foreground">
                         <PlayCircle className="h-4 w-4" />
-                        <span>{course.duration} on-demand video</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-muted-foreground">
-                        <BookOpen className="h-4 w-4" />
-                        <span>{course.lessons} lessons</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-muted-foreground">
-                        <BarChart className="h-4 w-4" />
-                        <span>Downloadable resources</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-muted-foreground">
-                        <Award className="h-4 w-4" />
-                        <span>Certificate of completion</span>
+                        <span>{modules.length} video modules</span>
                       </div>
                     </div>
                   </div>
@@ -562,31 +595,46 @@ export default function CourseDetails() {
             </div>
 
             {/* Curriculum */}
-            <div className="animate-fade-in" style={{ animationDelay: "0.1s" }}>
-              <h2 className="mb-6 font-heading text-2xl font-bold">
-                Course Curriculum
-              </h2>
-              <div className="space-y-3">
-                {curriculum.map((section, index) => (
-                  <Card key={index} className="border-border/50">
-                    <CardContent className="flex items-center justify-between p-4">
-                      <div className="flex items-center gap-4">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 font-semibold text-primary">
-                          {index + 1}
+            {modules.length > 0 && (
+              <div
+                className="animate-fade-in"
+                style={{ animationDelay: "0.1s" }}
+              >
+                <h2 className="mb-6 font-heading text-2xl font-bold">
+                  Course Curriculum
+                </h2>
+                <div className="space-y-3">
+                  {modules.map((module, index) => (
+                    <Card
+                      key={module.id || index}
+                      className="border-border/50 hover:shadow-md transition-shadow"
+                    >
+                      <CardContent className="flex items-center justify-between p-4">
+                        <div className="flex items-center gap-4 flex-1">
+                          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 font-semibold text-primary flex-shrink-0">
+                            {index + 1}
+                          </div>
+                          <div className="flex-1">
+                            <h4 className="font-semibold">{module.title}</h4>
+                            {module.description && (
+                              <p className="text-sm text-muted-foreground line-clamp-1">
+                                {module.description}
+                              </p>
+                            )}
+                            {module.duration && (
+                              <p className="text-xs text-muted-foreground mt-1">
+                                {module.duration}
+                              </p>
+                            )}
+                          </div>
                         </div>
-                        <div>
-                          <h4 className="font-semibold">{section.title}</h4>
-                          <p className="text-sm text-muted-foreground">
-                            {section.lessons} lessons • {section.duration}
-                          </p>
-                        </div>
-                      </div>
-                      <BookOpen className="h-5 w-5 text-muted-foreground" />
-                    </CardContent>
-                  </Card>
-                ))}
+                        <Video className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Module Management for Instructors */}
             {isInstructor && course.instructorId === user?.uid && (
@@ -802,10 +850,11 @@ export default function CourseDetails() {
                     videoUrl: e.target.value,
                   }))
                 }
-                placeholder="https://example.com/video.mp4"
+                placeholder="https://example.com/video.mp4 or https://youtube.com/watch?v=..."
               />
               <p className="text-xs text-muted-foreground mt-1">
-                Upload your video to a hosting service and paste the URL here
+                Paste a direct video URL or YouTube link. YouTube videos will be
+                embedded and playable directly on your website.
               </p>
             </div>
 
