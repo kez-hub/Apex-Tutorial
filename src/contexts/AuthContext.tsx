@@ -14,7 +14,6 @@ import {
   GoogleAuthProvider,
   signInWithPopup,
   updateProfile,
-  sendPasswordResetEmail,
 } from "firebase/auth";
 import {
   doc,
@@ -29,6 +28,7 @@ import {
 } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
 import emailjs from "@emailjs/browser";
+import bcrypt from "bcryptjs";
 import { LearningAlarm } from "@/lib/data";
 
 export interface UserData {
@@ -47,6 +47,7 @@ export interface UserData {
   bannerBase64?: string;
   hasPaid: boolean;
   role: "student" | "instructor";
+  passwordHash?: string; // Hashed password for our custom auth
 }
 
 interface AuthContextType {
@@ -135,50 +136,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signIn = async (email: string, password: string) => {
     try {
-      // First check if there's a pending password reset
+      // First, get the user data from Firestore to check the hashed password
       const usersRef = collection(db, "users");
       const q = query(usersRef, where("email", "==", email));
       const querySnapshot = await getDocs(q);
 
-      if (!querySnapshot.empty) {
-        const userDoc = querySnapshot.docs[0];
-        const userData = userDoc.data();
-
-        // If there's a pending password and it matches, update Firebase Auth password
-        if (
-          userData.pendingNewPassword &&
-          userData.pendingNewPassword === password
-        ) {
-          // Try to sign in with the old password first (if user remembers it)
-          try {
-            const userCredential = await signInWithEmailAndPassword(
-              auth,
-              email,
-              userData.pendingNewPassword,
-            );
-            // If successful, clear the pending password
-            await updateDoc(userDoc.ref, { pendingNewPassword: null });
-            return { error: null };
-          } catch (oldPasswordError) {
-            // If old password doesn't work, we need to use a different approach
-            // For now, let's try to update the password using a temporary sign in
-            // This is a workaround - in production, use Firebase Admin SDK
-
-            // Clear the pending password since the user is trying to use the new one
-            await updateDoc(userDoc.ref, { pendingNewPassword: null });
-
-            // For demo purposes, let's create a temporary user credential
-            // This is not secure and should be replaced with proper server-side password reset
-            return {
-              error: new Error(
-                "Password has been reset. Please try signing in again.",
-              ),
-            };
-          }
-        }
+      if (querySnapshot.empty) {
+        throw new Error("User not found");
       }
 
-      // Normal sign in
+      const userDoc = querySnapshot.docs[0];
+      const userData = userDoc.data() as UserData;
+      const passwordHash = userData.passwordHash;
+
+      if (!passwordHash) {
+        throw new Error("Password not set for this account");
+      }
+
+      // Verify the password
+      const isPasswordValid = await bcrypt.compare(password, passwordHash);
+      if (!isPasswordValid) {
+        throw new Error("Invalid password");
+      }
+
+      // If password is valid, sign in with Firebase Auth
       await signInWithEmailAndPassword(auth, email, password);
       return { error: null };
     } catch (e) {
@@ -193,6 +174,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     role: "student" | "instructor" = "student",
     department?: string,
     whatsapp?: string,
+    passwordHash?: string,
   ) => {
     const userDocRef = doc(db, "users", userObj.uid);
     const counterDocRef = doc(db, "metadata", "counters");
@@ -210,15 +192,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         currentCount = counterDoc.data().userCount || 0;
       }
 
-      const newCount = currentCount + 1;
-      const tutorialId = "APEX-" + String(newCount).padStart(3, "0");
-
-      transaction.set(counterDocRef, { userCount: newCount }, { merge: true });
+      // Only generate tutorial ID for students, not instructors
+      let tutorialId = "";
+      if (role === "student") {
+        const newCount = currentCount + 1;
+        tutorialId = "APEX-" + String(newCount).padStart(3, "0");
+        transaction.set(
+          counterDocRef,
+          { userCount: newCount },
+          { merge: true },
+        );
+      }
 
       transaction.set(userDocRef, {
         email,
         full_name: fullName,
-        tutorialId,
+        tutorialId, // Empty string for instructors
         department: department || "",
         whatsapp: whatsapp || "",
         enrolledCourses: [],
@@ -229,6 +218,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         verificationCode,
         hasPaid: false,
         role,
+        passwordHash: passwordHash || null,
         createdAt: new Date().toISOString(),
       });
     });
@@ -245,10 +235,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     whatsapp?: string,
   ) => {
     try {
+      // Hash the password
+      const saltRounds = 12;
+      const passwordHash = await bcrypt.hash(password, saltRounds);
+
       const userCredential = await createUserWithEmailAndPassword(
         auth,
         email,
-        password,
+        password, // Still create Firebase Auth account for other features
       );
       const userObj = userCredential.user;
 
@@ -261,6 +255,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         role,
         department,
         whatsapp,
+        passwordHash, // Pass the hashed password
       );
 
       const emailParams = {
@@ -405,73 +400,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     newPassword: string,
   ) => {
     try {
-      if (!newPassword || newPassword.length === 0) {
-        return { error: new Error("Password is required") };
-      }
-
       // First verify the code
       const verifyResult = await verifyResetCode(email, code);
       if (verifyResult.error) {
         return verifyResult;
       }
 
-      // Get user document
+      // Hash the new password
+      const saltRounds = 12;
+      const passwordHash = await bcrypt.hash(newPassword, saltRounds);
+
+      // Update the password hash in Firestore
       const usersRef = collection(db, "users");
       const q = query(usersRef, where("email", "==", email));
       const querySnapshot = await getDocs(q);
-
-      if (querySnapshot.empty) {
-        return { error: new Error("User not found") };
-      }
-
       const userDoc = querySnapshot.docs[0];
 
-      // Generate a secure token for password reset completion
-      const resetToken =
-        Math.random().toString(36).substring(2, 15) +
-        Math.random().toString(36).substring(2, 15) +
-        Math.random().toString(36).substring(2, 15);
-
-      // Store the temporary password with an expiring token
-      // Note: In production, this should be hashed and handled via Cloud Functions
       await updateDoc(userDoc.ref, {
+        passwordHash,
         resetCode: null,
         resetCodeExpiry: null,
-        pendingPasswordReset: true,
-        pendingPasswordUpdate: newPassword, // Temporary storage - should be hashed in production
-        resetToken: resetToken,
-        resetTokenExpiry: new Date(Date.now() + 24 * 60 * 60000).toISOString(), // 24 hours
       });
-
-      // Send confirmation email with instructions
-      const emailParams = {
-        email: email,
-        subject: "Password Reset Complete",
-        message:
-          "Your password has been successfully verified and updated. You can now sign in with your new password. If you did not request this change, please contact support immediately.",
-        time: new Date().toLocaleTimeString([], {
-          hour: "2-digit",
-          minute: "2-digit",
-        }),
-      };
-
-      try {
-        await emailjs.send(
-          "service_29d3d1f",
-          "template_pyppw0d",
-          emailParams,
-          "SVWb5wSsyH14FfE4I",
-        );
-        console.log("Password reset confirmation email sent.");
-      } catch (emailErr) {
-        console.error(
-          "Failed to send password reset confirmation email",
-          emailErr,
-        );
-      }
 
       return { error: null };
     } catch (e) {
+      console.error("Password reset error:", e);
       return { error: e as Error };
     }
   };

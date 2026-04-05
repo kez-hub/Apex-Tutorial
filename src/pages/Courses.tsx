@@ -14,7 +14,7 @@ import { Footer } from "@/components/layout/Footer";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCourses } from "@/hooks/useCourses";
-import { courses as initialCourses, Course, categories } from "@/lib/data";
+import { Course, categories } from "@/lib/data";
 import { AddCourseModal } from "@/components/courses/AddCourseModal";
 import { CourseCard } from "@/components/courses/CourseCard";
 
@@ -29,10 +29,13 @@ export default function Courses() {
   const levels = ["All Levels", "Beginner", "Intermediate", "Advanced"];
 
   const filteredCourses = courses.filter((course) => {
-    const matchesSearch = course.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    const matchesSearch =
+      course.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       course.instructor.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = selectedCategory === "All" || course.category === selectedCategory;
-    const matchesLevel = selectedLevel === "All Levels" || course.level === selectedLevel;
+    const matchesCategory =
+      selectedCategory === "All" || course.category === selectedCategory;
+    const matchesLevel =
+      selectedLevel === "All Levels" || course.level === selectedLevel;
     return matchesSearch && matchesCategory && matchesLevel;
   });
 
@@ -40,12 +43,12 @@ export default function Courses() {
     <div className="min-h-screen bg-background">
       <Navbar isAuthenticated />
 
-      <AddCourseModal 
-        isOpen={isAddModalOpen} 
+      <AddCourseModal
+        isOpen={isAddModalOpen}
         onOpenChange={(open) => {
           setIsAddModalOpen(open);
           if (!open) setCourseToEdit(null);
-        }} 
+        }}
         initialData={courseToEdit}
       />
 
@@ -59,7 +62,10 @@ export default function Courses() {
         </div>
 
         {/* Filters */}
-        <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-center animate-fade-in" style={{ animationDelay: "0.1s" }}>
+        <div
+          className="mb-8 flex flex-col gap-4 md:flex-row md:items-center animate-fade-in"
+          style={{ animationDelay: "0.1s" }}
+        >
           {/* Search */}
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -75,7 +81,10 @@ export default function Courses() {
           {/* Category Filter */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="min-w-[160px] justify-between">
+              <Button
+                variant="outline"
+                className="min-w-[160px] justify-between"
+              >
                 <span className="flex items-center gap-2">
                   <Filter className="h-4 w-4" />
                   {selectedCategory}
@@ -88,7 +97,11 @@ export default function Courses() {
                 <DropdownMenuItem
                   key={category}
                   onClick={() => setSelectedCategory(category)}
-                  className={selectedCategory === category ? "bg-primary/10 text-primary" : ""}
+                  className={
+                    selectedCategory === category
+                      ? "bg-primary/10 text-primary"
+                      : ""
+                  }
                 >
                   {category}
                 </DropdownMenuItem>
@@ -99,7 +112,10 @@ export default function Courses() {
           {/* Level Filter */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="min-w-[140px] justify-between">
+              <Button
+                variant="outline"
+                className="min-w-[140px] justify-between"
+              >
                 {selectedLevel}
                 <ChevronDown className="h-4 w-4" />
               </Button>
@@ -109,7 +125,9 @@ export default function Courses() {
                 <DropdownMenuItem
                   key={level}
                   onClick={() => setSelectedLevel(level)}
-                  className={selectedLevel === level ? "bg-primary/10 text-primary" : ""}
+                  className={
+                    selectedLevel === level ? "bg-primary/10 text-primary" : ""
+                  }
                 >
                   {level}
                 </DropdownMenuItem>
@@ -119,14 +137,19 @@ export default function Courses() {
         </div>
 
         {/* Category Pills */}
-        <div className="mb-8 flex flex-wrap gap-2 animate-fade-in" style={{ animationDelay: "0.2s" }}>
+        <div
+          className="mb-8 flex flex-wrap gap-2 animate-fade-in"
+          style={{ animationDelay: "0.2s" }}
+        >
           {categories.map((category) => (
             <Button
               key={category}
               variant={selectedCategory === category ? "default" : "outline"}
               size="sm"
               onClick={() => setSelectedCategory(category)}
-              className={selectedCategory === category ? "gradient-primary" : ""}
+              className={
+                selectedCategory === category ? "gradient-primary" : ""
+              }
             >
               {category}
             </Button>
@@ -134,8 +157,12 @@ export default function Courses() {
         </div>
 
         {/* Results Count */}
-        <p className="mb-6 text-sm text-muted-foreground animate-fade-in" style={{ animationDelay: "0.3s" }}>
-          Showing {filteredCourses.length} course{filteredCourses.length !== 1 ? "s" : ""}
+        <p
+          className="mb-6 text-sm text-muted-foreground animate-fade-in"
+          style={{ animationDelay: "0.3s" }}
+        >
+          Showing {filteredCourses.length} course
+          {filteredCourses.length !== 1 ? "s" : ""}
         </p>
 
         {/* Course Grid */}
@@ -144,7 +171,9 @@ export default function Courses() {
             <div className="mb-4 rounded-full bg-muted p-6">
               <Search className="h-8 w-8 text-muted-foreground" />
             </div>
-            <h3 className="font-heading text-xl font-semibold">No courses found</h3>
+            <h3 className="font-heading text-xl font-semibold">
+              No courses found
+            </h3>
             <p className="mt-2 text-muted-foreground">
               Try adjusting your search or filter criteria
             </p>
@@ -163,9 +192,13 @@ export default function Courses() {
         ) : (
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {filteredCourses.map((course, index) => (
-              <div key={course.id} className="animate-fade-in" style={{ animationDelay: `${index * 0.05}s` }}>
-                <CourseCard 
-                  course={course} 
+              <div
+                key={course.id}
+                className="animate-fade-in"
+                style={{ animationDelay: `${index * 0.05}s` }}
+              >
+                <CourseCard
+                  course={course}
                   onEdit={(c) => {
                     setCourseToEdit(c);
                     setIsAddModalOpen(true);

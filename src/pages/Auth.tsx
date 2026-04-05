@@ -122,6 +122,7 @@ export default function Auth() {
           email,
           password,
           name,
+          "student",
           department,
           whatsapp,
         );
