@@ -82,13 +82,15 @@ export default function CourseDetails() {
           // Fetch instructor profile if instructorId exists
           if (courseData.instructorId) {
             const instructorDoc = doc(db, "users", courseData.instructorId);
-            getDoc(instructorDoc).then((instructorSnapshot) => {
-              if (instructorSnapshot.exists()) {
-                setInstructorProfile(instructorSnapshot.data());
-              }
-            }).catch((error) => {
-              console.error("Error fetching instructor profile:", error);
-            });
+            getDoc(instructorDoc)
+              .then((instructorSnapshot) => {
+                if (instructorSnapshot.exists()) {
+                  setInstructorProfile(instructorSnapshot.data());
+                }
+              })
+              .catch((error) => {
+                console.error("Error fetching instructor profile:", error);
+              });
           }
         } else {
           setCourse(null);
@@ -296,7 +298,9 @@ export default function CourseDetails() {
       });
 
       // Update local state
-      setCourse(prev => prev ? { ...prev, students: prev.students + 1 } : null);
+      setCourse((prev) =>
+        prev ? { ...prev, students: prev.students + 1 } : null,
+      );
 
       toast({
         title: "Enrolled successfully! 🎉",
@@ -705,7 +709,10 @@ export default function CourseDetails() {
                 <div className="flex items-center gap-3">
                   <Avatar className="h-16 w-16">
                     <AvatarImage
-                      src={instructorProfile?.avatarBase64 || course.instructorAvatar}
+                      src={
+                        instructorProfile?.avatarBase64 ||
+                        course.instructorAvatar
+                      }
                       alt={course.instructor}
                       className="object-cover"
                     />
@@ -721,7 +728,8 @@ export default function CourseDetails() {
                   </div>
                 </div>
                 <p className="mt-4 text-sm text-muted-foreground">
-                  {instructorProfile?.bio || "A passionate educator with years of experience helping students achieve their learning goals."}
+                  {instructorProfile?.bio ||
+                    "A passionate educator with years of experience helping students achieve their learning goals."}
                 </p>
               </CardContent>
             </Card>

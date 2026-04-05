@@ -1,11 +1,25 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { User, Mail, Phone, BookOpen, Save, ArrowLeft, FileText } from "lucide-react";
+import {
+  User,
+  Mail,
+  Phone,
+  BookOpen,
+  Save,
+  ArrowLeft,
+  FileText,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import {
   Select,
   SelectContent,
@@ -21,14 +35,32 @@ import { db } from "@/lib/firebase";
 import { useToast } from "@/hooks/use-toast";
 
 const departments = [
-  "Biological Science(s)", "Biochemistry", "Microbiology", "Pure and Industrial Chemistry", 
-  "Faculty of Physical Sciences", "Computer Science", "Geology", "Mathematics", 
-  "Industrial Physics", "Physics", "Statistics", "Nursing Science", 
-  "Medical Laboratory Science", "Anatomy", "Physiology", "Medicine and Surgery", 
-  "Faculty of Engineering", "Civil Engineering", "Electrical/Electronic Engineering", 
-  "Mechanical Engineering", "Agricultural Economics and Extension", "Animal Science", 
-  "Crop Science And Horticulture", "Soil Science", "Fishery & Aquaculture", 
-  "Food Science & Technology"
+  "Biological Science(s)",
+  "Biochemistry",
+  "Microbiology",
+  "Pure and Industrial Chemistry",
+  "Faculty of Physical Sciences",
+  "Computer Science",
+  "Geology",
+  "Mathematics",
+  "Industrial Physics",
+  "Physics",
+  "Statistics",
+  "Nursing Science",
+  "Medical Laboratory Science",
+  "Anatomy",
+  "Physiology",
+  "Medicine and Surgery",
+  "Faculty of Engineering",
+  "Civil Engineering",
+  "Electrical/Electronic Engineering",
+  "Mechanical Engineering",
+  "Agricultural Economics and Extension",
+  "Animal Science",
+  "Crop Science And Horticulture",
+  "Soil Science",
+  "Fishery & Aquaculture",
+  "Food Science & Technology",
 ];
 
 export default function EditProfile() {
@@ -92,11 +124,11 @@ export default function EditProfile() {
   return (
     <div className="min-h-screen bg-background">
       <Navbar isAuthenticated />
-      
+
       <main className="container mx-auto px-4 py-12 max-w-2xl">
-        <Button 
-          variant="ghost" 
-          className="mb-6 gap-2" 
+        <Button
+          variant="ghost"
+          className="mb-6 gap-2"
           onClick={() => navigate("/profile")}
         >
           <ArrowLeft className="h-4 w-4" />
@@ -105,8 +137,12 @@ export default function EditProfile() {
 
         <Card className="border-border/50 shadow-card animate-fade-in">
           <CardHeader>
-            <CardTitle className="text-2xl font-heading">Edit Your Profile</CardTitle>
-            <CardDescription>Update your personal information and academic details.</CardDescription>
+            <CardTitle className="text-2xl font-heading">
+              Edit Your Profile
+            </CardTitle>
+            <CardDescription>
+              Update your personal information and academic details.
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSave} className="space-y-6">
@@ -135,7 +171,9 @@ export default function EditProfile() {
                     className="pl-10 bg-muted cursor-not-allowed"
                   />
                 </div>
-                <p className="text-xs text-muted-foreground italic">Email changes are restricted for security.</p>
+                <p className="text-xs text-muted-foreground italic">
+                  Email changes are restricted for security.
+                </p>
               </div>
 
               <div className="space-y-2">
@@ -149,7 +187,9 @@ export default function EditProfile() {
                     className="pl-10 bg-muted cursor-not-allowed opacity-70"
                   />
                 </div>
-                <p className="text-xs text-muted-foreground italic">Your department is locked to your account record.</p>
+                <p className="text-xs text-muted-foreground italic">
+                  Your department is locked to your account record.
+                </p>
               </div>
 
               <div className="space-y-2">
@@ -164,7 +204,9 @@ export default function EditProfile() {
                     placeholder="Not set"
                   />
                 </div>
-                <p className="text-xs text-muted-foreground italic">Phone numbers cannot be changed here for security.</p>
+                <p className="text-xs text-muted-foreground italic">
+                  Phone numbers cannot be changed here for security.
+                </p>
               </div>
 
               {userData?.role === "instructor" && (
@@ -188,12 +230,29 @@ export default function EditProfile() {
               )}
 
               <div className="pt-4">
-                <Button type="submit" variant="gradient" className="w-full h-12" disabled={isLoading}>
+                <Button
+                  type="submit"
+                  variant="gradient"
+                  className="w-full h-12"
+                  disabled={isLoading}
+                >
                   {isLoading ? (
                     <span className="flex items-center gap-2">
                       <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                          fill="none"
+                        />
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        />
                       </svg>
                       Updating...
                     </span>
