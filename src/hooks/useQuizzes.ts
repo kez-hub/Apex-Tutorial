@@ -19,6 +19,7 @@ interface Quiz {
   instructorName: string;
   createdAt: string;
   updatedAt: string;
+  completions?: Record<string, { score: number; completedAt: string }>;
 }
 
 export function useQuizzes() {

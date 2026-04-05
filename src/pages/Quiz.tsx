@@ -32,6 +32,7 @@ interface Quiz {
   maxScore?: number;
   completedAt?: Date;
   instructorId: string;
+  completions?: Record<string, { score: number; completedAt: string }>;
 }
 
 export default function Quiz() {
@@ -41,8 +42,24 @@ export default function Quiz() {
   const instructorQuizzes = quizzes.filter(
     (quiz) => quiz.instructorId === user?.uid,
   );
-  const completedQuizzes = quizzes.filter((q) => q.completed);
-  const pendingQuizzes = quizzes.filter((q) => !q.completed);
+
+  // Check user-specific completion status
+  const completedQuizzes = quizzes.filter((q) => {
+    const completions =
+      (q.completions as Record<
+        string,
+        { score: number; completedAt: string }
+      >) || {};
+    return completions[user?.uid || ""] !== undefined;
+  });
+  const pendingQuizzes = quizzes.filter((q) => {
+    const completions =
+      (q.completions as Record<
+        string,
+        { score: number; completedAt: string }
+      >) || {};
+    return completions[user?.uid || ""] === undefined;
+  });
 
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
@@ -218,11 +235,15 @@ export default function Quiz() {
                 <p className="font-heading text-2xl font-bold">
                   {completedQuizzes.length > 0
                     ? Math.round(
-                        completedQuizzes.reduce(
-                          (acc, q) =>
-                            acc + getScorePercentage(q.score!, q.maxScore!),
-                          0,
-                        ) / completedQuizzes.length,
+                        completedQuizzes.reduce((acc, q) => {
+                          const completions =
+                            (q.completions as Record<
+                              string,
+                              { score: number }
+                            >) || {};
+                          const userCompletion = completions[user?.uid || ""];
+                          return acc + (userCompletion?.score || 0);
+                        }, 0) / completedQuizzes.length,
                       )
                     : 0}
                   %
@@ -282,9 +303,11 @@ export default function Quiz() {
                             {quiz.duration} min
                           </div>
                         </div>
-                        <Button className="w-full" size="sm">
-                          <Play className="h-4 w-4 mr-2" />
-                          Start Quiz
+                        <Button className="w-full" size="sm" asChild>
+                          <Link to={`/quiz/${quiz.id}/take`}>
+                            <Play className="h-4 w-4 mr-2" />
+                            Start Quiz
+                          </Link>
                         </Button>
                       </CardContent>
                     </Card>

@@ -4,6 +4,9 @@ service cloud.firestore {
     match /users/{userId}/{documents=**} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
     }
+    match /users/{userId}/quizResults/{quizId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
     match /users/{userId} {
       // Allow authenticated users to read their own document
       allow read: if request.auth != null && request.auth.uid == userId;
@@ -57,6 +60,9 @@ service cloud.firestore {
       allow update: if request.auth != null && 
         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'instructor' &&
         resource.data.instructorId == request.auth.uid;
+      // Allow students to update completion data for any quiz
+      allow update: if request.auth != null &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['completions']);
       // Allow instructors to create and delete their own quizzes
       allow create, delete: if request.auth != null && 
         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'instructor';
