@@ -49,9 +49,15 @@ export function Navbar({ isAuthenticated = false }: NavbarProps) {
     const notificationsRef = collection(db, "users", user.uid, "notifications");
     const q = query(notificationsRef, where("isRead", "==", false));
 
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      setUnreadNotifications(snapshot.size);
-    });
+    const unsubscribe = onSnapshot(
+      q,
+      (snapshot) => {
+        setUnreadNotifications(snapshot.size);
+      },
+      (error) => {
+        console.error("Notifications listener error:", error);
+      },
+    );
 
     // Add messages listener
     const messagesRef = collection(db, "messages");
@@ -59,13 +65,19 @@ export function Navbar({ isAuthenticated = false }: NavbarProps) {
       messagesRef,
       where("participants", "array-contains", user.uid),
     );
-    const messagesUnsubscribe = onSnapshot(messagesQuery, (snapshot) => {
-      const unreadCount = snapshot.docs.filter((doc) => {
-        const data = doc.data();
-        return data.receiverId === user.uid && !data.isRead;
-      }).length;
-      setUnreadMessages(unreadCount);
-    });
+    const messagesUnsubscribe = onSnapshot(
+      messagesQuery,
+      (snapshot) => {
+        const unreadCount = snapshot.docs.filter((doc) => {
+          const data = doc.data();
+          return data.receiverId === user.uid && !data.isRead;
+        }).length;
+        setUnreadMessages(unreadCount);
+      },
+      (error) => {
+        console.error("Messages unread count listener error:", error);
+      },
+    );
 
     return () => {
       unsubscribe();

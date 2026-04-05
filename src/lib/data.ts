@@ -368,15 +368,11 @@ export const learningAlarms: LearningAlarm[] = [
 
 export const categories = [
   "All",
-  "Chemistry",
-  "Physics",
-  "Mathematics",
-  "Biology",
-  "Development",
-  "Data Science",
-  "Marketing",
-  "Design",
-  "Photography",
-  "Business",
-  "Arts",
+  "CHEM 102",
+  "CHEM 108",
+  "PHY 102",
+  "PHY 108",
+  "BIO 102",
+  "BIO 108",
+  "MTH 102",
 ];

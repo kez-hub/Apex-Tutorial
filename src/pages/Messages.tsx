@@ -85,48 +85,60 @@ export default function Messages() {
             where("participants", "array-contains", user.uid),
           );
 
-          const unsubscribe = onSnapshot(q, async (snapshot) => {
-            const participantIds = new Set<string>();
+          const unsubscribe = onSnapshot(
+            q,
+            async (snapshot) => {
+              const participantIds = new Set<string>();
 
-            snapshot.forEach((doc) => {
-              const data = doc.data();
-              const otherParticipantId =
-                data.senderId === user.uid ? data.receiverId : data.senderId;
-              participantIds.add(otherParticipantId);
-            });
+              snapshot.forEach((doc) => {
+                const data = doc.data();
+                const otherParticipantId =
+                  data.senderId === user.uid ? data.receiverId : data.senderId;
+                participantIds.add(otherParticipantId);
+              });
 
-            const conversationsList: Conversation[] = [];
-            for (const participantId of participantIds) {
-              try {
-                const participantDoc = await getDoc(
-                  doc(db, "users", participantId),
-                );
-                if (participantDoc.exists()) {
-                  const participantData = participantDoc.data();
-                  conversationsList.push({
-                    id: participantId,
-                    participantId,
-                    participantName:
-                      participantData.full_name ||
-                      participantData.email?.split("@")[0] ||
-                      "User",
-                    participantAvatar: participantData.avatarBase64,
-                    unreadCount: 0, // TODO: Calculate unread count
-                  });
+              const conversationsList: Conversation[] = [];
+              for (const participantId of participantIds) {
+                try {
+                  const participantDoc = await getDoc(
+                    doc(db, "users", participantId),
+                  );
+                  if (participantDoc.exists()) {
+                    const participantData = participantDoc.data();
+                    conversationsList.push({
+                      id: participantId,
+                      participantId,
+                      participantName:
+                        participantData.full_name ||
+                        participantData.email?.split("@")[0] ||
+                        "User",
+                      participantAvatar: participantData.avatarBase64,
+                      unreadCount: 0, // TODO: Calculate unread count
+                    });
+                  }
+                } catch (error) {
+                  console.error(
+                    `Error loading participant ${participantId}:`,
+                    error,
+                  );
                 }
-              } catch (error) {
-                console.error(
-                  `Error loading participant ${participantId}:`,
-                  error,
-                );
               }
-            }
 
-            setConversations(conversationsList);
-            if (conversationsList.length > 0 && !selectedConversation) {
-              setSelectedConversation(conversationsList[0]);
-            }
-          });
+              setConversations(conversationsList);
+              if (conversationsList.length > 0 && !selectedConversation) {
+                setSelectedConversation(conversationsList[0]);
+              }
+            },
+            (error) => {
+              console.error("Conversations listener error:", error);
+              toast({
+                title: "Unable to load conversations",
+                description:
+                  "There was a permissions or network issue loading your conversations.",
+                variant: "destructive",
+              });
+            },
+          );
 
           return () => unsubscribe();
         }
@@ -151,42 +163,54 @@ export default function Messages() {
       orderBy("timestamp", "asc"),
     );
 
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const msgs: Message[] = [];
-      snapshot.forEach((doc) => {
-        const data = doc.data() as Omit<Message, "id" | "timestamp"> & {
-          timestamp: unknown;
-        };
-        const timestamp: Date = (() => {
-          const rawTimestamp = data.timestamp;
+    const unsubscribe = onSnapshot(
+      q,
+      (snapshot) => {
+        const msgs: Message[] = [];
+        snapshot.forEach((doc) => {
+          const data = doc.data() as Omit<Message, "id" | "timestamp"> & {
+            timestamp: unknown;
+          };
+          const timestamp: Date = (() => {
+            const rawTimestamp = data.timestamp;
+            if (
+              typeof rawTimestamp === "object" &&
+              rawTimestamp !== null &&
+              "toDate" in rawTimestamp &&
+              typeof (rawTimestamp as { toDate: unknown }).toDate === "function"
+            ) {
+              return (rawTimestamp as { toDate: () => Date }).toDate();
+            }
+            return new Date();
+          })();
           if (
-            typeof rawTimestamp === "object" &&
-            rawTimestamp !== null &&
-            "toDate" in rawTimestamp &&
-            typeof (rawTimestamp as { toDate: unknown }).toDate === "function"
+            (data.senderId === user.uid &&
+              data.receiverId === selectedConversation.participantId) ||
+            (data.senderId === selectedConversation.participantId &&
+              data.receiverId === user.uid)
           ) {
-            return (rawTimestamp as { toDate: () => Date }).toDate();
+            msgs.push({
+              id: doc.id,
+              senderId: data.senderId,
+              receiverId: data.receiverId,
+              content: data.content,
+              isRead: data.isRead,
+              timestamp,
+            });
           }
-          return new Date();
-        })();
-        if (
-          (data.senderId === user.uid &&
-            data.receiverId === selectedConversation.participantId) ||
-          (data.senderId === selectedConversation.participantId &&
-            data.receiverId === user.uid)
-        ) {
-          msgs.push({
-            id: doc.id,
-            senderId: data.senderId,
-            receiverId: data.receiverId,
-            content: data.content,
-            isRead: data.isRead,
-            timestamp,
-          });
-        }
-      });
-      setMessages(msgs);
-    });
+        });
+        setMessages(msgs);
+      },
+      (error) => {
+        console.error("Messages snapshot error:", error);
+        toast({
+          title: "Unable to load messages",
+          description:
+            "There was a permissions or network issue loading this conversation.",
+          variant: "destructive",
+        });
+      },
+    );
 
     return () => unsubscribe();
   }, [selectedConversation, user]);
