@@ -1,6 +1,14 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { BookOpen, Menu, X, User, Bell, LogOut } from "lucide-react";
+import {
+  BookOpen,
+  Menu,
+  X,
+  User,
+  Bell,
+  LogOut,
+  MessageCircle,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -21,6 +29,7 @@ interface NavbarProps {
 export function Navbar({ isAuthenticated = false }: NavbarProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [unreadNotifications, setUnreadNotifications] = useState(0);
+  const [unreadMessages, setUnreadMessages] = useState(0);
   const location = useLocation();
   const navigate = useNavigate();
   const { user, userData, signOut } = useAuth();
@@ -44,7 +53,24 @@ export function Navbar({ isAuthenticated = false }: NavbarProps) {
       setUnreadNotifications(snapshot.size);
     });
 
-    return () => unsubscribe();
+    // Add messages listener
+    const messagesRef = collection(db, "messages");
+    const messagesQuery = query(
+      messagesRef,
+      where("participants", "array-contains", user.uid),
+    );
+    const messagesUnsubscribe = onSnapshot(messagesQuery, (snapshot) => {
+      const unreadCount = snapshot.docs.filter((doc) => {
+        const data = doc.data();
+        return data.receiverId === user.uid && !data.isRead;
+      }).length;
+      setUnreadMessages(unreadCount);
+    });
+
+    return () => {
+      unsubscribe();
+      messagesUnsubscribe();
+    };
   }, [user]);
 
   const handleLogout = async () => {
@@ -56,6 +82,10 @@ export function Navbar({ isAuthenticated = false }: NavbarProps) {
     ? ([
         { href: "/dashboard", label: "Dashboard" },
         { href: "/courses", label: "Courses" },
+        {
+          href: "/messages",
+          label: "Messages",
+        },
         userData?.role === "student" && { href: "/notes", label: "Notes" },
         userData?.role === "student" && { href: "/quiz", label: "Quiz" },
         userData?.role === "student" && {
@@ -119,6 +149,21 @@ export function Navbar({ isAuthenticated = false }: NavbarProps) {
                     {unreadNotifications > 0 && (
                       <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-red-500 text-white text-xs flex items-center justify-center font-bold">
                         {unreadNotifications > 99 ? "99+" : unreadNotifications}
+                      </span>
+                    )}
+                  </Link>
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="relative text-foreground hover:text-primary transition-colors"
+                  asChild
+                >
+                  <Link to="/messages">
+                    <MessageCircle className="h-5 w-5" />
+                    {unreadMessages > 0 && (
+                      <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-red-500 text-white text-xs flex items-center justify-center font-bold">
+                        {unreadMessages > 99 ? "99+" : unreadMessages}
                       </span>
                     )}
                   </Link>

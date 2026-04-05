@@ -7,6 +7,7 @@ import {
   MoreVertical,
   Pencil,
   Trash,
+  MessageCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
@@ -242,6 +243,26 @@ export function CourseCard({ course, onEdit }: CourseCardProps) {
             </div>
           </CardFooter>
         )}
+
+        {/* Message Icon for Students */}
+        {userData?.role === "student" &&
+          userData?.enrolledCourses?.includes(course.id) && (
+            <div className="absolute bottom-3 right-3">
+              <Button
+                variant="secondary"
+                size="icon"
+                className="h-8 w-8 rounded-full shadow-md hover:shadow-lg transition-shadow bg-background/90 backdrop-blur-sm"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  // Navigate to messages with instructor
+                  window.location.href = `/messages?instructor=${course.instructorId}`;
+                }}
+              >
+                <MessageCircle className="h-4 w-4" />
+              </Button>
+            </div>
+          )}
       </Card>
     </Link>
   );
