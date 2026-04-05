@@ -260,6 +260,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         passwordHash, // Pass the hashed password
       );
 
+      // Get the created user data to get the correct tutorialId
+      const userDocRef = doc(db, "users", userObj.uid);
+      const userDoc = await getDoc(userDocRef);
+      const userData = userDoc.data();
+      const tutorialId = userData?.tutorialId || "";
+
       const emailParams = {
         passcode: vCode,
         time: new Date(Date.now() + 15 * 60000).toLocaleTimeString([], {
@@ -267,7 +273,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           minute: "2-digit",
         }),
         email: email,
-        tutorialId: userObj.uid,
+        tutorialId: role === "student" ? tutorialId : "N/A", // Only show tutorial ID for students
       };
 
       try {
@@ -334,6 +340,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       // Store reset code in user document
       const userDoc = querySnapshot.docs[0];
+      const userData = userDoc.data();
       await updateDoc(userDoc.ref, {
         resetCode,
         resetCodeExpiry: new Date(Date.now() + 15 * 60000).toISOString(), // 15 minutes
@@ -347,7 +354,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           minute: "2-digit",
         }),
         email: email,
-        tutorialId: user.uid,
+        tutorialId:
+          userData.role === "student" ? userData.tutorialId || "" : "N/A",
       };
 
       try {

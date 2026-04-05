@@ -22,7 +22,15 @@ import { doc, setDoc, updateDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
-import { FileText, BookOpen, Upload, ImageIcon, Layers } from "lucide-react";
+import { categories } from "@/lib/data";
+import {
+  FileText,
+  BookOpen,
+  Upload,
+  ImageIcon,
+  Layers,
+  Tag,
+} from "lucide-react";
 
 interface Note {
   id: string;
@@ -34,6 +42,7 @@ interface Note {
   instructorId: string;
   instructorAvatar: string;
   level: string;
+  category: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -56,6 +65,7 @@ export function AddNotesModal({
   const [formData, setFormData] = useState({
     title: "",
     level: "Beginner",
+    category: "",
     description: "",
     thumbnail: "",
     pdfUrl: "",
@@ -67,6 +77,7 @@ export function AddNotesModal({
       setFormData({
         title: initialData.title || "",
         level: initialData.level || "Beginner",
+        category: initialData.category || "",
         description: initialData.description || "",
         thumbnail: initialData.thumbnail || "",
         pdfUrl: initialData.pdfUrl || "",
@@ -76,6 +87,7 @@ export function AddNotesModal({
       setFormData({
         title: "",
         level: "Beginner",
+        category: "",
         description: "",
         thumbnail: "",
         pdfUrl: "",
@@ -167,6 +179,7 @@ export function AddNotesModal({
       instructorId: user.uid,
       description: formData.description,
       level: formData.level,
+      category: formData.category,
       thumbnail:
         formData.thumbnail ||
         "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&h=450&fit=crop",
@@ -174,11 +187,6 @@ export function AddNotesModal({
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
-
-    // Only set these for new notes
-    if (!initialData) {
-      notePayload.id = noteId;
-    }
 
     try {
       const noteDocRef = doc(db, "notes", noteId);
@@ -199,6 +207,7 @@ export function AddNotesModal({
       setFormData({
         title: "",
         level: "Beginner",
+        category: "",
         description: "",
         thumbnail: "",
         pdfUrl: "",
@@ -253,24 +262,54 @@ export function AddNotesModal({
             />
           </div>
 
-          {/* Level */}
-          <div className="space-y-2">
-            <Label className="text-sm font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-              <Layers className="h-3.5 w-3.5" /> Difficulty Level
-            </Label>
-            <Select
-              value={formData.level || "Beginner"}
-              onValueChange={(val) => setFormData({ ...formData, level: val })}
-            >
-              <SelectTrigger className="bg-muted/30">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Beginner">Beginner</SelectItem>
-                <SelectItem value="Intermediate">Intermediate</SelectItem>
-                <SelectItem value="Advanced">Advanced</SelectItem>
-              </SelectContent>
-            </Select>
+          <div className="grid grid-cols-2 gap-4">
+            {/* Category */}
+            <div className="space-y-2">
+              <Label className="text-sm font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+                <Tag className="h-3.5 w-3.5" /> Category
+              </Label>
+              <Select
+                value={formData.category || ""}
+                onValueChange={(val) =>
+                  setFormData({ ...formData, category: val })
+                }
+              >
+                <SelectTrigger className="bg-muted/30">
+                  <SelectValue placeholder="Select Category" />
+                </SelectTrigger>
+                <SelectContent>
+                  {categories
+                    .filter((c) => c !== "All")
+                    .map((cat) => (
+                      <SelectItem key={cat} value={cat}>
+                        {cat}
+                      </SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Level */}
+            <div className="space-y-2">
+              <Label className="text-sm font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+                <Layers className="h-3.5 w-3.5" /> Difficulty Level
+              </Label>
+              <Select
+                value={formData.level || "Beginner"}
+                onValueChange={(val) =>
+                  setFormData({ ...formData, level: val })
+                }
+              >
+                <SelectTrigger className="bg-muted/30">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Beginner">Beginner</SelectItem>
+                  <SelectItem value="Intermediate">Intermediate</SelectItem>
+                  <SelectItem value="Advanced">Advanced</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           {/* Description */}

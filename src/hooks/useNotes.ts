@@ -12,6 +12,7 @@ interface Note {
   instructorId: string;
   instructorAvatar: string;
   level: string;
+  category: string;
   createdAt: string;
   updatedAt: string;
 }
