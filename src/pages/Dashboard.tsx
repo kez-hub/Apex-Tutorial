@@ -267,7 +267,10 @@ export default function Dashboard() {
                                 const blob = new Blob([u8arr], { type: mime });
                                 const blobUrl = URL.createObjectURL(blob);
                                 window.open(blobUrl, "_blank");
-                                setTimeout(() => URL.revokeObjectURL(blobUrl), 100);
+                                setTimeout(
+                                  () => URL.revokeObjectURL(blobUrl),
+                                  100,
+                                );
                               } else {
                                 window.open(note.pdfUrl, "_blank");
                               }
@@ -307,7 +310,10 @@ export default function Dashboard() {
                               link.click();
                               document.body.removeChild(link);
                               if (note.pdfUrl.startsWith("data:")) {
-                                setTimeout(() => URL.revokeObjectURL(link.href), 100);
+                                setTimeout(
+                                  () => URL.revokeObjectURL(link.href),
+                                  100,
+                                );
                               }
                             } catch (error) {
                               console.error("Error downloading PDF:", error);

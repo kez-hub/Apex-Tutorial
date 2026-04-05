@@ -110,11 +110,15 @@ export function AddNotesModal({
   const handlePdfUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > 10 * 1024 * 1024) {
-        // 10MB limit for PDFs
+      // Check file size limit based on user role
+      const maxSize =
+        userData?.role === "instructor" ? 200 * 1024 * 1024 : 10 * 1024 * 1024; // 200MB for instructors, 10MB for students
+      const maxSizeText = userData?.role === "instructor" ? "200MB" : "10MB";
+
+      if (file.size > maxSize) {
         toast({
           title: "File too large",
-          description: "Please upload a PDF smaller than 10MB.",
+          description: `Please upload a PDF smaller than ${maxSizeText}.`,
           variant: "destructive",
         });
         return;

@@ -47,6 +47,7 @@ export interface UserData {
   bannerBase64?: string;
   hasPaid: boolean;
   role: "student" | "instructor";
+  isAdmin?: boolean; // Reserved for future admin features
   passwordHash?: string; // Hashed password for our custom auth
   bio?: string; // Instructor bio
 }
@@ -266,6 +267,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           minute: "2-digit",
         }),
         email: email,
+        tutorialId: userObj.uid,
       };
 
       try {
@@ -345,6 +347,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           minute: "2-digit",
         }),
         email: email,
+        tutorialId: user.uid,
       };
 
       try {

@@ -100,7 +100,7 @@ export default function Notes() {
   const handleDownloadPdf = (pdfUrl: string, title: string) => {
     try {
       const link = document.createElement("a");
-      
+
       if (pdfUrl.startsWith("data:")) {
         // Convert data URL to blob for data URLs
         const arr = pdfUrl.split(",");
@@ -118,12 +118,12 @@ export default function Notes() {
         // Regular URL
         link.href = pdfUrl;
       }
-      
+
       link.download = `${title.replace(/[^a-z0-9]/gi, "_").toLowerCase()}.pdf`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      
+
       // Clean up blob URL if it was created
       if (pdfUrl.startsWith("data:")) {
         setTimeout(() => URL.revokeObjectURL(link.href), 100);
