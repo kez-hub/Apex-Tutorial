@@ -94,10 +94,9 @@ export function Navbar({ isAuthenticated = false }: NavbarProps) {
     ? ([
         { href: "/dashboard", label: "Dashboard" },
         { href: "/courses", label: "Courses" },
-        {
-          href: "/messages",
-          label: "Messages",
-        },
+        userData?.role === "instructor"
+          ? { href: "/quiz", label: "Quiz" }
+          : { href: "/messages", label: "Messages" },
         userData?.role === "student" && { href: "/notes", label: "Notes" },
         userData?.role === "student" && { href: "/quiz", label: "Quiz" },
         userData?.role === "student" && {

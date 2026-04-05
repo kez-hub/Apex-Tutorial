@@ -27,6 +27,7 @@ import EditProfile from "./pages/EditProfile";
 import Settings from "./pages/Settings";
 import InstructorSignup from "./pages/InstructorSignup";
 import Quiz from "./pages/Quiz";
+import QuizDetails from "./pages/QuizDetails";
 import Notes from "./pages/Notes";
 import Messages from "./pages/Messages";
 import { PaymentModal } from "@/components/auth/PaymentModal";
@@ -94,6 +95,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <Quiz />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/quiz/:id"
+              element={
+                <ProtectedRoute>
+                  <QuizDetails />
                 </ProtectedRoute>
               }
             />

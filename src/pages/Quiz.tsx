@@ -31,12 +31,16 @@ interface Quiz {
   score?: number;
   maxScore?: number;
   completedAt?: Date;
+  instructorId: string;
 }
 
 export default function Quiz() {
-  const { userData } = useAuth();
+  const { user, userData } = useAuth();
   const { quizzes, loading } = useQuizzes();
 
+  const instructorQuizzes = quizzes.filter(
+    (quiz) => quiz.instructorId === user?.uid,
+  );
   const completedQuizzes = quizzes.filter((q) => q.completed);
   const pendingQuizzes = quizzes.filter((q) => !q.completed);
 
@@ -57,20 +61,90 @@ export default function Quiz() {
     return Math.round((score / maxScore) * 100);
   };
 
-  if (userData?.role !== "student") {
+  if (userData?.role === "instructor") {
     return (
       <div className="min-h-screen bg-background">
         <Navbar isAuthenticated />
         <main className="container mx-auto px-4 py-8">
-          <div className="flex flex-col items-center justify-center py-12 text-center">
-            <Brain className="h-16 w-16 text-muted-foreground mb-4" />
-            <h1 className="font-heading text-2xl font-bold mb-2">
-              Access Restricted
+          <div className="mb-8">
+            <h1 className="font-heading text-3xl font-bold mb-2">
+              Your Posted Quizzes
             </h1>
             <p className="text-muted-foreground">
-              Quiz feature is only available for students.
+              Review the quizzes you have created and keep track of what
+              students can take.
             </p>
           </div>
+
+          {loading ? (
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {Array.from({ length: 3 }).map((_, index) => (
+                <div
+                  key={index}
+                  className="h-[220px] w-full animate-pulse rounded-xl bg-muted"
+                />
+              ))}
+            </div>
+          ) : instructorQuizzes.length > 0 ? (
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {instructorQuizzes.map((quiz) => (
+                <Card
+                  key={quiz.id}
+                  className="hover:shadow-lg transition-shadow"
+                >
+                  <CardHeader>
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex-1">
+                        <CardTitle className="text-lg mb-2">
+                          {quiz.title}
+                        </CardTitle>
+                        <p className="text-sm text-muted-foreground">
+                          {quiz.courseTitle}
+                        </p>
+                      </div>
+                      <Badge className="bg-primary/10 text-primary border-primary/20">
+                        {quiz.difficulty}
+                      </Badge>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      {quiz.description}
+                    </p>
+                    <div className="flex items-center gap-4 text-sm text-muted-foreground mb-4">
+                      <div className="flex items-center gap-1">
+                        <Target className="h-4 w-4" />
+                        {quiz.questions} questions
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Clock className="h-4 w-4" />
+                        {quiz.duration} min
+                      </div>
+                    </div>
+                    <Button
+                      variant="outline"
+                      className="w-full"
+                      size="sm"
+                      asChild
+                    >
+                      <Link to={`/quiz/${quiz.id}`}>View Quiz</Link>
+                    </Button>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center py-12 text-center border border-dashed border-border rounded-2xl bg-muted/30">
+              <Brain className="h-16 w-16 text-muted-foreground mb-4" />
+              <h3 className="font-heading text-xl font-semibold mb-2">
+                No quizzes posted yet
+              </h3>
+              <p className="text-muted-foreground max-w-md">
+                Create quizzes from your dashboard to make them available for
+                students.
+              </p>
+            </div>
+          )}
         </main>
         <Footer />
       </div>
