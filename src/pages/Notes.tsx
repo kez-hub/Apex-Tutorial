@@ -57,11 +57,9 @@ export default function Notes() {
   const levels = ["All Levels", "Beginner", "Intermediate", "Advanced"];
 
   const filteredNotes = notes.filter((note) => {
-    // For instructors, only show their own notes
-    const isInstructorNote =
-      !userData ||
-      userData.role !== "instructor" ||
-      note.instructorId === user?.uid;
+    // For instructors, only show their own notes; for students, show all
+    const isApplicableNote =
+      userData?.role !== "instructor" || note.instructorId === user?.uid;
 
     const matchesSearch =
       note.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -71,7 +69,7 @@ export default function Notes() {
       selectedCategory === "All" || note.category === selectedCategory;
     const matchesLevel =
       selectedLevel === "All Levels" || note.level === selectedLevel;
-    return isInstructorNote && matchesSearch && matchesCategory && matchesLevel;
+    return isApplicableNote && matchesSearch && matchesCategory && matchesLevel;
   });
 
   const getLevelColor = (level: string) => {
