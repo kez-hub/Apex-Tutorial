@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { User, Mail, Phone, BookOpen, Save, ArrowLeft } from "lucide-react";
+import { User, Mail, Phone, BookOpen, Save, ArrowLeft, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import {
   Select,
@@ -39,12 +40,14 @@ export default function EditProfile() {
   const [name, setName] = useState("");
   const [department, setDepartment] = useState("");
   const [whatsapp, setWhatsapp] = useState("");
+  const [bio, setBio] = useState("");
 
   useEffect(() => {
     if (userData) {
       setName(userData.full_name || "");
       setDepartment(userData.department || "");
       setWhatsapp(userData.whatsapp || "");
+      setBio(userData.bio || "");
     }
   }, [userData]);
 
@@ -67,6 +70,7 @@ export default function EditProfile() {
         full_name: name.trim(),
         department: department,
         whatsapp: whatsapp.trim(),
+        bio: bio.trim(),
       });
 
       toast({
@@ -162,6 +166,26 @@ export default function EditProfile() {
                 </div>
                 <p className="text-xs text-muted-foreground italic">Phone numbers cannot be changed here for security.</p>
               </div>
+
+              {userData?.role === "instructor" && (
+                <div className="space-y-2">
+                  <Label htmlFor="bio">Bio</Label>
+                  <div className="relative">
+                    <FileText className="absolute left-3 top-3 h-4 w-4 text-muted-foreground opacity-50" />
+                    <Textarea
+                      id="bio"
+                      value={bio}
+                      onChange={(e) => setBio(e.target.value)}
+                      className="pl-10 min-h-[100px] resize-none"
+                      placeholder="Tell students about your experience, teaching style, and what makes you passionate about your subject..."
+                      maxLength={500}
+                    />
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    {bio.length}/500 characters
+                  </p>
+                </div>
+              )}
 
               <div className="pt-4">
                 <Button type="submit" variant="gradient" className="w-full h-12" disabled={isLoading}>

@@ -48,6 +48,7 @@ export interface UserData {
   hasPaid: boolean;
   role: "student" | "instructor";
   passwordHash?: string; // Hashed password for our custom auth
+  bio?: string; // Instructor bio
 }
 
 interface AuthContextType {
