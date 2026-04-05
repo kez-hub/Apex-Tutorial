@@ -26,6 +26,7 @@ import FAQ from "./pages/FAQ";
 import EditProfile from "./pages/EditProfile";
 import Settings from "./pages/Settings";
 import InstructorSignup from "./pages/InstructorSignup";
+import Quiz from "./pages/Quiz";
 import { PaymentModal } from "@/components/auth/PaymentModal";
 import { useAuth } from "@/contexts/AuthContext";
 import React from "react";
@@ -86,6 +87,14 @@ const App = () => (
             />
             <Route path="/courses" element={<Courses />} />
             <Route path="/courses/:id" element={<CourseDetails />} />
+            <Route
+              path="/quiz"
+              element={
+                <ProtectedRoute>
+                  <Quiz />
+                </ProtectedRoute>
+              }
+            />
             <Route
               path="/profile"
               element={

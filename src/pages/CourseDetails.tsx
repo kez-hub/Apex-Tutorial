@@ -499,7 +499,7 @@ export default function CourseDetails() {
                         Continue Learning
                       </Button>
                     </>
-                  ) : (
+                  ) : userData?.role !== "instructor" ? (
                     <Button
                       variant="gradient"
                       className="w-full"
@@ -508,7 +508,7 @@ export default function CourseDetails() {
                     >
                       Enroll Now
                     </Button>
-                  )}
+                  ) : null}
 
                   <Separator className="my-6" />
 

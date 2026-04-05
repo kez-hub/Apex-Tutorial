@@ -1,15 +1,15 @@
 import { useState, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { 
-  User, 
-  Mail, 
-  BookOpen, 
-  Clock, 
-  Award, 
+import {
+  User,
+  Mail,
+  BookOpen,
+  Clock,
+  Award,
   Calendar,
   Edit2,
   Settings,
-  Camera
+  Camera,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -29,22 +29,40 @@ export default function Profile() {
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const bannerInputRef = useRef<HTMLInputElement>(null);
-  
-  const userName = userData?.full_name || user?.displayName || user?.email?.split("@")[0] || "User";
+
+  const userName =
+    userData?.full_name ||
+    user?.displayName ||
+    user?.email?.split("@")[0] ||
+    "User";
   const userEmail = user?.email || "";
-  const [avatarUrl, setAvatarUrl] = useState(userData?.avatarBase64 || user?.photoURL || "");
+  const [avatarUrl, setAvatarUrl] = useState(
+    userData?.avatarBase64 || user?.photoURL || "",
+  );
   const [bannerUrl, setBannerUrl] = useState(userData?.bannerBase64 || "");
 
   // Certificate logic: Count enrolled courses that are 100% completed
   const enrolledCourseIds = userData?.enrolledCourses || [];
-  const enrolledCourses = courses.filter((course) => enrolledCourseIds.includes(course.id));
-  const certificatesCount = enrolledCourses.filter(c => (c.progress || 0) >= 100).length;
-  const totalProgress = enrolledCourses.length > 0 
-    ? enrolledCourses.reduce((sum, course) => sum + (course.progress || 0), 0) / enrolledCourses.length 
-    : 0;
+  const enrolledCourses = courses.filter((course) =>
+    enrolledCourseIds.includes(course.id),
+  );
+  const certificatesCount = enrolledCourses.filter(
+    (c) => (c.progress || 0) >= 100,
+  ).length;
+  const totalProgress =
+    enrolledCourses.length > 0
+      ? enrolledCourses.reduce(
+          (sum, course) => sum + (course.progress || 0),
+          0,
+        ) / enrolledCourses.length
+      : 0;
 
   const stats = [
-    { label: "Courses Enrolled", value: enrolledCourses.length, icon: BookOpen },
+    {
+      label: "Courses Enrolled",
+      value: enrolledCourses.length,
+      icon: BookOpen,
+    },
     { label: "Hours Learned", value: userData?.hoursLearned || 0, icon: Clock },
     { label: "Certificates", value: certificatesCount, icon: Award },
   ];
@@ -53,18 +71,21 @@ export default function Profile() {
     fileInputRef.current?.click();
   };
 
-  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
     const file = event.target.files?.[0];
     if (file && user) {
       if (file.size > 2 * 1024 * 1024) {
         toast({
           title: "File too large",
-          description: "Please select an image under 2MB for storage efficiency.",
+          description:
+            "Please select an image under 2MB for storage efficiency.",
           variant: "destructive",
         });
         return;
       }
-      
+
       const reader = new FileReader();
       reader.onload = async (e) => {
         const img = new Image();
@@ -74,7 +95,7 @@ export default function Profile() {
           const MAX_SIZE = 300;
           let width = img.width;
           let height = img.height;
-          
+
           if (width > height) {
             if (width > MAX_SIZE) {
               height *= MAX_SIZE / width;
@@ -86,14 +107,14 @@ export default function Profile() {
               height = MAX_SIZE;
             }
           }
-          
+
           canvas.width = width;
           canvas.height = height;
           const ctx = canvas.getContext("2d");
           ctx?.drawImage(img, 0, 0, width, height);
-          
+
           const compressedBase64 = canvas.toDataURL("image/jpeg", 0.7);
-          
+
           try {
             const userRef = doc(db, "users", user.uid);
             await updateDoc(userRef, { avatarBase64: compressedBase64 });
@@ -103,10 +124,10 @@ export default function Profile() {
               description: "Your profile picture is now saved in the database.",
             });
           } catch (err: any) {
-             toast({
+            toast({
               title: "Storage Error",
               description: "Failed to save profile picture bits to Firestore.",
-              variant: "destructive"
+              variant: "destructive",
             });
           }
         };
@@ -116,7 +137,9 @@ export default function Profile() {
     }
   };
 
-  const handleBannerChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleBannerChange = async (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
     const file = event.target.files?.[0];
     if (file && user) {
       const reader = new FileReader();
@@ -127,19 +150,19 @@ export default function Profile() {
           const MAX_WIDTH = 1200;
           let width = img.width;
           let height = img.height;
-          
+
           if (width > MAX_WIDTH) {
             height *= MAX_WIDTH / width;
             width = MAX_WIDTH;
           }
-          
+
           canvas.width = width;
           canvas.height = height;
           const ctx = canvas.getContext("2d");
           ctx?.drawImage(img, 0, 0, width, height);
-          
+
           const compressedBase64 = canvas.toDataURL("image/jpeg", 0.6);
-          
+
           try {
             const userRef = doc(db, "users", user.uid);
             await updateDoc(userRef, { bannerBase64: compressedBase64 });
@@ -149,10 +172,10 @@ export default function Profile() {
               description: "Your new cover image has been saved.",
             });
           } catch (err: any) {
-             toast({
+            toast({
               title: "Banner Error",
               description: "Failed to save banner bits to Firestore.",
-              variant: "destructive"
+              variant: "destructive",
             });
           }
         };
@@ -171,11 +194,15 @@ export default function Profile() {
         <Card className="mb-8 overflow-hidden border-border/50 shadow-card animate-fade-in relative">
           <div className="h-32 relative overflow-hidden group/banner">
             {bannerUrl ? (
-              <img src={bannerUrl} alt="Banner" className="w-full h-full object-cover" />
+              <img
+                src={bannerUrl}
+                alt="Banner"
+                className="w-full h-full object-cover"
+              />
             ) : (
               <div className="h-full w-full gradient-primary" />
             )}
-            <button 
+            <button
               onClick={() => bannerInputRef.current?.click()}
               className="absolute top-2 right-2 bg-black/40 hover:bg-black/60 text-white p-2 rounded-full opacity-0 group-hover/banner:opacity-100 transition-opacity"
             >
@@ -190,11 +217,16 @@ export default function Profile() {
             />
           </div>
           <CardContent className="relative px-6 pb-6">
-          <div className="flex flex-col items-start gap-6 sm:flex-row sm:items-end">
+            <div className="flex flex-col items-start gap-6 sm:flex-row sm:items-end">
               <div className="relative -mt-16 group">
-                <Avatar className="h-32 w-32 border-4 border-card shadow-elevated cursor-pointer" onClick={handleAvatarClick}>
+                <Avatar
+                  className="h-32 w-32 border-4 border-card shadow-elevated cursor-pointer"
+                  onClick={handleAvatarClick}
+                >
                   <AvatarImage src={avatarUrl} alt={userName} />
-                  <AvatarFallback className="text-4xl">{userName.charAt(0).toUpperCase()}</AvatarFallback>
+                  <AvatarFallback className="text-4xl">
+                    {userName.charAt(0).toUpperCase()}
+                  </AvatarFallback>
                 </Avatar>
                 <button
                   onClick={handleAvatarClick}
@@ -210,22 +242,37 @@ export default function Profile() {
                   onChange={handleFileChange}
                 />
               </div>
-              
+
               <div className="flex-1">
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                   <div>
-                    <h1 className="font-heading text-2xl font-bold">{userName}</h1>
-                    <div className="mt-1 flex items-center gap-2 text-muted-foreground">
+                    <h1 className="font-heading text-2xl font-bold">
+                      {userName}
+                    </h1>
+                    {userData?.role === "instructor" && userData?.bio && (
+                      <p className="mt-2 text-sm text-muted-foreground max-w-md">
+                        {userData.bio}
+                      </p>
+                    )}
+                    <div className="mt-2 flex items-center gap-2 text-muted-foreground">
                       <Mail className="h-4 w-4" />
                       <span>{userEmail}</span>
                     </div>
                   </div>
                   <div className="flex gap-2">
-                    <Button variant="outline" size="sm" onClick={() => navigate("/profile/edit")}>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => navigate("/profile/edit")}
+                    >
                       <Edit2 className="h-4 w-4" />
                       Edit Profile
                     </Button>
-                    <Button variant="outline" size="sm" onClick={() => navigate("/settings")}>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => navigate("/settings")}
+                    >
                       <Settings className="h-4 w-4" />
                       Settings
                     </Button>
@@ -242,14 +289,22 @@ export default function Profile() {
             {/* Stats */}
             <div className="grid gap-4 sm:grid-cols-3">
               {stats.map((stat, index) => (
-                <Card key={stat.label} className="border-border/50 shadow-card animate-fade-in" style={{ animationDelay: `${index * 0.1}s` }}>
+                <Card
+                  key={stat.label}
+                  className="border-border/50 shadow-card animate-fade-in"
+                  style={{ animationDelay: `${index * 0.1}s` }}
+                >
                   <CardContent className="flex items-center gap-4 p-6">
                     <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10">
                       <stat.icon className="h-6 w-6 text-primary" />
                     </div>
                     <div>
-                      <p className="font-heading text-2xl font-bold">{stat.value}</p>
-                      <p className="text-sm text-muted-foreground">{stat.label}</p>
+                      <p className="font-heading text-2xl font-bold">
+                        {stat.value}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        {stat.label}
+                      </p>
                     </div>
                   </CardContent>
                 </Card>
@@ -257,7 +312,10 @@ export default function Profile() {
             </div>
 
             {/* Enrolled Courses */}
-            <Card className="border-border/50 shadow-card animate-fade-in" style={{ animationDelay: "0.2s" }}>
+            <Card
+              className="border-border/50 shadow-card animate-fade-in"
+              style={{ animationDelay: "0.2s" }}
+            >
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <BookOpen className="h-5 w-5 text-primary" />
@@ -277,19 +335,33 @@ export default function Profile() {
                         className="h-32 w-full sm:h-16 sm:w-24 rounded-lg object-cover"
                       />
                       <div className="flex-1 min-w-0">
-                        <Link to={`/courses/${course.id}`} className="font-semibold hover:text-primary transition-colors line-clamp-2">
+                        <Link
+                          to={`/courses/${course.id}`}
+                          className="font-semibold hover:text-primary transition-colors line-clamp-2"
+                        >
                           {course.title}
                         </Link>
-                        <p className="text-sm text-muted-foreground">{course.instructor}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {course.instructor}
+                        </p>
                         <div className="mt-2">
                           <div className="mb-1 flex items-center justify-between text-xs">
-                            <span className="text-muted-foreground">Progress</span>
-                            <span className="font-medium text-primary">{course.progress}%</span>
+                            <span className="text-muted-foreground">
+                              Progress
+                            </span>
+                            <span className="font-medium text-primary">
+                              {course.progress}%
+                            </span>
                           </div>
                           <Progress value={course.progress} className="h-1.5" />
                         </div>
                       </div>
-                      <Button variant="outline" size="sm" className="w-full sm:w-auto" asChild>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full sm:w-auto"
+                        asChild
+                      >
                         <Link to={`/courses/${course.id}`}>Continue</Link>
                       </Button>
                     </div>
@@ -302,14 +374,20 @@ export default function Profile() {
           {/* Sidebar */}
           <div className="space-y-6">
             {/* Overall Progress */}
-            <Card className="border-border/50 shadow-card animate-fade-in" style={{ animationDelay: "0.3s" }}>
+            <Card
+              className="border-border/50 shadow-card animate-fade-in"
+              style={{ animationDelay: "0.3s" }}
+            >
               <CardHeader>
                 <CardTitle className="text-lg">Learning Progress</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="mb-4 text-center">
                   <div className="relative mx-auto h-32 w-32">
-                    <svg className="h-full w-full -rotate-90" viewBox="0 0 100 100">
+                    <svg
+                      className="h-full w-full -rotate-90"
+                      viewBox="0 0 100 100"
+                    >
                       <circle
                         cx="50"
                         cy="50"
@@ -332,7 +410,9 @@ export default function Profile() {
                       />
                     </svg>
                     <div className="absolute inset-0 flex items-center justify-center">
-                      <span className="font-heading text-3xl font-bold">{Math.round(totalProgress)}%</span>
+                      <span className="font-heading text-3xl font-bold">
+                        {Math.round(totalProgress)}%
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -343,7 +423,10 @@ export default function Profile() {
             </Card>
 
             {/* Learning Schedule */}
-            <Card className="border-border/50 shadow-card animate-fade-in" style={{ animationDelay: "0.4s" }}>
+            <Card
+              className="border-border/50 shadow-card animate-fade-in"
+              style={{ animationDelay: "0.4s" }}
+            >
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-lg">
                   <Calendar className="h-5 w-5 text-primary" />
@@ -351,7 +434,9 @@ export default function Profile() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-sm text-muted-foreground">Set up your learning schedule to receive reminders.</p>
+                <p className="text-sm text-muted-foreground">
+                  Set up your learning schedule to receive reminders.
+                </p>
                 <Button variant="outline" className="mt-4 w-full" asChild>
                   <Link to="/schedule">Manage Schedule</Link>
                 </Button>
@@ -362,7 +447,6 @@ export default function Profile() {
       </main>
 
       <Footer />
-
     </div>
   );
 }

@@ -23,7 +23,11 @@ export function Navbar({ isAuthenticated = false }: NavbarProps) {
   const { user, userData, signOut } = useAuth();
   const isAuthed = !!user;
 
-  const userName = userData?.full_name || user?.displayName || user?.email?.split("@")[0] || "User";
+  const userName =
+    userData?.full_name ||
+    user?.displayName ||
+    user?.email?.split("@")[0] ||
+    "User";
   const userEmail = user?.email || "";
   const userAvatar = userData?.avatarBase64 || user?.photoURL || "";
 
@@ -33,11 +37,15 @@ export function Navbar({ isAuthenticated = false }: NavbarProps) {
   };
 
   const navLinks = isAuthed
-    ? [
+    ? ([
         { href: "/dashboard", label: "Dashboard" },
         { href: "/courses", label: "Courses" },
-        userData?.role === 'student' && { href: "/schedule", label: "Schedule" },
-      ].filter(Boolean) as { href: string; label: string }[]
+        userData?.role === "student" && { href: "/quiz", label: "Quiz" },
+        userData?.role === "student" && {
+          href: "/schedule",
+          label: "Schedule",
+        },
+      ].filter(Boolean) as { href: string; label: string }[])
     : [
         { href: "/", label: "Home" },
         { href: "/courses", label: "Courses" },
@@ -50,8 +58,15 @@ export function Navbar({ isAuthenticated = false }: NavbarProps) {
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
-          <Link to={isAuthed ? "/dashboard" : "/"} className="flex items-center gap-2">
-            <img src="/logo.jpeg" alt="Apex Tutorial" className="h-9 w-9 rounded-lg object-cover" />
+          <Link
+            to={isAuthed ? "/dashboard" : "/"}
+            className="flex items-center gap-2"
+          >
+            <img
+              src="/logo.jpeg"
+              alt="Apex Tutorial"
+              className="h-9 w-9 rounded-lg object-cover"
+            />
             <span className="font-heading text-xl font-bold text-foreground">
               Apex Tutorial
             </span>
@@ -76,7 +91,12 @@ export function Navbar({ isAuthenticated = false }: NavbarProps) {
           <div className="hidden items-center gap-4 md:flex">
             {isAuthed ? (
               <>
-                <Button variant="ghost" size="icon" className="relative text-foreground hover:text-primary transition-colors" asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="relative text-foreground hover:text-primary transition-colors"
+                  asChild
+                >
                   <Link to="/notifications">
                     <Bell className="h-5 w-5" />
                     <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-accent animate-pulse" />
@@ -84,10 +104,15 @@ export function Navbar({ isAuthenticated = false }: NavbarProps) {
                 </Button>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="relative h-9 w-9 rounded-full">
+                    <Button
+                      variant="ghost"
+                      className="relative h-9 w-9 rounded-full"
+                    >
                       <Avatar className="h-9 w-9">
                         <AvatarImage src={userAvatar} alt={userName} />
-                        <AvatarFallback>{userName.charAt(0).toUpperCase()}</AvatarFallback>
+                        <AvatarFallback>
+                          {userName.charAt(0).toUpperCase()}
+                        </AvatarFallback>
                       </Avatar>
                     </Button>
                   </DropdownMenuTrigger>
@@ -95,25 +120,35 @@ export function Navbar({ isAuthenticated = false }: NavbarProps) {
                     <div className="flex items-center gap-2 p-2">
                       <Avatar className="h-8 w-8">
                         <AvatarImage src={userAvatar} alt={userName} />
-                        <AvatarFallback>{userName.charAt(0).toUpperCase()}</AvatarFallback>
+                        <AvatarFallback>
+                          {userName.charAt(0).toUpperCase()}
+                        </AvatarFallback>
                       </Avatar>
                       <div className="flex flex-col">
                         <p className="text-sm font-medium">{userName}</p>
-                        <p className="text-xs text-muted-foreground">{userEmail}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {userEmail}
+                        </p>
                       </div>
                     </div>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem asChild>
-                      <Link to="/profile" className="flex items-center gap-2 cursor-pointer">
+                      <Link
+                        to="/profile"
+                        className="flex items-center gap-2 cursor-pointer"
+                      >
                         <User className="h-4 w-4" />
                         Profile
                       </Link>
                     </DropdownMenuItem>
 
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={handleLogout} className="flex items-center gap-2 cursor-pointer text-destructive">
-                        <LogOut className="h-4 w-4" />
-                        Log out
+                    <DropdownMenuItem
+                      onClick={handleLogout}
+                      className="flex items-center gap-2 cursor-pointer text-destructive"
+                    >
+                      <LogOut className="h-4 w-4" />
+                      Log out
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
@@ -137,7 +172,11 @@ export function Navbar({ isAuthenticated = false }: NavbarProps) {
             className="md:hidden"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
           >
-            {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            {isMobileMenuOpen ? (
+              <X className="h-5 w-5" />
+            ) : (
+              <Menu className="h-5 w-5" />
+            )}
           </Button>
         </div>
 
@@ -151,7 +190,9 @@ export function Navbar({ isAuthenticated = false }: NavbarProps) {
                   to={link.href}
                   onClick={() => setIsMobileMenuOpen(false)}
                   className={`text-sm font-medium transition-colors hover:text-primary ${
-                    isActive(link.href) ? "text-primary" : "text-muted-foreground"
+                    isActive(link.href)
+                      ? "text-primary"
+                      : "text-muted-foreground"
                   }`}
                 >
                   {link.label}

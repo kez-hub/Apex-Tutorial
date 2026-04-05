@@ -1,5 +1,13 @@
 import { Link } from "react-router-dom";
-import { Clock, BookOpen, Star, Users, MoreVertical, Pencil, Trash } from "lucide-react";
+import {
+  Clock,
+  BookOpen,
+  Star,
+  Users,
+  MoreVertical,
+  Pencil,
+  Trash,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -8,13 +16,14 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Course } from "@/lib/data";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuTrigger 
+import { useState, useEffect } from "react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { doc, deleteDoc } from "firebase/firestore";
+import { doc, deleteDoc, getDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 
 interface CourseCardProps {
@@ -25,34 +34,63 @@ interface CourseCardProps {
 export function CourseCard({ course, onEdit }: CourseCardProps) {
   const { user, userData } = useAuth();
   const { toast } = useToast();
+  const [instructorAvatar, setInstructorAvatar] = useState(
+    course.instructorAvatar,
+  );
+
+  // Fetch instructor profile picture from Firestore
+  useEffect(() => {
+    if (course.instructorId) {
+      getDoc(doc(db, "users", course.instructorId))
+        .then((docSnap) => {
+          if (docSnap.exists()) {
+            const instructorData = docSnap.data();
+            if (instructorData.avatarBase64) {
+              setInstructorAvatar(instructorData.avatarBase64);
+            }
+          }
+        })
+        .catch((error) => {
+          console.error("Error fetching instructor avatar:", error);
+        });
+    }
+  }, [course.instructorId]);
 
   const handleCourseClick = (e: React.MouseEvent) => {
     // Instructors bypass the payment check
-    if (userData?.role === 'instructor') return;
+    if (userData?.role === "instructor") return;
 
     if (!userData?.hasPaid && !course.enrolled) {
       e.preventDefault();
       toast({
         title: "Payment Required ₦",
-        description: "You need to unlock all courses to access this content. Check your dashboard for the 'Pay Now' button.",
+        description:
+          "You need to unlock all courses to access this content. Check your dashboard for the 'Pay Now' button.",
         variant: "destructive",
       });
     }
   };
 
-  const isOwner = userData?.role === 'instructor' && course.instructorId === user?.uid;
+  const isOwner =
+    userData?.role === "instructor" && course.instructorId === user?.uid;
 
   const handleDelete = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    
-    if (!window.confirm("Are you sure you want to delete this course? This action cannot be undone.")) return;
+
+    if (
+      !window.confirm(
+        "Are you sure you want to delete this course? This action cannot be undone.",
+      )
+    )
+      return;
 
     try {
       await deleteDoc(doc(db, "courses", course.id));
       toast({
         title: "Course Deleted",
-        description: "The course has been successfully removed from the platform.",
+        description:
+          "The course has been successfully removed from the platform.",
       });
     } catch (err) {
       console.error("Error deleting course:", err);
@@ -114,10 +152,16 @@ export function CourseCard({ course, onEdit }: CourseCardProps) {
           {/* Instructor */}
           <div className="mb-3 flex items-center gap-2">
             <Avatar className="h-6 w-6">
-              <AvatarImage src={course.instructorAvatar} alt={course.instructor} />
+              <AvatarImage
+                src={instructorAvatar}
+                alt={course.instructor}
+                className="object-cover"
+              />
               <AvatarFallback>{course.instructor.charAt(0)}</AvatarFallback>
             </Avatar>
-            <span className="text-sm text-muted-foreground">{course.instructor}</span>
+            <span className="text-sm text-muted-foreground">
+              {course.instructor}
+            </span>
           </div>
 
           {/* Stats */}
@@ -140,7 +184,9 @@ export function CourseCard({ course, onEdit }: CourseCardProps) {
               </div>
               <div className="flex items-center gap-1 text-muted-foreground">
                 <Users className="h-3.5 w-3.5" />
-                <span className="text-xs">{course.students.toLocaleString()}</span>
+                <span className="text-xs">
+                  {course.students.toLocaleString()}
+                </span>
               </div>
             </div>
 
@@ -148,17 +194,30 @@ export function CourseCard({ course, onEdit }: CourseCardProps) {
             {isOwner && (
               <div onClick={(e) => e.preventDefault()}>
                 <DropdownMenu>
-                  <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full hover:bg-muted">
+                  <DropdownMenuTrigger
+                    asChild
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 rounded-full hover:bg-muted"
+                    >
                       <MoreVertical className="h-4 w-4 text-muted-foreground" />
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-32">
-                    <DropdownMenuItem onClick={handleEditClick} className="cursor-pointer gap-2">
+                    <DropdownMenuItem
+                      onClick={handleEditClick}
+                      className="cursor-pointer gap-2"
+                    >
                       <Pencil className="h-3.5 w-3.5" />
                       Edit
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={handleDelete} className="cursor-pointer gap-2 text-destructive focus:text-destructive">
+                    <DropdownMenuItem
+                      onClick={handleDelete}
+                      className="cursor-pointer gap-2 text-destructive focus:text-destructive"
+                    >
                       <Trash className="h-3.5 w-3.5" />
                       Delete
                     </DropdownMenuItem>
@@ -175,7 +234,9 @@ export function CourseCard({ course, onEdit }: CourseCardProps) {
             <div className="w-full">
               <div className="mb-1 flex items-center justify-between text-xs">
                 <span className="text-muted-foreground">Progress</span>
-                <span className="font-medium text-primary">{course.progress}%</span>
+                <span className="font-medium text-primary">
+                  {course.progress}%
+                </span>
               </div>
               <Progress value={course.progress} className="h-1.5" />
             </div>

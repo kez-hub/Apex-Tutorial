@@ -49,20 +49,23 @@ export function PaymentModal({ isOpen, onClose }: PaymentModalProps) {
       await updateDoc(userDocRef, {
         hasPaid: true,
         paymentReference: response.reference,
-        paidAt: new Date().toISOString()
+        paidAt: new Date().toISOString(),
       });
 
       toast({
         title: "Payment Successful! 🎉",
-        description: "Welcome to Apex Tutorials! All courses are now unlocked forever.",
+        description:
+          "Welcome to Apex Tutorials! All courses are now unlocked forever.",
       });
-      
+
       onClose();
     } catch (error) {
       console.error("Error updating payment status:", error);
       toast({
         title: "Database Sync Error",
-        description: "Your payment was successful but we couldn't update your account. Please contact support with ref: " + response.reference,
+        description:
+          "Your payment was successful but we couldn't update your account. Please contact support with ref: " +
+          response.reference,
         variant: "destructive",
       });
     } finally {
@@ -78,7 +81,7 @@ export function PaymentModal({ isOpen, onClose }: PaymentModalProps) {
     const handler = window.PaystackPop.setup({
       key: import.meta.env.VITE_PAYSTACK_PUBLIC_KEY || "pk_test_placeholder",
       email: user.email,
-      amount: 10000 * 100, 
+      amount: 10000 * 100,
       currency: "NGN",
       ref: `APEX-${user.uid.slice(0, 8)}-${Date.now()}`,
       callback: (response: any) => {
@@ -89,7 +92,8 @@ export function PaymentModal({ isOpen, onClose }: PaymentModalProps) {
         setIsProcessing(false);
         toast({
           title: "Payment Cancelled",
-          description: "You need to complete the payment to access your courses.",
+          description:
+            "You need to complete the payment to access your courses.",
           variant: "default",
         });
       },
@@ -101,21 +105,17 @@ export function PaymentModal({ isOpen, onClose }: PaymentModalProps) {
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="sm:max-w-[450px] p-0 overflow-hidden border-none shadow-2xl max-h-[90vh] flex flex-col">
-        <button 
-          onClick={onClose}
-          className="absolute right-4 top-4 z-50 rounded-full bg-black/20 p-2 text-white/80 hover:bg-black/40 hover:text-white transition-all"
-        >
-          <X className="h-5 w-5" />
-        </button>
-
         <div className="gradient-primary p-8 text-white relative overflow-hidden flex-shrink-0">
           <div className="absolute top-0 right-0 -mt-4 -mr-4 h-32 w-32 rounded-full bg-white/10 blur-2xl" />
           <div className="relative z-10">
             <Zap className="h-12 w-12 mb-4 text-amber-300 fill-amber-300 animate-pulse" />
             <DialogHeader>
-              <DialogTitle className="text-3xl font-bold font-heading text-white">Unlock All Courses</DialogTitle>
+              <DialogTitle className="text-3xl font-bold font-heading text-white">
+                Unlock All Courses
+              </DialogTitle>
               <DialogDescription className="text-white/80 text-lg mt-2">
-                Get lifetime access to the entire Apex Tutorial library for a one-time fee.
+                Get lifetime access to the entire Apex Tutorial library for a
+                one-time fee.
               </DialogDescription>
             </DialogHeader>
           </div>
@@ -128,7 +128,7 @@ export function PaymentModal({ isOpen, onClose }: PaymentModalProps) {
               "Official Certificates of Completion",
               "Exclusive Learning Community Access",
               "Downloadable Resource Materials",
-              "Future Course Updates included"
+              "Future Course Updates included",
             ].map((feature, i) => (
               <div key={i} className="flex items-start gap-3">
                 <CheckCircle2 className="h-5 w-5 text-primary mt-0.5" />
@@ -138,15 +138,17 @@ export function PaymentModal({ isOpen, onClose }: PaymentModalProps) {
           </div>
 
           <div className="bg-muted/50 rounded-2xl p-6 mb-8 border border-border/50 text-center">
-            <p className="text-muted-foreground text-sm uppercase tracking-wider font-semibold mb-1">One-Time Payment</p>
+            <p className="text-muted-foreground text-sm uppercase tracking-wider font-semibold mb-1">
+              One-Time Payment
+            </p>
             <h3 className="text-4xl font-bold text-foreground">₦10,000</h3>
             <p className="text-xs text-muted-foreground mt-2 flex items-center justify-center gap-1">
               <ShieldCheck className="h-3 w-3" /> Secure Payment via Paystack
             </p>
           </div>
 
-          <Button 
-            variant="gradient" 
+          <Button
+            variant="gradient"
             className="w-full h-14 text-lg font-bold shadow-lg shadow-primary/20"
             onClick={handlePayment}
             disabled={isProcessing}
@@ -163,9 +165,10 @@ export function PaymentModal({ isOpen, onClose }: PaymentModalProps) {
               </>
             )}
           </Button>
-          
+
           <p className="text-center text-[10px] text-muted-foreground mt-4 italic">
-            By clicking "Unlock Access Now", you'll be redirected to Paystack to complete your secure purchase.
+            By clicking "Unlock Access Now", you'll be redirected to Paystack to
+            complete your secure purchase.
           </p>
         </div>
       </DialogContent>
