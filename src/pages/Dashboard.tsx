@@ -11,6 +11,8 @@ import {
   Video,
   ClipboardList,
   FileText,
+  Eye,
+  Download,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -20,12 +22,18 @@ import { CourseCard } from "@/components/courses/CourseCard";
 import { courses as initialCourses, Course } from "@/lib/data";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCourses } from "@/hooks/useCourses";
+import { useNotes } from "@/hooks/useNotes";
 import { AddCourseModal } from "@/components/courses/AddCourseModal";
+import { AddNotesModal } from "@/components/notes/AddNotesModal";
+import { AddQuizModal } from "@/components/quiz/AddQuizModal";
 
 export default function Dashboard() {
   const { user, userData } = useAuth();
   const { courses, loading } = useCourses();
+  const { notes } = useNotes();
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isNotesModalOpen, setIsNotesModalOpen] = useState(false);
+  const [isQuizModalOpen, setIsQuizModalOpen] = useState(false);
   const [isFabOpen, setIsFabOpen] = useState(false);
   const [courseToEdit, setCourseToEdit] = useState<Course | null>(null);
   const navigate = useNavigate();
@@ -84,6 +92,16 @@ export default function Dashboard() {
           if (!open) setCourseToEdit(null);
         }}
         initialData={courseToEdit}
+      />
+
+      <AddNotesModal
+        isOpen={isNotesModalOpen}
+        onOpenChange={setIsNotesModalOpen}
+      />
+
+      <AddQuizModal
+        isOpen={isQuizModalOpen}
+        onOpenChange={setIsQuizModalOpen}
       />
 
       <main className="container mx-auto px-4 py-8 overflow-hidden">
@@ -183,6 +201,142 @@ export default function Dashboard() {
             )}
           </div>
         </section>
+
+        {/* Notes Section - Only for instructors */}
+        {userData?.role === "instructor" && (
+          <section className="mt-12 pb-20">
+            <div className="mb-6 flex items-center justify-between">
+              <h2 className="font-heading text-xl font-semibold">
+                My Study Notes
+              </h2>
+              <Button variant="ghost" asChild>
+                <Link to="/notes" className="text-primary">
+                  View All Notes
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+              </Button>
+            </div>
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {notes
+                .filter((note) => note.instructorId === user?.uid)
+                .slice(0, 3)
+                .map((note) => (
+                  <Card
+                    key={note.id}
+                    className="hover:shadow-lg transition-shadow group overflow-hidden"
+                  >
+                    <div className="aspect-video w-full overflow-hidden bg-muted">
+                      <img
+                        src={note.thumbnail}
+                        alt={note.title}
+                        className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                    </div>
+
+                    <CardContent className="p-4">
+                      <div className="flex items-start justify-between mb-2">
+                        <div className="text-xs font-medium bg-primary/10 text-primary px-2 py-1 rounded">
+                          {note.level}
+                        </div>
+                      </div>
+                      <h3 className="font-heading font-semibold line-clamp-2 mb-1">
+                        {note.title}
+                      </h3>
+                      <p className="text-sm text-muted-foreground line-clamp-1 mb-4">
+                        {note.description}
+                      </p>
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="flex-1 text-xs"
+                          onClick={() => {
+                            try {
+                              if (note.pdfUrl.startsWith("data:")) {
+                                const arr = note.pdfUrl.split(",");
+                                const mimeMatch = arr[0].match(/:(.*?);/);
+                                const mime = mimeMatch
+                                  ? mimeMatch[1]
+                                  : "application/pdf";
+                                const bstr = atob(arr[1]);
+                                const n = bstr.length;
+                                const u8arr = new Uint8Array(n);
+                                for (let i = 0; i < n; i++) {
+                                  u8arr[i] = bstr.charCodeAt(i);
+                                }
+                                const blob = new Blob([u8arr], { type: mime });
+                                const blobUrl = URL.createObjectURL(blob);
+                                window.open(blobUrl, "_blank");
+                                setTimeout(() => URL.revokeObjectURL(blobUrl), 100);
+                              } else {
+                                window.open(note.pdfUrl, "_blank");
+                              }
+                            } catch (error) {
+                              console.error("Error opening PDF:", error);
+                            }
+                          }}
+                        >
+                          <Eye className="h-3 w-3 mr-1" />
+                          View
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => {
+                            try {
+                              const link = document.createElement("a");
+                              if (note.pdfUrl.startsWith("data:")) {
+                                const arr = note.pdfUrl.split(",");
+                                const mimeMatch = arr[0].match(/:(.*?);/);
+                                const mime = mimeMatch
+                                  ? mimeMatch[1]
+                                  : "application/pdf";
+                                const bstr = atob(arr[1]);
+                                const n = bstr.length;
+                                const u8arr = new Uint8Array(n);
+                                for (let i = 0; i < n; i++) {
+                                  u8arr[i] = bstr.charCodeAt(i);
+                                }
+                                const blob = new Blob([u8arr], { type: mime });
+                                link.href = URL.createObjectURL(blob);
+                              } else {
+                                link.href = note.pdfUrl;
+                              }
+                              link.download = `${note.title.replace(/[^a-z0-9]/gi, "_").toLowerCase()}.pdf`;
+                              document.body.appendChild(link);
+                              link.click();
+                              document.body.removeChild(link);
+                              if (note.pdfUrl.startsWith("data:")) {
+                                setTimeout(() => URL.revokeObjectURL(link.href), 100);
+                              }
+                            } catch (error) {
+                              console.error("Error downloading PDF:", error);
+                            }
+                          }}
+                        >
+                          <Download className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              {notes.filter((note) => note.instructorId === user?.uid)
+                .length === 0 && (
+                <div className="col-span-full flex flex-col items-center justify-center py-12 text-center border-2 border-dashed border-border/50 rounded-2xl bg-muted/30">
+                  <div className="mb-4 rounded-full bg-background p-4 shadow-sm">
+                    <FileText className="h-8 w-8 text-muted-foreground" />
+                  </div>
+                  <h3 className="font-heading text-lg font-semibold">
+                    No notes yet
+                  </h3>
+                  <p className="mt-2 text-muted-foreground max-w-xs">
+                    Create your first study note using the button below!
+                  </p>
+                </div>
+              )}
+            </div>
+          </section>
+        )}
 
         {/* Quiz Section - Only for students */}
         {userData?.role === "student" && (
@@ -285,8 +439,8 @@ export default function Dashboard() {
                 <button
                   type="button"
                   onClick={() => {
+                    setIsQuizModalOpen(true);
                     setIsFabOpen(false);
-                    navigate("/quiz");
                   }}
                   className="flex items-center gap-3 rounded-full bg-white/95 px-4 py-3 shadow-xl shadow-black/10 ring-1 ring-border transition hover:-translate-y-1"
                   title="Quiz"
@@ -298,6 +452,7 @@ export default function Dashboard() {
                 <button
                   type="button"
                   onClick={() => {
+                    setIsNotesModalOpen(true);
                     setIsFabOpen(false);
                   }}
                   className="flex items-center gap-3 rounded-full bg-white/95 px-4 py-3 shadow-xl shadow-black/10 ring-1 ring-border transition hover:-translate-y-1"

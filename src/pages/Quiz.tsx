@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import {
   Brain,
@@ -16,6 +16,7 @@ import { Progress } from "@/components/ui/progress";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { useAuth } from "@/contexts/AuthContext";
+import { useQuizzes } from "@/hooks/useQuizzes";
 
 interface Quiz {
   id: string;
@@ -34,55 +35,7 @@ interface Quiz {
 
 export default function Quiz() {
   const { userData } = useAuth();
-  const [quizzes, setQuizzes] = useState<Quiz[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  // Mock quiz data - in a real app, this would come from Firestore
-  useEffect(() => {
-    // Simulate API call
-    setTimeout(() => {
-      const mockQuizzes: Quiz[] = [
-        {
-          id: "1",
-          title: "JavaScript Fundamentals",
-          description: "Test your knowledge of JavaScript basics",
-          courseId: "js101",
-          courseTitle: "JavaScript for Beginners",
-          questions: 20,
-          duration: 30,
-          difficulty: "easy",
-          completed: true,
-          score: 18,
-          maxScore: 20,
-          completedAt: new Date("2024-01-15"),
-        },
-        {
-          id: "2",
-          title: "React Components Quiz",
-          description: "Master React component concepts",
-          courseId: "react101",
-          courseTitle: "React Fundamentals",
-          questions: 25,
-          duration: 45,
-          difficulty: "medium",
-          completed: false,
-        },
-        {
-          id: "3",
-          title: "Advanced TypeScript",
-          description: "Challenge yourself with TypeScript advanced topics",
-          courseId: "ts201",
-          courseTitle: "TypeScript Advanced",
-          questions: 30,
-          duration: 60,
-          difficulty: "hard",
-          completed: false,
-        },
-      ];
-      setQuizzes(mockQuizzes);
-      setLoading(false);
-    }, 1000);
-  }, []);
+  const { quizzes, loading } = useQuizzes();
 
   const completedQuizzes = quizzes.filter((q) => q.completed);
   const pendingQuizzes = quizzes.filter((q) => !q.completed);

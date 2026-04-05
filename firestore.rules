@@ -37,6 +37,28 @@ service cloud.firestore {
       // TODO: Restrict this to admin users only in production
       allow write: if true;
     }
+    match /notes/{noteId} {
+      // Allow everyone to read notes
+      allow read: if true;
+      // Allow instructors to update their own notes
+      allow update: if request.auth != null && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'instructor' &&
+        resource.data.instructorId == request.auth.uid;
+      // Allow instructors to create and delete their own notes
+      allow create, delete: if request.auth != null && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'instructor';
+    }
+    match /quizzes/{quizId} {
+      // Allow everyone to read quizzes
+      allow read: if true;
+      // Allow instructors to update their own quizzes
+      allow update: if request.auth != null && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'instructor' &&
+        resource.data.instructorId == request.auth.uid;
+      // Allow instructors to create and delete their own quizzes
+      allow create, delete: if request.auth != null && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'instructor';
+    }
     match /metadata/{document=**} {
       allow read, write: if request.auth != null;
     }
