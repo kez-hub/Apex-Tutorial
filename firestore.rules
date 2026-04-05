@@ -4,6 +4,19 @@ service cloud.firestore {
     match /users/{userId}/{documents=**} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
     }
+    match /users/{userId} {
+      // Allow reading user document for password reset (to check email exists)
+      allow read: if request.auth == null;
+      // Allow updating reset code fields for password reset
+      allow update: if request.auth == null && 
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['resetCode', 'resetCodeExpiry', 'pendingNewPassword', 'pendingPasswordReset', 'pendingPasswordUpdate', 'resetToken', 'resetTokenExpiry']);
+    }
+    match /password-resets/{resetId} {
+      // Allow creating and reading password reset documents
+      allow create, read: if request.auth == null;
+      allow update, delete: if request.auth == null && 
+        request.auth.uid == resource.data.userId;
+    }
     match /courses/{courseId} {
       // Allow everyone to see the catalog (public read)
       allow read: if true;
