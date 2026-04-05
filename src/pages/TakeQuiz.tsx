@@ -173,20 +173,14 @@ export default function TakeQuiz() {
         { merge: true },
       );
 
-      // Update quiz document to record completion
+      // Update quiz document to record completion in the completions map
       const quizRef = doc(db, "quizzes", quiz.id);
-      await setDoc(
-        quizRef,
-        {
-          completions: {
-            [user.uid]: {
-              score: finalScore,
-              completedAt: new Date().toISOString(),
-            },
-          },
+      await updateDoc(quizRef, {
+        [`completions.${user.uid}`]: {
+          score: finalScore,
+          completedAt: new Date().toISOString(),
         },
-        { merge: true },
-      );
+      });
 
       toast({
         title: "Quiz submitted",

@@ -218,8 +218,8 @@ export default function InstructorSignup() {
                 </div>
               </div>
               <div>
-                <p className="text-xl font-bold">Professor Adebayo</p>
-                <p className="text-primary font-medium tracking-wide">Head of Curriculum @ Apex</p>
+                <p className="text-xl font-bold">Nwagbo Chidera Kelvin</p>
+                <p className="text-primary font-medium tracking-wide">Head of Curriculum Apex</p>
               </div>
             </div>
           </div>

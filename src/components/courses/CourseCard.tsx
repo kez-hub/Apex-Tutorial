@@ -117,7 +117,7 @@ export function CourseCard({ course, onEdit }: CourseCardProps) {
 
   return (
     <Link to={`/courses/${course.id}`} onClick={handleCourseClick}>
-      <Card className="relative group h-full overflow-hidden border-border/50 bg-card shadow-card transition-all duration-300 hover:shadow-elevated hover:-translate-y-1">
+      <Card className="group h-full overflow-hidden border-border/50 bg-card shadow-card transition-all duration-300 hover:shadow-elevated hover:-translate-y-1">
         {/* Thumbnail */}
         <div className="relative aspect-video overflow-hidden">
           <img
