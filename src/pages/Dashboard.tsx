@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   BookOpen,
   Clock,
@@ -8,6 +8,9 @@ import {
   ArrowRight,
   Plus,
   Brain,
+  Video,
+  ClipboardList,
+  FileText,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -23,7 +26,9 @@ export default function Dashboard() {
   const { user, userData } = useAuth();
   const { courses, loading } = useCourses();
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isFabOpen, setIsFabOpen] = useState(false);
   const [courseToEdit, setCourseToEdit] = useState<Course | null>(null);
+  const navigate = useNavigate();
   const userName = user?.displayName || user?.email?.split("@")[0] || "User";
 
   const enrolledCourseIds = userData?.enrolledCourses || [];
@@ -261,13 +266,58 @@ export default function Dashboard() {
 
         {/* Floating Action Button for Instructors */}
         {userData?.role === "instructor" && (
-          <button
-            className="fixed bottom-8 right-8 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-elevated hover:scale-110 active:scale-95 transition-all duration-300 animate-fade-in group"
-            title="Create New Course"
-            onClick={() => setIsAddModalOpen(true)}
-          >
-            <Plus className="h-6 w-6 group-hover:rotate-90 transition-transform duration-300" />
-          </button>
+          <div className="fixed bottom-8 right-8 z-50 flex flex-col items-end gap-3">
+            {isFabOpen && (
+              <div className="flex flex-col items-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsAddModalOpen(true);
+                    setIsFabOpen(false);
+                  }}
+                  className="flex items-center gap-3 rounded-full bg-white/95 px-4 py-3 shadow-xl shadow-black/10 ring-1 ring-border transition hover:-translate-y-1"
+                  title="Videos"
+                >
+                  <Video className="h-5 w-5 text-primary" />
+                  <span className="text-sm font-medium">Videos</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsFabOpen(false);
+                    navigate("/quiz");
+                  }}
+                  className="flex items-center gap-3 rounded-full bg-white/95 px-4 py-3 shadow-xl shadow-black/10 ring-1 ring-border transition hover:-translate-y-1"
+                  title="Quiz"
+                >
+                  <ClipboardList className="h-5 w-5 text-secondary" />
+                  <span className="text-sm font-medium">Quiz</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsFabOpen(false);
+                  }}
+                  className="flex items-center gap-3 rounded-full bg-white/95 px-4 py-3 shadow-xl shadow-black/10 ring-1 ring-border transition hover:-translate-y-1"
+                  title="Notes"
+                >
+                  <FileText className="h-5 w-5 text-accent" />
+                  <span className="text-sm font-medium">Notes</span>
+                </button>
+              </div>
+            )}
+
+            <button
+              type="button"
+              className="flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-elevated hover:scale-110 active:scale-95 transition-all duration-300 animate-fade-in"
+              title="Create New Content"
+              onClick={() => setIsFabOpen((open) => !open)}
+            >
+              <Plus className="h-6 w-6 transition-transform duration-300" />
+            </button>
+          </div>
         )}
       </main>
 
