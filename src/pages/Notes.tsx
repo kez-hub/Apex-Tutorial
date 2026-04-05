@@ -58,8 +58,11 @@ export default function Notes() {
 
   const filteredNotes = notes.filter((note) => {
     // For instructors, only show their own notes
-    const isInstructorNote = !userData || userData.role !== "instructor" || note.instructorId === userData.uid;
-    
+    const isInstructorNote =
+      !userData ||
+      userData.role !== "instructor" ||
+      note.instructorId === user?.uid;
+
     const matchesSearch =
       note.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       note.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -163,8 +166,7 @@ export default function Notes() {
           <p className="text-muted-foreground">
             {userData?.role === "instructor"
               ? "Manage and view the study notes you've uploaded for your students."
-              : "Access comprehensive study materials and resources from expert instructors."
-            }
+              : "Access comprehensive study materials and resources from expert instructors."}
           </p>
         </div>
 
