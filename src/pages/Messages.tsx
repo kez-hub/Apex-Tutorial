@@ -13,8 +13,10 @@ import { useToast } from "@/hooks/use-toast";
 import {
   doc,
   getDoc,
+  getDocs,
   collection,
   addDoc,
+  updateDoc,
   onSnapshot,
   query,
   orderBy,
@@ -65,6 +67,18 @@ export default function Messages() {
           const instructorDoc = await getDoc(doc(db, "users", instructorId));
           if (instructorDoc.exists()) {
             const instructorData = instructorDoc.data();
+
+            // Calculate unread count for this conversation
+            const messagesRef = collection(db, "messages");
+            const unreadQuery = query(
+              messagesRef,
+              where("participants", "array-contains", user.uid),
+              where("senderId", "==", instructorId),
+              where("receiverId", "==", user.uid),
+              where("isRead", "==", false),
+            );
+            const unreadSnapshot = await getDocs(unreadQuery);
+
             const conversation: Conversation = {
               id: instructorId,
               participantId: instructorId,
@@ -73,10 +87,13 @@ export default function Messages() {
                 instructorData.email?.split("@")[0] ||
                 "Instructor",
               participantAvatar: instructorData.avatarBase64,
-              unreadCount: 0,
+              unreadCount: unreadSnapshot.size,
             };
             setConversations([conversation]);
             setSelectedConversation(conversation);
+            setShowMessageView(true);
+            // Mark messages as read when opening from course card
+            markMessagesAsRead(conversation);
           }
         } else {
           // Load all conversations for the current user
@@ -106,6 +123,17 @@ export default function Messages() {
                   );
                   if (participantDoc.exists()) {
                     const participantData = participantDoc.data();
+
+                    // Calculate unread count for this conversation
+                    const unreadMessages = snapshot.docs.filter((doc) => {
+                      const data = doc.data();
+                      return (
+                        data.senderId === participantId &&
+                        data.receiverId === user.uid &&
+                        !data.isRead
+                      );
+                    });
+
                     conversationsList.push({
                       id: participantId,
                       participantId,
@@ -114,7 +142,7 @@ export default function Messages() {
                         participantData.email?.split("@")[0] ||
                         "User",
                       participantAvatar: participantData.avatarBase64,
-                      unreadCount: 0, // TODO: Calculate unread count
+                      unreadCount: unreadMessages.length,
                     });
                   }
                 } catch (error) {
@@ -248,6 +276,30 @@ export default function Messages() {
     }
   };
 
+  const markMessagesAsRead = async (conversation: Conversation) => {
+    if (!user) return;
+
+    try {
+      const messagesRef = collection(db, "messages");
+      const q = query(
+        messagesRef,
+        where("participants", "array-contains", user.uid),
+        where("senderId", "==", conversation.participantId),
+        where("receiverId", "==", user.uid),
+        where("isRead", "==", false),
+      );
+
+      const snapshot = await getDocs(q);
+      const updatePromises = snapshot.docs.map((doc) =>
+        updateDoc(doc.ref, { isRead: true }),
+      );
+
+      await Promise.all(updatePromises);
+    } catch (error) {
+      console.error("Error marking messages as read:", error);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background">
@@ -311,6 +363,7 @@ export default function Messages() {
                             onClick={() => {
                               setSelectedConversation(conversation);
                               setShowMessageView(true);
+                              markMessagesAsRead(conversation);
                             }}
                             className={`px-4 py-3 cursor-pointer border-b border-border/30 transition-colors ${
                               selectedConversation?.id === conversation.id

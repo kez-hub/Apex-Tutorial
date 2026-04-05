@@ -90,9 +90,12 @@ service cloud.firestore {
         request.resource.data.senderId in request.resource.data.participants &&
         request.resource.data.receiverId in request.resource.data.participants;
 
-      // Allow users to update messages they sent (for marking as read)
-      allow update: if request.auth != null &&
-        request.auth.uid == resource.data.senderId;
+      // Allow users to update messages they sent OR allow receivers to mark messages as read
+      allow update: if request.auth != null && (
+        request.auth.uid == resource.data.senderId ||
+        (request.auth.uid == resource.data.receiverId && 
+         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isRead']))
+      );
     }
   }
 }
