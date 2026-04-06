@@ -6,8 +6,10 @@ interface Quiz {
   id: string;
   title: string;
   description: string;
-  courseId: string;
-  courseTitle: string;
+  courseId?: string;
+  courseTitle?: string;
+  noteId?: string;
+  noteTitle?: string;
   questions: number;
   duration: number; // in minutes
   difficulty: "easy" | "medium" | "hard";

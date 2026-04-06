@@ -37,8 +37,10 @@ interface Quiz {
   id: string;
   title: string;
   description: string;
-  courseId: string;
-  courseTitle: string;
+  courseId?: string;
+  courseTitle?: string;
+  noteId?: string;
+  noteTitle?: string;
   questions: number;
   duration: number;
   difficulty: "easy" | "medium" | "hard";
@@ -267,8 +269,8 @@ export default function QuizDetails() {
                   <div>
                     <CardTitle className="text-2xl">{quiz.title}</CardTitle>
                     <p className="text-sm text-muted-foreground mt-1">
-                      {quiz.courseTitle} • {quiz.duration} min •{" "}
-                      {quiz.questions} questions
+                      {quiz.courseTitle || quiz.noteTitle} • {quiz.duration} min
+                      • {quiz.questions} questions
                     </p>
                   </div>
                   <Badge className="bg-secondary/10 text-secondary border-secondary/20">

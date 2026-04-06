@@ -23,14 +23,24 @@ import { db } from "@/lib/firebase";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { useCourses } from "@/hooks/useCourses";
-import { ClipboardList, BookOpen, Clock, Target, Layers } from "lucide-react";
+import { useNotes } from "@/hooks/useNotes";
+import {
+  ClipboardList,
+  BookOpen,
+  Clock,
+  Target,
+  Layers,
+  FileText,
+} from "lucide-react";
 
 interface Quiz {
   id: string;
   title: string;
   description: string;
-  courseId: string;
-  courseTitle: string;
+  courseId?: string;
+  courseTitle?: string;
+  noteId?: string;
+  noteTitle?: string;
   questions: number;
   duration: number; // in minutes
   difficulty: "easy" | "medium" | "hard";
@@ -57,13 +67,17 @@ export function AddQuizModal({
 }: AddQuizModalProps) {
   const { user, userData } = useAuth();
   const { courses } = useCourses();
+  const { notes } = useNotes();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
 
   const [formData, setFormData] = useState({
     title: "",
+    relatedType: "course" as "course" | "note",
     courseId: "",
     courseTitle: "",
+    noteId: "",
+    noteTitle: "",
     description: "",
     questions: 10,
     duration: 30,
@@ -75,8 +89,13 @@ export function AddQuizModal({
     if (initialData) {
       setFormData({
         title: initialData.title || "",
+        relatedType: (initialData.noteId ? "note" : "course") as
+          | "course"
+          | "note",
         courseId: initialData.courseId || "",
         courseTitle: initialData.courseTitle || "",
+        noteId: initialData.noteId || "",
+        noteTitle: initialData.noteTitle || "",
         description: initialData.description || "",
         questions: initialData.questions || 10,
         duration: initialData.duration || 30,
@@ -86,8 +105,11 @@ export function AddQuizModal({
       // Default state for new quiz
       setFormData({
         title: "",
+        relatedType: "course",
         courseId: "",
         courseTitle: "",
+        noteId: "",
+        noteTitle: "",
         description: "",
         questions: 10,
         duration: 30,
@@ -106,15 +128,28 @@ export function AddQuizModal({
     }
   }, [formData.courseId, courses]);
 
+  // Update note title when note ID changes
+  useEffect(() => {
+    if (formData.noteId) {
+      const selectedNote = notes.find((n) => n.id === formData.noteId);
+      if (selectedNote) {
+        setFormData((prev) => ({ ...prev, noteTitle: selectedNote.title }));
+      }
+    }
+  }, [formData.noteId, notes]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user || !userData) return;
 
-    if (!formData.title || !formData.courseId || !formData.description) {
+    const hasRelatedItem =
+      formData.relatedType === "course" ? formData.courseId : formData.noteId;
+
+    if (!formData.title || !hasRelatedItem || !formData.description) {
       toast({
         title: "Missing Fields",
         description:
-          "Please fill in all required fields including selecting a course.",
+          "Please fill in all required fields including selecting a course or note.",
         variant: "destructive",
       });
       return;
@@ -126,8 +161,13 @@ export function AddQuizModal({
     const quizPayload: Omit<Quiz, "id"> = {
       title: formData.title,
       description: formData.description,
-      courseId: formData.courseId,
-      courseTitle: formData.courseTitle,
+      courseId:
+        formData.relatedType === "course" ? formData.courseId : undefined,
+      courseTitle:
+        formData.relatedType === "course" ? formData.courseTitle : undefined,
+      noteId: formData.relatedType === "note" ? formData.noteId : undefined,
+      noteTitle:
+        formData.relatedType === "note" ? formData.noteTitle : undefined,
       questions: formData.questions,
       duration: formData.duration,
       difficulty: formData.difficulty,
@@ -156,8 +196,11 @@ export function AddQuizModal({
       // Reset form
       setFormData({
         title: "",
+        relatedType: "course",
         courseId: "",
         courseTitle: "",
+        noteId: "",
+        noteTitle: "",
         description: "",
         questions: 10,
         duration: 30,
@@ -175,9 +218,12 @@ export function AddQuizModal({
     }
   };
 
-  // Filter courses to only show instructor's own courses
+  // Filter courses and notes to only show instructor's own items
   const instructorCourses = courses.filter(
     (course) => course.instructorId === user?.uid,
+  );
+  const instructorNotes = notes.filter(
+    (note) => note.instructorId === user?.uid,
   );
 
   return (
@@ -218,26 +264,78 @@ export function AddQuizModal({
             />
           </div>
 
-          {/* Course Selection */}
+          {/* Related Content Type */}
           <div className="space-y-2">
             <Label className="text-sm font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-              <BookOpen className="h-3.5 w-3.5" /> Related Course
+              <BookOpen className="h-3.5 w-3.5" /> Related Content Type
             </Label>
             <Select
-              value={formData.courseId || ""}
-              onValueChange={(val) =>
-                setFormData({ ...formData, courseId: val })
-              }
+              value={formData.relatedType}
+              onValueChange={(val: "course" | "note") => {
+                setFormData({
+                  ...formData,
+                  relatedType: val,
+                  courseId: "",
+                  courseTitle: "",
+                  noteId: "",
+                  noteTitle: "",
+                });
+              }}
             >
               <SelectTrigger className="bg-muted/30">
-                <SelectValue placeholder="Select a course for this quiz" />
+                <SelectValue placeholder="Select content type" />
               </SelectTrigger>
               <SelectContent>
-                {instructorCourses.map((course) => (
-                  <SelectItem key={course.id} value={course.id}>
-                    {course.title}
-                  </SelectItem>
-                ))}
+                <SelectItem value="course">Course</SelectItem>
+                <SelectItem value="note">Note</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Related Content Selection */}
+          <div className="space-y-2">
+            <Label className="text-sm font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+              {formData.relatedType === "course" ? (
+                <>
+                  <BookOpen className="h-3.5 w-3.5" /> Related Course
+                </>
+              ) : (
+                <>
+                  <FileText className="h-3.5 w-3.5" /> Related Note
+                </>
+              )}
+            </Label>
+            <Select
+              value={
+                formData.relatedType === "course"
+                  ? formData.courseId || ""
+                  : formData.noteId || ""
+              }
+              onValueChange={(val) => {
+                if (formData.relatedType === "course") {
+                  setFormData({ ...formData, courseId: val });
+                } else {
+                  setFormData({ ...formData, noteId: val });
+                }
+              }}
+            >
+              <SelectTrigger className="bg-muted/30">
+                <SelectValue
+                  placeholder={`Select a ${formData.relatedType} for this quiz`}
+                />
+              </SelectTrigger>
+              <SelectContent>
+                {formData.relatedType === "course"
+                  ? instructorCourses.map((course) => (
+                      <SelectItem key={course.id} value={course.id}>
+                        {course.title}
+                      </SelectItem>
+                    ))
+                  : instructorNotes.map((note) => (
+                      <SelectItem key={note.id} value={note.id}>
+                        {note.title}
+                      </SelectItem>
+                    ))}
               </SelectContent>
             </Select>
           </div>

@@ -22,8 +22,10 @@ interface Quiz {
   id: string;
   title: string;
   description: string;
-  courseId: string;
-  courseTitle: string;
+  courseId?: string;
+  courseTitle?: string;
+  noteId?: string;
+  noteTitle?: string;
   questions: number;
   duration: number; // in minutes
   difficulty: "easy" | "medium" | "hard";
@@ -116,7 +118,7 @@ export default function Quiz() {
                           {quiz.title}
                         </CardTitle>
                         <p className="text-sm text-muted-foreground">
-                          {quiz.courseTitle}
+                          {quiz.courseTitle || quiz.noteTitle}
                         </p>
                       </div>
                       <Badge className="bg-primary/10 text-primary border-primary/20">
@@ -279,7 +281,7 @@ export default function Quiz() {
                               {quiz.title}
                             </CardTitle>
                             <p className="text-sm text-muted-foreground mb-3">
-                              {quiz.courseTitle}
+                              {quiz.courseTitle || quiz.noteTitle}
                             </p>
                           </div>
                           <Badge
@@ -332,7 +334,7 @@ export default function Quiz() {
                           {quiz.title}
                         </CardTitle>
                         <p className="text-sm text-muted-foreground mb-3">
-                          {quiz.courseTitle}
+                          {quiz.courseTitle || quiz.noteTitle}
                         </p>
                       </div>
                       <Badge className="bg-green-500/10 text-green-600 border-green-200">
