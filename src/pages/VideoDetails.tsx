@@ -60,6 +60,8 @@ export default function VideoDetails() {
   const [editingModule, setEditingModule] = useState<VideoModule | null>(null);
   const [currentModuleIndex, setCurrentModuleIndex] = useState(0);
   const [instructorProfile, setInstructorProfile] = useState<any>(null);
+  const [objectives, setObjectives] = useState<string[]>([]);
+  const [newObjective, setNewObjective] = useState("");
   const [moduleForm, setModuleForm] = useState({
     title: "",
     description: "",
@@ -78,6 +80,7 @@ export default function VideoDetails() {
           const videoData = { ...snapshot.data(), id: snapshot.id } as Video;
           setVideo(videoData);
           setModules(videoData.modules || []);
+          setObjectives(videoData.objectives || []);
 
           // Fetch instructor profile if instructorId exists
           if (videoData.instructorId) {
@@ -252,6 +255,53 @@ export default function VideoDetails() {
   };
 
   const isEnrolled = userData?.enrolledVideos?.includes(id || "") || false;
+
+  const handleAddObjective = async () => {
+    if (!newObjective.trim() || !id) return;
+
+    const updatedObjectives = [...objectives, newObjective.trim()];
+    try {
+      await updateDoc(doc(db, "videos", id), {
+        objectives: updatedObjectives,
+      });
+      setObjectives(updatedObjectives);
+      setNewObjective("");
+      toast({
+        title: "Objective Added",
+        description: "Your objective has been added successfully.",
+      });
+    } catch (error) {
+      console.error("Error adding objective:", error);
+      toast({
+        title: "Error",
+        description: "Failed to add objective. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDeleteObjective = async (index: number) => {
+    if (!id) return;
+
+    const updatedObjectives = objectives.filter((_, i) => i !== index);
+    try {
+      await updateDoc(doc(db, "videos", id), {
+        objectives: updatedObjectives,
+      });
+      setObjectives(updatedObjectives);
+      toast({
+        title: "Objective Deleted",
+        description: "The objective has been removed.",
+      });
+    } catch (error) {
+      console.error("Error deleting objective:", error);
+      toast({
+        title: "Error",
+        description: "Failed to delete objective. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
 
   if (isLoading) {
     return (
@@ -598,6 +648,95 @@ export default function VideoDetails() {
                 </CardContent>
               </Card>
             </div>
+
+            {/* Course Objectives - Instructors Only */}
+            {isInstructor && video.instructorId === user?.uid && (
+              <div
+                className="animate-fade-in"
+                style={{ animationDelay: "0.05s" }}
+              >
+                <h2 className="mb-6 font-heading text-2xl font-bold">
+                  Course Objectives
+                </h2>
+                <Card className="border-border/50">
+                  <CardContent className="p-6">
+                    {/* Add New Objective */}
+                    <div className="mb-6 flex gap-2">
+                      <Input
+                        value={newObjective}
+                        onChange={(e) => setNewObjective(e.target.value)}
+                        placeholder="Add a course objective..."
+                        onKeyPress={(e) => {
+                          if (e.key === "Enter") handleAddObjective();
+                        }}
+                        className="flex-1"
+                      />
+                      <Button
+                        onClick={handleAddObjective}
+                        variant="gradient"
+                        size="sm"
+                      >
+                        <Plus className="h-4 w-4" />
+                        Add
+                      </Button>
+                    </div>
+
+                    {/* Objectives List */}
+                    {objectives.length > 0 ? (
+                      <ul className="space-y-2">
+                        {objectives.map((objective, index) => (
+                          <li
+                            key={index}
+                            className="flex items-center justify-between gap-3 rounded-lg border border-border/50 p-3 hover:bg-muted/50 transition-colors"
+                          >
+                            <div className="flex items-start gap-3 flex-1">
+                              <CheckCircle className="h-5 w-5 text-accent flex-shrink-0 mt-0.5" />
+                              <span className="text-sm">{objective}</span>
+                            </div>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDeleteObjective(index)}
+                              className="text-destructive hover:text-destructive"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="text-sm text-muted-foreground text-center py-4">
+                        No objectives added yet. Add your first objective above.
+                      </p>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+
+            {/* View Course Objectives - Students Only */}
+            {!isInstructor && objectives.length > 0 && (
+              <div
+                className="animate-fade-in"
+                style={{ animationDelay: "0.05s" }}
+              >
+                <h2 className="mb-6 font-heading text-2xl font-bold">
+                  Course Objectives
+                </h2>
+                <Card className="border-border/50">
+                  <CardContent className="p-6">
+                    <ul className="space-y-2">
+                      {objectives.map((objective, index) => (
+                        <li key={index} className="flex items-start gap-3">
+                          <CheckCircle className="h-5 w-5 text-accent flex-shrink-0 mt-0.5" />
+                          <span className="text-sm">{objective}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
 
             {/* Curriculum */}
             {modules.length > 0 && (

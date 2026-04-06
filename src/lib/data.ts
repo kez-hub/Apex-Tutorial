@@ -15,6 +15,7 @@ export interface Video {
   progress?: number;
   enrolled?: boolean;
   modules?: VideoModule[];
+  objectives?: string[];
 }
 
 export interface VideoModule {
