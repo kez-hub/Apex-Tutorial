@@ -25,6 +25,14 @@ interface PaymentModalProps {
   onClose: () => void;
 }
 
+// Helper to detect if device is mobile
+const isMobileDevice = () => {
+  if (typeof window === "undefined") return false;
+  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+    navigator.userAgent
+  );
+};
+
 export function PaymentModal({ isOpen, onClose }: PaymentModalProps) {
   const { user, userData } = useAuth();
   const { toast } = useToast();
@@ -78,12 +86,17 @@ export function PaymentModal({ isOpen, onClose }: PaymentModalProps) {
 
     setIsProcessing(true);
 
+    // Determine display mode: use 'page' on mobile for better UX, 'modal' on desktop
+    const isOnMobile = isMobileDevice();
+    const displayMode = isOnMobile ? "page" : "modal";
+
     const handler = window.PaystackPop.setup({
       key: import.meta.env.VITE_PAYSTACK_PUBLIC_KEY || "pk_test_placeholder",
       email: user.email,
       amount: 10050 * 100,
       currency: "NGN",
       ref: `APEX-${user.uid.slice(0, 8)}-${Date.now()}`,
+      display: displayMode, // Use page mode on mobile for better touch interaction
       callback: (response: any) => {
         // Payment successful - call internal async handler
         onPaymentSuccess(response);
@@ -99,7 +112,12 @@ export function PaymentModal({ isOpen, onClose }: PaymentModalProps) {
       },
     });
 
-    handler.openIframe();
+    // Use openIframe for modal, pay for page
+    if (isOnMobile) {
+      handler.pay();
+    } else {
+      handler.openIframe();
+    }
   };
 
   return (
