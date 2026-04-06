@@ -13,6 +13,7 @@ import {
   FileText,
   Eye,
   Download,
+  MessageCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -484,6 +485,20 @@ export default function Dashboard() {
               onClick={() => setIsFabOpen((open) => !open)}
             >
               <Plus className="h-6 w-6 transition-transform duration-300" />
+            </button>
+          </div>
+        )}
+
+        {/* WhatsApp FAB for Students */}
+        {userData?.role === "student" && (
+          <div className="fixed bottom-8 right-8 z-50">
+            <button
+              type="button"
+              className="flex h-14 w-14 items-center justify-center rounded-full bg-green-500 text-white shadow-elevated hover:scale-110 active:scale-95 transition-all duration-300 animate-fade-in"
+              title="Join WhatsApp Group"
+              onClick={() => window.open('https://chat.whatsapp.com/KPOMeE4fhz9FwsXn3FF7eO?mode=gi_t', '_blank')}
+            >
+              <MessageCircle className="h-6 w-6" />
             </button>
           </div>
         )}
