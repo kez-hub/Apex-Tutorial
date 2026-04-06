@@ -4,9 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { VideoCard } from "@/components/videos/VideoCard";
-import { videos } from "@/lib/data";
+import { useVideos } from "@/hooks/useVideos";
 
 export default function Landing() {
+  const { videos, loading } = useVideos();
   const featuredVideos = videos.slice(0, 3);
 
   const stats = [
@@ -175,15 +176,36 @@ export default function Landing() {
           </div>
 
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {featuredVideos.map((video, index) => (
-              <div
-                key={video.id}
-                className="animate-fade-in"
-                style={{ animationDelay: `${index * 0.1}s` }}
-              >
-                <VideoCard video={video} />
+            {loading ? (
+              Array.from({ length: 3 }).map((_, index) => (
+                <div
+                  key={index}
+                  className="h-[300px] w-full animate-pulse rounded-xl bg-muted"
+                />
+              ))
+            ) : featuredVideos.length > 0 ? (
+              featuredVideos.map((video, index) => (
+                <div
+                  key={video.id}
+                  className="animate-fade-in"
+                  style={{ animationDelay: `${index * 0.1}s` }}
+                >
+                  <VideoCard video={video} />
+                </div>
+              ))
+            ) : (
+              <div className="col-span-full flex flex-col items-center justify-center py-12 text-center">
+                <div className="mb-4 rounded-full bg-muted p-4">
+                  <BookOpen className="h-8 w-8 text-muted-foreground" />
+                </div>
+                <h3 className="font-heading text-xl font-semibold">
+                  No videos available
+                </h3>
+                <p className="mt-2 text-muted-foreground max-w-xs">
+                  Check back later for new content.
+                </p>
               </div>
-            ))}
+            )}
           </div>
 
           <div className="mt-12 text-center">
