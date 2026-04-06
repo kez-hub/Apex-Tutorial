@@ -23,21 +23,27 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
     return <Navigate to="/auth" state={{ from: location }} replace />;
   }
   
-  // Only redirect to confirm-email if userData exists AND user is not verified
-  // AND we're not already on the confirm-email page
-  // This prevents redirects during userData temporary null states
-  if (userData && !userData.isVerified && location.pathname !== '/confirm-email') {
-    return <Navigate to={`/confirm-email?email=${encodeURIComponent(user.email || "")}`} replace />;
+  // If already on confirm-email page, allow access while userData loads
+  if (location.pathname === '/confirm-email') {
+    return <>{children}</>;
   }
-
-  // If we have a user but userData is null (still loading), show loading state
-  // This prevents showing content before userData is ready
+  
+  // If userData still loading, show loading state (don't redirect yet)
   if (!userData) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
       </div>
     );
+  }
+  
+  // Check verification status: trust Firebase's emailVerified if available, otherwise use our custom flag
+  // Also allow access if user has already paid (indicates they've been verified before)
+  const isUserVerified = user.emailVerified || userData.isVerified || userData.hasPaid;
+  
+  // Only redirect to confirm-email if user is NOT verified
+  if (!isUserVerified) {
+    return <Navigate to={`/confirm-email?email=${encodeURIComponent(user.email || "")}`} replace />;
   }
 
   return <>{children}</>;

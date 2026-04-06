@@ -110,7 +110,7 @@ export function PaymentModal({ isOpen, onClose }: PaymentModalProps) {
       const handler = window.PaystackPop.setup({
         key: import.meta.env.VITE_PAYSTACK_PUBLIC_KEY || "pk_test_placeholder",
         email: user.email,
-        amount: 10050 * 100,
+        amount: 10300 * 100,
         currency: "NGN",
         ref: `APEX-${user.uid.slice(0, 8)}-${Date.now()}`,
         callback: (response: any) => {
@@ -188,7 +188,7 @@ export function PaymentModal({ isOpen, onClose }: PaymentModalProps) {
             <p className="text-muted-foreground text-sm uppercase tracking-wider font-semibold mb-1">
               One-Time Payment
             </p>
-            <h3 className="text-4xl font-bold text-foreground">₦10,050</h3>
+            <h3 className="text-4xl font-bold text-foreground">₦10,300</h3>
             <p className="text-xs text-muted-foreground mt-2 flex items-center justify-center gap-1">
               <ShieldCheck className="h-3 w-3" /> Secure Payment via Paystack
             </p>
