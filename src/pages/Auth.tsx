@@ -466,7 +466,7 @@ export default function Auth() {
         <div className="absolute inset-0 gradient-primary opacity-90" />
         <img
           className="absolute inset-0 h-full w-full object-cover"
-          src="https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=1920&h=1080&fit=crop"
+          src="/src/test/group-students.jpg"
           alt="Students learning"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-primary/90 via-primary/50 to-transparent" />
@@ -479,14 +479,14 @@ export default function Auth() {
             </p>
             <footer className="flex items-center gap-4">
               <img
-                src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=80&h=80&fit=crop"
-                alt="Sarah Chen"
+                src="/src/test/founder.jpg"
+                alt="Okechukwu Delight"
                 className="h-12 w-12 rounded-full border-2 border-primary-foreground/30"
               />
               <div>
-                <p className="font-semibold">Sarah Chen</p>
+                <p className="font-semibold">Okechukwu Delight</p>
                 <p className="text-sm text-primary-foreground/80">
-                  Software Engineer at Google
+                  Founder at CampusGig
                 </p>
               </div>
             </footer>
