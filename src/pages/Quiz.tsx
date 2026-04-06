@@ -320,12 +320,30 @@ export default function Quiz() {
                             {quiz.duration} min
                           </div>
                         </div>
-                        <Button className="w-full" size="sm" asChild>
-                          <Link to={`/quiz/${quiz.id}/take`}>
-                            <Play className="h-4 w-4 mr-2" />
-                            Start Quiz
-                          </Link>
-                        </Button>
+                        {userData?.hasPaid ? (
+                          <Button className="w-full" size="sm" asChild>
+                            <Link to={`/quiz/${quiz.id}/take`}>
+                              <Play className="h-4 w-4 mr-2" />
+                              Start Quiz
+                            </Link>
+                          </Button>
+                        ) : (
+                          <div className="text-center">
+                            <p className="text-sm text-muted-foreground mb-2">
+                              Payment required to take quizzes
+                            </p>
+                            <Button
+                              variant="outline"
+                              className="w-full"
+                              size="sm"
+                              onClick={() =>
+                                (window.location.href = "/dashboard")
+                              }
+                            >
+                              Upgrade to Access
+                            </Button>
+                          </div>
+                        )}
                       </CardContent>
                     </Card>
                   ))}

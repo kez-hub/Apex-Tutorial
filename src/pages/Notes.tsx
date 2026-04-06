@@ -340,20 +340,36 @@ export default function Notes() {
                   </div>
 
                   <div className="flex gap-2">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="flex-1"
-                      onClick={() => handleViewPdf(note.pdfUrl, note.title)}
-                    >
-                      <Eye className="h-4 w-4 mr-2" />
-                      View PDF
-                    </Button>
+                    {userData?.hasPaid ? (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="flex-1"
+                        onClick={() => handleViewPdf(note.pdfUrl, note.title)}
+                      >
+                        <Eye className="h-4 w-4 mr-2" />
+                        View PDF
+                      </Button>
+                    ) : (
+                      <div className="w-full text-center">
+                        <p className="text-sm text-muted-foreground mb-2">
+                          Payment required to access notes
+                        </p>
+                        <Button
+                          variant="outline"
+                          className="w-full"
+                          size="sm"
+                          onClick={() => (window.location.href = "/dashboard")}
+                        >
+                          Upgrade to Access
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 </CardContent>
 
                 {/* Message Icon for Students */}
-                {userData?.role === "student" && (
+                {userData?.role === "student" && userData?.hasPaid && (
                   <div className="absolute bottom-3 right-3">
                     <Button
                       variant="secondary"

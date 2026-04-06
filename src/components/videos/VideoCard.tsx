@@ -246,6 +246,7 @@ export function VideoCard({ video, onEdit }: VideoCardProps) {
 
         {/* Message Icon for Students */}
         {userData?.role === "student" &&
+          userData?.hasPaid &&
           userData?.enrolledVideos?.includes(video.id) && (
             <div className="absolute bottom-3 right-3">
               <Button

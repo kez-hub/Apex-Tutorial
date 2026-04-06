@@ -14,8 +14,9 @@ export default function ContactUs() {
         <div className="container mx-auto max-w-5xl text-center">
           <h1 className="text-4xl font-bold font-heading mb-4">Get in Touch</h1>
           <p className="text-lg opacity-90 max-w-2xl mx-auto">
-            Have a question about a course or need technical support? We'd love to hear from you. 
-            Fill out the form below and our team will be in touch shortly.
+            Have a question about a course or need technical support? We'd love
+            to hear from you. Fill out the form below and our team will be in
+            touch shortly.
           </p>
         </div>
       </div>
@@ -25,7 +26,7 @@ export default function ContactUs() {
           {/* Contact Information */}
           <div className="space-y-8 md:col-span-1">
             <h3 className="text-2xl font-bold mb-6">Contact Info</h3>
-            
+
             <div className="flex items-start gap-4">
               <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
                 <MapPin className="w-5 h-5 text-primary" />
@@ -33,9 +34,7 @@ export default function ContactUs() {
               <div>
                 <h4 className="font-semibold mb-1">Our Office</h4>
                 <p className="text-sm text-muted-foreground leading-relaxed">
-                  123 Learning Avenue<br />
-                  Tech District, Suite 400<br />
-                  Los Angeles, CA 90001
+                  Chukwuemeka Odumeje Ojukwu University, Uli
                 </p>
               </div>
             </div>
@@ -46,8 +45,9 @@ export default function ContactUs() {
               </div>
               <div>
                 <h4 className="font-semibold mb-1">Email Us</h4>
-                <p className="text-sm text-muted-foreground">support@apextutorial.com</p>
-                <p className="text-sm text-muted-foreground">hello@apextutorial.com</p>
+                <p className="text-sm text-muted-foreground">
+                  apextutorial.app@gmail.com
+                </p>
               </div>
             </div>
 
@@ -57,8 +57,15 @@ export default function ContactUs() {
               </div>
               <div>
                 <h4 className="font-semibold mb-1">Call Us</h4>
-                <p className="text-sm text-muted-foreground">+1 (555) 123-4567</p>
-                <p className="text-sm text-muted-foreground">Mon-Fri, 9am - 6pm PST</p>
+                <p className="text-sm text-muted-foreground">
+                  +234 (916) 655-8032
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  +234 (816) 781-3300
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  Mon-Fri, 9am - 2pm WAT
+                </p>
               </div>
             </div>
           </div>
@@ -76,26 +83,37 @@ export default function ContactUs() {
                   <Input placeholder="Doe" className="bg-background" />
                 </div>
               </div>
-              
+
               <div className="space-y-2">
                 <label className="text-sm font-medium">Email Address</label>
-                <Input type="email" placeholder="john@example.com" className="bg-background" />
+                <Input
+                  type="email"
+                  placeholder="john@example.com"
+                  className="bg-background"
+                />
               </div>
 
               <div className="space-y-2">
                 <label className="text-sm font-medium">Message Subject</label>
-                <Input placeholder="How can we help?" className="bg-background" />
+                <Input
+                  placeholder="How can we help?"
+                  className="bg-background"
+                />
               </div>
 
               <div className="space-y-2">
                 <label className="text-sm font-medium">Your Message</label>
-                <Textarea 
-                  placeholder="Tell us exactly what you need help with..." 
+                <Textarea
+                  placeholder="Tell us exactly what you need help with..."
                   className="min-h-[150px] bg-background resize-y"
                 />
               </div>
 
-              <Button type="submit" variant="gradient" className="w-full text-base h-12">
+              <Button
+                type="submit"
+                variant="gradient"
+                className="w-full text-base h-12"
+              >
                 Send Message
               </Button>
             </form>

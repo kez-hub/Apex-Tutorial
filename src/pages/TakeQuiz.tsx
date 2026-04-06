@@ -48,7 +48,7 @@ interface Quiz {
 export default function TakeQuiz() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, userData } = useAuth();
   const { toast } = useToast();
 
   const [quiz, setQuiz] = useState<Quiz | null>(null);
@@ -58,6 +58,30 @@ export default function TakeQuiz() {
   const [timeLeft, setTimeLeft] = useState(0);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [score, setScore] = useState(0);
+
+  // Check if user has paid
+  if (userData && !userData.hasPaid && userData.role === "student") {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar isAuthenticated />
+        <main className="container mx-auto px-4 py-8">
+          <div className="flex flex-col items-center justify-center py-20 text-center">
+            <h1 className="font-heading text-3xl font-bold mb-4">
+              Payment Required
+            </h1>
+            <p className="text-muted-foreground mb-6">
+              You need to make a payment to access quizzes and test your
+              knowledge.
+            </p>
+            <Button onClick={() => navigate("/dashboard")}>
+              Back to Dashboard
+            </Button>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   useEffect(() => {
     if (!id) return;
