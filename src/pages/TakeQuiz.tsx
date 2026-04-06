@@ -1,6 +1,12 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { doc, onSnapshot, setDoc, updateDoc, serverTimestamp } from "firebase/firestore";
+import {
+  doc,
+  onSnapshot,
+  setDoc,
+  updateDoc,
+  serverTimestamp,
+} from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
@@ -27,8 +33,10 @@ interface Quiz {
   id: string;
   title: string;
   description: string;
-  courseId: string;
-  courseTitle: string;
+  videoId?: string;
+  videoTitle?: string;
+  noteId?: string;
+  noteTitle?: string;
   questions: number;
   duration: number;
   difficulty: "easy" | "medium" | "hard";
@@ -106,7 +114,8 @@ export default function TakeQuiz() {
 
   // Auto-submit when time runs out
   useEffect(() => {
-    if (isSubmitted || timeLeft > 0 || !quiz || !quiz.questionItems?.length) return;
+    if (isSubmitted || timeLeft > 0 || !quiz || !quiz.questionItems?.length)
+      return;
     handleSubmitQuiz();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [timeLeft, isSubmitted, quiz]);
@@ -135,7 +144,11 @@ export default function TakeQuiz() {
 
   const handleSubmitQuiz = async () => {
     if (!quiz || !user || !questions || questions.length === 0) {
-      console.error("Quiz or user not available", { quiz: !!quiz, user: !!user, questions: questions.length });
+      console.error("Quiz or user not available", {
+        quiz: !!quiz,
+        user: !!user,
+        questions: questions.length,
+      });
       return;
     }
 
@@ -153,7 +166,10 @@ export default function TakeQuiz() {
       }
     });
 
-    const finalScore = questions.length > 0 ? Math.round((correctCount / questions.length) * 100) : 0;
+    const finalScore =
+      questions.length > 0
+        ? Math.round((correctCount / questions.length) * 100)
+        : 0;
     setScore(finalScore);
     setIsSubmitted(true);
 
@@ -168,6 +184,7 @@ export default function TakeQuiz() {
           completedAt: new Date().toISOString(),
           totalQuestions: questions.length,
           correctAnswers: correctCount,
+          userAnswers: userAnswers,
           status: "completed",
         },
         { merge: true },
@@ -330,7 +347,9 @@ export default function TakeQuiz() {
         <div className="mb-8 flex items-center justify-between">
           <div>
             <h1 className="font-heading text-3xl font-bold">{quiz.title}</h1>
-            <p className="text-muted-foreground">{quiz.courseTitle}</p>
+            <p className="text-muted-foreground">
+              {quiz.videoTitle || quiz.noteTitle || "Quiz"}
+            </p>
           </div>
           <div className="text-right">
             <div className="flex items-center gap-2 text-2xl font-bold">

@@ -45,15 +45,30 @@ export default function Quiz() {
     (quiz) => quiz.instructorId === user?.uid,
   );
 
-  // Check user-specific completion status
-  const completedQuizzes = quizzes.filter((q) => {
-    const completions =
-      (q.completions as Record<
-        string,
-        { score: number; completedAt: string }
-      >) || {};
-    return completions[user?.uid || ""] !== undefined;
-  });
+  // Check user-specific completion status and enrich with score data
+  const completedQuizzes = quizzes
+    .filter((q) => {
+      const completions =
+        (q.completions as Record<
+          string,
+          { score: number; completedAt: string }
+        >) || {};
+      return completions[user?.uid || ""] !== undefined;
+    })
+    .map((quiz) => {
+      const completions =
+        (quiz.completions as Record<
+          string,
+          { score: number; completedAt: string }
+        >) || {};
+      const userCompletion = completions[user?.uid || ""];
+      return {
+        ...quiz,
+        score: userCompletion?.score || 0,
+        maxScore: 100, // Quizzes are scored out of 100
+        completedAt: userCompletion?.completedAt,
+      };
+    });
   const pendingQuizzes = quizzes.filter((q) => {
     const completions =
       (q.completions as Record<
@@ -366,9 +381,16 @@ export default function Quiz() {
                         {quiz.duration} min
                       </div>
                     </div>
-                    <Button variant="outline" className="w-full" size="sm">
-                      Review Answers
-                      <ArrowRight className="h-4 w-4 ml-2" />
+                    <Button
+                      variant="outline"
+                      className="w-full"
+                      size="sm"
+                      asChild
+                    >
+                      <Link to={`/quiz/${quiz.id}?review=true`}>
+                        Review Answers
+                        <ArrowRight className="h-4 w-4 ml-2" />
+                      </Link>
                     </Button>
                   </CardContent>
                 </Card>
