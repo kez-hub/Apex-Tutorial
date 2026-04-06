@@ -251,7 +251,7 @@ export default function VideoDetails() {
     });
   };
 
-  const isEnrolled = !!video?.enrolled;
+  const isEnrolled = userData?.enrolledVideos?.includes(id || "") || false;
 
   if (isLoading) {
     return (
@@ -282,11 +282,20 @@ export default function VideoDetails() {
   const handleEnroll = async () => {
     if (!user || !userData || !video || !id) return;
 
+    // Check if already enrolled
+    if (isEnrolled) {
+      toast({
+        title: "Already enrolled",
+        description: "You're already enrolled in this video.",
+      });
+      return;
+    }
+
     try {
       // Update user's enrolled videos
       const userDocRef = doc(db, "users", user.uid);
       await updateDoc(userDocRef, {
-        enrolledCourses: arrayUnion(id),
+        enrolledVideos: arrayUnion(id),
       });
 
       // Increment video student count
@@ -297,7 +306,7 @@ export default function VideoDetails() {
 
       // Update local state
       setVideo((prev) =>
-        prev ? { ...prev, students: prev.students + 1 } : null,
+        prev ? { ...prev, students: prev.students + 1, enrolled: true } : null,
       );
 
       toast({

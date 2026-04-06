@@ -366,7 +366,7 @@ export default function Notes() {
                         window.location.href = `/messages?instructor=${note.instructorId}`;
                       }}
                     >
-                      <MessageCircle className="h-4 w-4" />
+                      <MessageCircle className="h-4 w-4 text-foreground" />
                     </Button>
                   </div>
                 )}

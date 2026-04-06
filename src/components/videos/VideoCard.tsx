@@ -132,7 +132,7 @@ export function VideoCard({ video, onEdit }: VideoCardProps) {
           >
             {video.level}
           </Badge>
-          {video.enrolled && (
+          {userData?.enrolledVideos?.includes(video.id) && (
             <Badge className="absolute right-3 top-3 bg-accent text-accent-foreground">
               Enrolled
             </Badge>
@@ -246,7 +246,7 @@ export function VideoCard({ video, onEdit }: VideoCardProps) {
 
         {/* Message Icon for Students */}
         {userData?.role === "student" &&
-          userData?.enrolledCourses?.includes(video.id) && (
+          userData?.enrolledVideos?.includes(video.id) && (
             <div className="absolute bottom-3 right-3">
               <Button
                 variant="secondary"
@@ -259,7 +259,7 @@ export function VideoCard({ video, onEdit }: VideoCardProps) {
                   window.location.href = `/messages?instructor=${video.instructorId}`;
                 }}
               >
-                <MessageCircle className="h-4 w-4" />
+                <MessageCircle className="h-4 w-4 text-foreground" />
               </Button>
             </div>
           )}
