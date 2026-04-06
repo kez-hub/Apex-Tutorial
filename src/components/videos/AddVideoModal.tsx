@@ -1,41 +1,53 @@
 import { useState, useEffect } from "react";
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
-  DialogTitle, 
-  DialogDescription, 
-  DialogFooter 
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select";
 import { doc, setDoc, updateDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
-import { categories, Course } from "@/lib/data";
-import { Film, BookOpen, Clock, Tag, Layers, Upload, ImageIcon } from "lucide-react";
+import { categories, Video } from "@/lib/data";
+import {
+  Film,
+  BookOpen,
+  Clock,
+  Tag,
+  Layers,
+  Upload,
+  ImageIcon,
+} from "lucide-react";
 
-interface AddCourseModalProps {
+interface AddVideoModalProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
-  initialData?: Course | null;
+  initialData?: Video | null;
 }
 
-export function AddCourseModal({ isOpen, onOpenChange, initialData }: AddCourseModalProps) {
+export function AddVideoModal({
+  isOpen,
+  onOpenChange,
+  initialData,
+}: AddVideoModalProps) {
   const { user, userData } = useAuth();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
-  
+
   const [formData, setFormData] = useState({
     title: "",
     category: "",
@@ -61,7 +73,7 @@ export function AddCourseModal({ isOpen, onOpenChange, initialData }: AddCourseM
         lessons: initialData.lessons || 10,
       });
     } else {
-      // Default state for new course
+      // Default state for new video
       setFormData({
         title: "",
         category: "",
@@ -78,7 +90,8 @@ export function AddCourseModal({ isOpen, onOpenChange, initialData }: AddCourseM
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > 2 * 1024 * 1024) { // 2MB limit
+      if (file.size > 2 * 1024 * 1024) {
+        // 2MB limit
         toast({
           title: "File too large",
           description: "Please upload an image smaller than 2MB.",
@@ -89,7 +102,10 @@ export function AddCourseModal({ isOpen, onOpenChange, initialData }: AddCourseM
 
       const reader = new FileReader();
       reader.onloadend = () => {
-        setFormData(prev => ({ ...prev, thumbnail: reader.result as string }));
+        setFormData((prev) => ({
+          ...prev,
+          thumbnail: reader.result as string,
+        }));
       };
       reader.readAsDataURL(file);
     }
@@ -102,46 +118,51 @@ export function AddCourseModal({ isOpen, onOpenChange, initialData }: AddCourseM
     if (!formData.title || !formData.category || !formData.description) {
       toast({
         title: "Missing Fields",
-        description: "Please fill in all the core course details.",
+        description: "Please fill in all the core video details.",
         variant: "destructive",
       });
       return;
     }
 
     setIsLoading(true);
-    const courseId = initialData?.id || `course-${Date.now()}`;
-    
-    const coursePayload: any = {
+    const videoId = initialData?.id || `video-${Date.now()}`;
+
+    const videoPayload: any = {
       title: formData.title,
       instructor: userData.full_name || user.displayName || "Elite Instructor",
-      instructorAvatar: userData?.avatarBase64 || user.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(userData?.full_name || "Instructor")}&background=random`,
+      instructorAvatar:
+        userData?.avatarBase64 ||
+        user.photoURL ||
+        `https://ui-avatars.com/api/?name=${encodeURIComponent(userData?.full_name || "Instructor")}&background=random`,
       instructorId: user.uid,
       description: formData.description,
       duration: `${formData.durationValue} ${formData.durationUnit}`,
       lessons: formData.lessons,
       category: formData.category,
       level: formData.level,
-      thumbnail: formData.thumbnail || "https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=800&h=450&fit=crop",
+      thumbnail:
+        formData.thumbnail ||
+        "https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=800&h=450&fit=crop",
     };
 
-    // Only set these for new courses
+    // Only set these for new videos
     if (!initialData) {
-      coursePayload.id = courseId;
-      coursePayload.rating = 5.0;
-      coursePayload.students = 0;
+      videoPayload.id = videoId;
+      videoPayload.rating = 5.0;
+      videoPayload.students = 0;
     }
 
     try {
-      const courseDocRef = doc(db, "courses", courseId);
+      const videoDocRef = doc(db, "videos", videoId);
       if (initialData) {
-        await updateDoc(courseDocRef, coursePayload);
+        await updateDoc(videoDocRef, videoPayload);
       } else {
-        await setDoc(courseDocRef, coursePayload);
+        await setDoc(videoDocRef, videoPayload);
       }
-      
+
       toast({
-        title: initialData ? "Course Updated! 🛠️" : "Course Published! 🚀",
-        description: initialData 
+        title: initialData ? "Video Updated! 🛠️" : "Video Published! 🚀",
+        description: initialData
           ? "Your changes have been saved."
           : "Your course is now live and visible to all students.",
       });
@@ -180,7 +201,7 @@ export function AddCourseModal({ isOpen, onOpenChange, initialData }: AddCourseM
             {initialData ? "Edit Masterclass" : "Publish New Course"}
           </DialogTitle>
           <DialogDescription>
-            {initialData 
+            {initialData
               ? "Update the curriculum details to keep your students informed."
               : "Enter the curriculum details for your new masterclass. This will be visible to all students globally."}
           </DialogDescription>
@@ -189,7 +210,10 @@ export function AddCourseModal({ isOpen, onOpenChange, initialData }: AddCourseM
         <form onSubmit={handleSubmit} className="space-y-6 py-4">
           {/* Title */}
           <div className="space-y-2">
-            <Label htmlFor="title" className="text-sm font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+            <Label
+              htmlFor="title"
+              className="text-sm font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2"
+            >
               <BookOpen className="h-3.5 w-3.5" /> Course Title
             </Label>
             <Input
@@ -197,7 +221,9 @@ export function AddCourseModal({ isOpen, onOpenChange, initialData }: AddCourseM
               placeholder="e.g. Masterclass in Advanced Physics"
               className="bg-muted/30 border-muted focus:border-primary transition-all pr-4"
               value={formData.title || ""}
-              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, title: e.target.value })
+              }
               required
             />
           </div>
@@ -208,17 +234,23 @@ export function AddCourseModal({ isOpen, onOpenChange, initialData }: AddCourseM
               <Label className="text-sm font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
                 <Tag className="h-3.5 w-3.5" /> Category
               </Label>
-              <Select 
-                value={formData.category || ""} 
-                onValueChange={(val) => setFormData({ ...formData, category: val })}
+              <Select
+                value={formData.category || ""}
+                onValueChange={(val) =>
+                  setFormData({ ...formData, category: val })
+                }
               >
                 <SelectTrigger className="bg-muted/30">
                   <SelectValue placeholder="Select Category" />
                 </SelectTrigger>
                 <SelectContent>
-                  {categories.filter(c => c !== "All").map(cat => (
-                    <SelectItem key={cat} value={cat}>{cat}</SelectItem>
-                  ))}
+                  {categories
+                    .filter((c) => c !== "All")
+                    .map((cat) => (
+                      <SelectItem key={cat} value={cat}>
+                        {cat}
+                      </SelectItem>
+                    ))}
                 </SelectContent>
               </Select>
             </div>
@@ -228,9 +260,11 @@ export function AddCourseModal({ isOpen, onOpenChange, initialData }: AddCourseM
               <Label className="text-sm font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
                 <Layers className="h-3.5 w-3.5" /> Skill Level
               </Label>
-              <Select 
-                value={formData.level || "Beginner"} 
-                onValueChange={(val) => setFormData({ ...formData, level: val })}
+              <Select
+                value={formData.level || "Beginner"}
+                onValueChange={(val) =>
+                  setFormData({ ...formData, level: val })
+                }
               >
                 <SelectTrigger className="bg-muted/30">
                   <SelectValue />
@@ -246,13 +280,20 @@ export function AddCourseModal({ isOpen, onOpenChange, initialData }: AddCourseM
 
           {/* Description */}
           <div className="space-y-2">
-            <Label htmlFor="desc" className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Short Summary</Label>
+            <Label
+              htmlFor="desc"
+              className="text-sm font-semibold uppercase tracking-wider text-muted-foreground"
+            >
+              Short Summary
+            </Label>
             <Textarea
               id="desc"
               placeholder="What will students learn in this course?"
               className="bg-muted/30 border-muted resize-none min-h-[100px]"
               value={formData.description || ""}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, description: e.target.value })
+              }
               required
             />
           </div>
@@ -270,11 +311,15 @@ export function AddCourseModal({ isOpen, onOpenChange, initialData }: AddCourseM
                   placeholder="e.g. 4.5"
                   className="bg-muted/30"
                   value={formData.durationValue || "0"}
-                  onChange={(e) => setFormData({ ...formData, durationValue: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, durationValue: e.target.value })
+                  }
                 />
-                <Select 
-                  value={formData.durationUnit || "hours"} 
-                  onValueChange={(val) => setFormData({ ...formData, durationUnit: val })}
+                <Select
+                  value={formData.durationUnit || "hours"}
+                  onValueChange={(val) =>
+                    setFormData({ ...formData, durationUnit: val })
+                  }
                 >
                   <SelectTrigger className="bg-muted/30">
                     <SelectValue />
@@ -288,7 +333,10 @@ export function AddCourseModal({ isOpen, onOpenChange, initialData }: AddCourseM
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="lessons" className="text-sm font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+              <Label
+                htmlFor="lessons"
+                className="text-sm font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2"
+              >
                 <BookOpen className="h-3.5 w-3.5" /> Lessons
               </Label>
               <Input
@@ -298,11 +346,14 @@ export function AddCourseModal({ isOpen, onOpenChange, initialData }: AddCourseM
                 className="bg-muted/30"
                 value={formData.lessons}
                 onKeyDown={(e) => {
-                  if (e.key === '-' || e.key === 'e') e.preventDefault();
+                  if (e.key === "-" || e.key === "e") e.preventDefault();
                 }}
                 onChange={(e) => {
                   const val = parseInt(e.target.value);
-                  setFormData({ ...formData, lessons: isNaN(val) ? 0 : Math.max(1, val) });
+                  setFormData({
+                    ...formData,
+                    lessons: isNaN(val) ? 0 : Math.max(1, val),
+                  });
                 }}
               />
             </div>
@@ -313,13 +364,13 @@ export function AddCourseModal({ isOpen, onOpenChange, initialData }: AddCourseM
             <Label className="text-sm font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
               <ImageIcon className="h-3.5 w-3.5" /> Course Thumbnail
             </Label>
-            
+
             <div className="flex flex-col gap-4">
               {formData.thumbnail && (
                 <div className="relative aspect-video w-full overflow-hidden rounded-xl border border-border/50 shadow-sm bg-muted/50">
-                  <img 
-                    src={formData.thumbnail} 
-                    alt="Preview" 
+                  <img
+                    src={formData.thumbnail}
+                    alt="Preview"
                     className="h-full w-full object-cover"
                   />
                   <Button
@@ -356,33 +407,46 @@ export function AddCourseModal({ isOpen, onOpenChange, initialData }: AddCourseM
                   <Input
                     placeholder="...or paste Image URL"
                     className="h-20 bg-muted/30 text-xs px-3"
-                    value={formData.thumbnail.startsWith('data:') ? "" : formData.thumbnail}
-                    onChange={(e) => setFormData({ ...formData, thumbnail: e.target.value })}
+                    value={
+                      formData.thumbnail.startsWith("data:")
+                        ? ""
+                        : formData.thumbnail
+                    }
+                    onChange={(e) =>
+                      setFormData({ ...formData, thumbnail: e.target.value })
+                    }
                   />
                 </div>
               </div>
             </div>
-            <p className="text-[10px] text-muted-foreground italic">Tip: Use 16:9 images for the best appearance on the student dashboard.</p>
+            <p className="text-[10px] text-muted-foreground italic">
+              Tip: Use 16:9 images for the best appearance on the student
+              dashboard.
+            </p>
           </div>
 
           <DialogFooter className="sm:justify-end gap-2 pt-4">
-            <Button 
-                type="button" 
-                variant="outline" 
-                onClick={() => onOpenChange(false)}
-                disabled={isLoading}
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              disabled={isLoading}
             >
               Discard Draft
             </Button>
-            <Button 
-                type="submit" 
-                variant="gradient" 
-                className="px-8 shadow-lg shadow-primary/20"
-                disabled={isLoading}
+            <Button
+              type="submit"
+              variant="gradient"
+              className="px-8 shadow-lg shadow-primary/20"
+              disabled={isLoading}
             >
-              {isLoading 
-                ? (initialData ? "Saving Changes..." : "Publishing World-Wide...") 
-                : (initialData ? "Save Changes" : "Launch Course")}
+              {isLoading
+                ? initialData
+                  ? "Saving Changes..."
+                  : "Publishing World-Wide..."
+                : initialData
+                  ? "Save Changes"
+                  : "Launch Course"}
             </Button>
           </DialogFooter>
         </form>

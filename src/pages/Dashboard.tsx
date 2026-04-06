@@ -8,7 +8,7 @@ import {
   ArrowRight,
   Plus,
   Brain,
-  Video,
+  VideoIcon,
   ClipboardList,
   FileText,
   Eye,
@@ -18,42 +18,43 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
-import { CourseCard } from "@/components/courses/CourseCard";
-import { courses as initialCourses, Course } from "@/lib/data";
+import { VideoCard } from "@/components/videos/VideoCard";
+import { videos as initialVideos, Video } from "@/lib/data";
 import { useAuth } from "@/contexts/AuthContext";
-import { useCourses } from "@/hooks/useCourses";
+import { useVideos } from "@/hooks/useVideos";
 import { useNotes } from "@/hooks/useNotes";
-import { AddCourseModal } from "@/components/courses/AddCourseModal";
+import { AddVideoModal } from "@/components/videos/AddVideoModal";
 import { AddNotesModal } from "@/components/notes/AddNotesModal";
 import { AddQuizModal } from "@/components/quiz/AddQuizModal";
 
 export default function Dashboard() {
   const { user, userData } = useAuth();
-  const { courses, loading } = useCourses();
+  const { videos, loading } = useVideos();
   const { notes } = useNotes();
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isNotesModalOpen, setIsNotesModalOpen] = useState(false);
   const [isQuizModalOpen, setIsQuizModalOpen] = useState(false);
   const [isFabOpen, setIsFabOpen] = useState(false);
-  const [courseToEdit, setCourseToEdit] = useState<Course | null>(null);
+  const [videoToEdit, setVideoToEdit] = useState<Video | null>(null);
   const navigate = useNavigate();
   const userName = user?.displayName || user?.email?.split("@")[0] || "User";
 
-  const enrolledCourseIds = userData?.enrolledCourses || [];
-  const enrolledCourses = courses.filter((course) =>
-    enrolledCourseIds.includes(course.id),
+  const enrolledVideoIds = userData?.enrolledVideos || [];
+  const enrolledVideos = videos.filter((video) =>
+    enrolledVideoIds.includes(video.id),
   );
   const upcomingAlarms =
     userData?.alarms?.filter((alarm) => alarm.enabled) || [];
 
-  const filteredDashboardCourses = courses
-    .filter((c) => !enrolledCourseIds.includes(c.id))
-    .slice(0, 6);
+  const filteredDashboardVideos =
+    userData?.role === "instructor"
+      ? videos.filter((v) => v.instructorId === user?.uid).slice(0, 6)
+      : videos.filter((v) => !enrolledVideoIds.includes(v.id)).slice(0, 6);
 
   const stats = [
     {
-      title: "Courses Enrolled",
-      value: enrolledCourses.length,
+      title: "Videos Enrolled",
+      value: enrolledVideos.length,
       icon: BookOpen,
       color: "text-primary",
       bgColor: "bg-primary/10",
@@ -85,13 +86,13 @@ export default function Dashboard() {
     <div className="min-h-screen bg-background overflow-x-hidden">
       <Navbar isAuthenticated />
 
-      <AddCourseModal
+      <AddVideoModal
         isOpen={isAddModalOpen}
         onOpenChange={(open) => {
           setIsAddModalOpen(open);
-          if (!open) setCourseToEdit(null);
+          if (!open) setVideoToEdit(null);
         }}
-        initialData={courseToEdit}
+        initialData={videoToEdit}
       />
 
       <AddNotesModal
@@ -112,7 +113,7 @@ export default function Dashboard() {
           </h1>
           <p className="mt-2 text-muted-foreground">
             {userData?.role === "instructor"
-              ? "Manage your courses and inspire your students."
+              ? "Manage your videos and inspire your students."
               : "Continue your learning journey and achieve your goals."}
           </p>
         </div>
@@ -146,16 +147,16 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* Recommended Courses */}
+        {/* Recommended Videos */}
         <section className="mt-12 pb-20">
           <div className="mb-6 flex items-center justify-between">
             <h2 className="font-heading text-xl font-semibold">
               {userData?.role === "instructor"
-                ? "Courses"
+                ? "Videos"
                 : "Recommended for You"}
             </h2>
             <Button variant="ghost" asChild>
-              <Link to="/courses" className="text-primary">
+              <Link to="/videos" className="text-primary">
                 Browse All
                 <ArrowRight className="h-4 w-4" />
               </Link>
@@ -169,13 +170,13 @@ export default function Dashboard() {
                   className="h-[300px] w-full animate-pulse rounded-xl bg-muted"
                 />
               ))
-            ) : filteredDashboardCourses.length === 0 ? (
+            ) : filteredDashboardVideos.length === 0 ? (
               <div className="col-span-full flex flex-col items-center justify-center py-12 text-center border-2 border-dashed border-border/50 rounded-2xl bg-muted/30">
                 <div className="mb-4 rounded-full bg-background p-4 shadow-sm">
                   <BookOpen className="h-8 w-8 text-muted-foreground" />
                 </div>
                 <h3 className="font-heading text-xl font-semibold">
-                  No course is available
+                  No video is available
                 </h3>
                 <p className="mt-2 text-muted-foreground max-w-xs">
                   Check back later or click "Browse All" to see the full
@@ -183,16 +184,16 @@ export default function Dashboard() {
                 </p>
               </div>
             ) : (
-              filteredDashboardCourses.map((course, index) => (
+              filteredDashboardVideos.map((video, index) => (
                 <div
-                  key={course.id}
+                  key={video.id}
                   className="animate-fade-in"
                   style={{ animationDelay: `${index * 0.1}s` }}
                 >
-                  <CourseCard
-                    course={course}
-                    onEdit={(c) => {
-                      setCourseToEdit(c);
+                  <VideoCard
+                    video={video}
+                    onEdit={(v) => {
+                      setVideoToEdit(v);
                       setIsAddModalOpen(true);
                     }}
                   />
@@ -411,10 +412,10 @@ export default function Dashboard() {
                     <BookOpen className="h-8 w-8 text-blue-600" />
                   </div>
                   <h3 className="font-heading text-lg font-semibold mb-2">
-                    Course Quizzes
+                    Video Quizzes
                   </h3>
                   <p className="text-sm text-muted-foreground mb-4">
-                    Unlock quizzes by completing course modules
+                    Unlock quizzes by completing video modules
                   </p>
                   <p className="text-2xl font-bold text-blue-600">3</p>
                   <p className="text-xs text-muted-foreground">Available Now</p>
@@ -438,7 +439,7 @@ export default function Dashboard() {
                   className="flex items-center gap-3 rounded-full bg-white/95 px-4 py-3 shadow-xl shadow-black/10 ring-1 ring-border transition hover:-translate-y-1"
                   title="Videos"
                 >
-                  <Video className="h-5 w-5 text-primary" />
+                  <VideoIcon className="h-5 w-5 text-primary" />
                   <span className="text-sm font-medium text-gray-900">
                     Videos
                   </span>

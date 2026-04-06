@@ -22,7 +22,7 @@ import { doc, setDoc, updateDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
-import { useCourses } from "@/hooks/useCourses";
+import { useVideos } from "@/hooks/useVideos";
 import { useNotes } from "@/hooks/useNotes";
 import {
   ClipboardList,
@@ -37,8 +37,8 @@ interface Quiz {
   id: string;
   title: string;
   description: string;
-  courseId?: string;
-  courseTitle?: string;
+  videoId?: string;
+  videoTitle?: string;
   noteId?: string;
   noteTitle?: string;
   questions: number;
@@ -66,16 +66,16 @@ export function AddQuizModal({
   initialData,
 }: AddQuizModalProps) {
   const { user, userData } = useAuth();
-  const { courses } = useCourses();
+  const { videos } = useVideos();
   const { notes } = useNotes();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
 
   const [formData, setFormData] = useState({
     title: "",
-    relatedType: "course" as "course" | "note",
-    courseId: "",
-    courseTitle: "",
+    relatedType: "video" as "video" | "note",
+    videoId: "",
+    videoTitle: "",
     noteId: "",
     noteTitle: "",
     description: "",
@@ -89,11 +89,11 @@ export function AddQuizModal({
     if (initialData) {
       setFormData({
         title: initialData.title || "",
-        relatedType: (initialData.noteId ? "note" : "course") as
-          | "course"
+        relatedType: (initialData.noteId ? "note" : "video") as
+          | "video"
           | "note",
-        courseId: initialData.courseId || "",
-        courseTitle: initialData.courseTitle || "",
+        videoId: initialData.videoId || "",
+        videoTitle: initialData.videoTitle || "",
         noteId: initialData.noteId || "",
         noteTitle: initialData.noteTitle || "",
         description: initialData.description || "",
@@ -105,9 +105,9 @@ export function AddQuizModal({
       // Default state for new quiz
       setFormData({
         title: "",
-        relatedType: "course",
-        courseId: "",
-        courseTitle: "",
+        relatedType: "video",
+        videoId: "",
+        videoTitle: "",
         noteId: "",
         noteTitle: "",
         description: "",
@@ -118,15 +118,15 @@ export function AddQuizModal({
     }
   }, [initialData, isOpen]);
 
-  // Update course title when course ID changes
+  // Update video title when video ID changes
   useEffect(() => {
-    if (formData.courseId) {
-      const selectedCourse = courses.find((c) => c.id === formData.courseId);
-      if (selectedCourse) {
-        setFormData((prev) => ({ ...prev, courseTitle: selectedCourse.title }));
+    if (formData.videoId) {
+      const selectedVideo = videos.find((v) => v.id === formData.videoId);
+      if (selectedVideo) {
+        setFormData((prev) => ({ ...prev, videoTitle: selectedVideo.title }));
       }
     }
-  }, [formData.courseId, courses]);
+  }, [formData.videoId, videos]);
 
   // Update note title when note ID changes
   useEffect(() => {
@@ -143,13 +143,13 @@ export function AddQuizModal({
     if (!user || !userData) return;
 
     const hasRelatedItem =
-      formData.relatedType === "course" ? formData.courseId : formData.noteId;
+      formData.relatedType === "video" ? formData.videoId : formData.noteId;
 
     if (!formData.title || !hasRelatedItem || !formData.description) {
       toast({
         title: "Missing Fields",
         description:
-          "Please fill in all required fields including selecting a course or note.",
+          "Please fill in all required fields including selecting a video or note.",
         variant: "destructive",
       });
       return;
@@ -161,13 +161,6 @@ export function AddQuizModal({
     const quizPayload: Omit<Quiz, "id"> = {
       title: formData.title,
       description: formData.description,
-      courseId:
-        formData.relatedType === "course" ? formData.courseId : undefined,
-      courseTitle:
-        formData.relatedType === "course" ? formData.courseTitle : undefined,
-      noteId: formData.relatedType === "note" ? formData.noteId : undefined,
-      noteTitle:
-        formData.relatedType === "note" ? formData.noteTitle : undefined,
       questions: formData.questions,
       duration: formData.duration,
       difficulty: formData.difficulty,
@@ -177,6 +170,15 @@ export function AddQuizModal({
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
+
+    // Conditionally add video or note fields
+    if (formData.relatedType === "video") {
+      quizPayload.videoId = formData.videoId;
+      quizPayload.videoTitle = formData.videoTitle;
+    } else {
+      quizPayload.noteId = formData.noteId;
+      quizPayload.noteTitle = formData.noteTitle;
+    }
 
     try {
       const quizDocRef = doc(db, "quizzes", quizId);
@@ -196,9 +198,9 @@ export function AddQuizModal({
       // Reset form
       setFormData({
         title: "",
-        relatedType: "course",
-        courseId: "",
-        courseTitle: "",
+        relatedType: "video",
+        videoId: "",
+        videoTitle: "",
         noteId: "",
         noteTitle: "",
         description: "",
@@ -218,9 +220,9 @@ export function AddQuizModal({
     }
   };
 
-  // Filter courses and notes to only show instructor's own items
-  const instructorCourses = courses.filter(
-    (course) => course.instructorId === user?.uid,
+  // Filter videos and notes to only show instructor's own items
+  const instructorVideos = videos.filter(
+    (video) => video.instructorId === user?.uid,
   );
   const instructorNotes = notes.filter(
     (note) => note.instructorId === user?.uid,
@@ -239,7 +241,7 @@ export function AddQuizModal({
           <DialogDescription>
             {initialData
               ? "Update your quiz details."
-              : "Create an interactive quiz for your students. Select a course and set the quiz parameters."}
+              : "Create an interactive quiz for your students. Select a video and set the quiz parameters."}
           </DialogDescription>
         </DialogHeader>
 
@@ -271,12 +273,12 @@ export function AddQuizModal({
             </Label>
             <Select
               value={formData.relatedType}
-              onValueChange={(val: "course" | "note") => {
+              onValueChange={(val: "video" | "note") => {
                 setFormData({
                   ...formData,
                   relatedType: val,
-                  courseId: "",
-                  courseTitle: "",
+                  videoId: "",
+                  videoTitle: "",
                   noteId: "",
                   noteTitle: "",
                 });
@@ -286,7 +288,7 @@ export function AddQuizModal({
                 <SelectValue placeholder="Select content type" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="course">Course</SelectItem>
+                <SelectItem value="video">Video</SelectItem>
                 <SelectItem value="note">Note</SelectItem>
               </SelectContent>
             </Select>
@@ -295,9 +297,9 @@ export function AddQuizModal({
           {/* Related Content Selection */}
           <div className="space-y-2">
             <Label className="text-sm font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-              {formData.relatedType === "course" ? (
+              {formData.relatedType === "video" ? (
                 <>
-                  <BookOpen className="h-3.5 w-3.5" /> Related Course
+                  <BookOpen className="h-3.5 w-3.5" /> Related Video
                 </>
               ) : (
                 <>
@@ -307,13 +309,13 @@ export function AddQuizModal({
             </Label>
             <Select
               value={
-                formData.relatedType === "course"
-                  ? formData.courseId || ""
+                formData.relatedType === "video"
+                  ? formData.videoId || ""
                   : formData.noteId || ""
               }
               onValueChange={(val) => {
-                if (formData.relatedType === "course") {
-                  setFormData({ ...formData, courseId: val });
+                if (formData.relatedType === "video") {
+                  setFormData({ ...formData, videoId: val });
                 } else {
                   setFormData({ ...formData, noteId: val });
                 }
@@ -325,10 +327,10 @@ export function AddQuizModal({
                 />
               </SelectTrigger>
               <SelectContent>
-                {formData.relatedType === "course"
-                  ? instructorCourses.map((course) => (
-                      <SelectItem key={course.id} value={course.id}>
-                        {course.title}
+                {formData.relatedType === "video"
+                  ? instructorVideos.map((video) => (
+                      <SelectItem key={video.id} value={video.id}>
+                        {video.title}
                       </SelectItem>
                     ))
                   : instructorNotes.map((note) => (

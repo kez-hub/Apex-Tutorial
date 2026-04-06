@@ -62,7 +62,7 @@ export default function Messages() {
 
     const loadConversations = async () => {
       try {
-        // If instructorId is provided (from course card), create conversation with that instructor
+        // If instructorId is provided (from video card), create conversation with that instructor
         if (instructorId) {
           const instructorDoc = await getDoc(doc(db, "users", instructorId));
           if (instructorDoc.exists()) {
@@ -92,7 +92,7 @@ export default function Messages() {
             setConversations([conversation]);
             setSelectedConversation(conversation);
             setShowMessageView(true);
-            // Mark messages as read when opening from course card
+            // Mark messages as read when opening from video card
             markMessagesAsRead(conversation);
           }
         } else {
@@ -341,7 +341,7 @@ export default function Messages() {
             </Button>
             <h1 className="text-3xl font-bold">Messages</h1>
             <p className="text-muted-foreground mt-2">
-              Connect with your instructors and get help with your courses.
+              Connect with your instructors and get help with your videos.
             </p>
           </div>
 
@@ -359,7 +359,7 @@ export default function Messages() {
                       <div className="p-4 text-center text-muted-foreground">
                         <p>No conversations yet.</p>
                         <p className="text-sm mt-1">
-                          Click the message icon on course cards to start
+                          Click the message icon on video cards to start
                           chatting with instructors.
                         </p>
                       </div>

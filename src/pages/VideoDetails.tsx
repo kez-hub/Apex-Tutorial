@@ -12,7 +12,7 @@ import {
   Upload,
   Edit,
   Trash2,
-  Video,
+  Video as VideoIcon,
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
@@ -35,7 +35,7 @@ import {
   getDoc,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { Course, CourseModule } from "@/lib/data";
+import { Video, VideoModule } from "@/lib/data";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -49,15 +49,15 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 
-export default function CourseDetails() {
+export default function VideoDetails() {
   const { id } = useParams<{ id: string }>();
   const { user, userData } = useAuth();
   const { toast } = useToast();
-  const [course, setCourse] = useState<Course | null>(null);
+  const [video, setVideo] = useState<Video | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [modules, setModules] = useState<CourseModule[]>([]);
+  const [modules, setModules] = useState<VideoModule[]>([]);
   const [isAddingModule, setIsAddingModule] = useState(false);
-  const [editingModule, setEditingModule] = useState<CourseModule | null>(null);
+  const [editingModule, setEditingModule] = useState<VideoModule | null>(null);
   const [currentModuleIndex, setCurrentModuleIndex] = useState(0);
   const [instructorProfile, setInstructorProfile] = useState<any>(null);
   const [moduleForm, setModuleForm] = useState({
@@ -70,18 +70,18 @@ export default function CourseDetails() {
   useEffect(() => {
     if (!id) return;
 
-    const courseDoc = doc(db, "courses", id);
+    const videoDoc = doc(db, "videos", id);
     const unsubscribe = onSnapshot(
-      courseDoc,
+      videoDoc,
       (snapshot) => {
         if (snapshot.exists()) {
-          const courseData = { ...snapshot.data(), id: snapshot.id } as Course;
-          setCourse(courseData);
-          setModules(courseData.modules || []);
+          const videoData = { ...snapshot.data(), id: snapshot.id } as Video;
+          setVideo(videoData);
+          setModules(videoData.modules || []);
 
           // Fetch instructor profile if instructorId exists
-          if (courseData.instructorId) {
-            const instructorDoc = doc(db, "users", courseData.instructorId);
+          if (videoData.instructorId) {
+            const instructorDoc = doc(db, "users", videoData.instructorId);
             getDoc(instructorDoc)
               .then((instructorSnapshot) => {
                 if (instructorSnapshot.exists()) {
@@ -93,14 +93,14 @@ export default function CourseDetails() {
               });
           }
         } else {
-          setCourse(null);
+          setVideo(null);
           setModules([]);
         }
         setIsLoading(false);
       },
       (error) => {
-        console.error("Error loading course:", error);
-        setCourse(null);
+        console.error("Error loading video:", error);
+        setVideo(null);
         setIsLoading(false);
       },
     );
@@ -129,11 +129,11 @@ export default function CourseDetails() {
 
   // Module management functions
   const addModule = async (
-    moduleData: Omit<CourseModule, "id" | "order" | "createdAt">,
+    moduleData: Omit<VideoModule, "id" | "order" | "createdAt">,
   ) => {
-    if (!course || !id) return;
+    if (!video || !id) return;
 
-    const newModule: CourseModule = {
+    const newModule: VideoModule = {
       ...moduleData,
       id: `module-${Date.now()}`,
       order: modules.length,
@@ -143,14 +143,14 @@ export default function CourseDetails() {
     const updatedModules = [...modules, newModule];
 
     try {
-      await updateDoc(doc(db, "courses", id), {
+      await updateDoc(doc(db, "videos", id), {
         modules: updatedModules,
         lessons: updatedModules.length,
       });
       setModules(updatedModules);
       toast({
         title: "Module Added",
-        description: "Your video module has been added to the course.",
+        description: "Your video module has been added to the video.",
       });
     } catch (error) {
       console.error("Error adding module:", error);
@@ -164,16 +164,16 @@ export default function CourseDetails() {
 
   const updateModule = async (
     moduleId: string,
-    updates: Partial<CourseModule>,
+    updates: Partial<VideoModule>,
   ) => {
-    if (!course || !id) return;
+    if (!video || !id) return;
 
     const updatedModules = modules.map((module) =>
       module.id === moduleId ? { ...module, ...updates } : module,
     );
 
     try {
-      await updateDoc(doc(db, "courses", id), {
+      await updateDoc(doc(db, "videos", id), {
         modules: updatedModules,
       });
       setModules(updatedModules);
@@ -192,19 +192,19 @@ export default function CourseDetails() {
   };
 
   const deleteModule = async (moduleId: string) => {
-    if (!course || !id) return;
+    if (!video || !id) return;
 
     const updatedModules = modules.filter((module) => module.id !== moduleId);
 
     try {
-      await updateDoc(doc(db, "courses", id), {
+      await updateDoc(doc(db, "videos", id), {
         modules: updatedModules,
         lessons: updatedModules.length,
       });
       setModules(updatedModules);
       toast({
         title: "Module Deleted",
-        description: "The module has been removed from your course.",
+        description: "The module has been removed from your video.",
       });
     } catch (error) {
       console.error("Error deleting module:", error);
@@ -251,9 +251,7 @@ export default function CourseDetails() {
     });
   };
 
-  const isEnrolled = !!(
-    course?.enrolled || userData?.enrolledCourses?.includes(id || "")
-  );
+  const isEnrolled = !!video?.enrolled;
 
   if (isLoading) {
     return (
@@ -263,17 +261,17 @@ export default function CourseDetails() {
     );
   }
 
-  if (!course) {
+  if (!video) {
     return (
       <div className="min-h-screen bg-background">
         <Navbar isAuthenticated />
         <div className="container mx-auto px-4 py-16 text-center">
-          <h1 className="font-heading text-2xl font-bold">Course not found</h1>
+          <h1 className="font-heading text-2xl font-bold">Video not found</h1>
           <p className="mt-2 text-muted-foreground">
-            The course you're looking for doesn't exist.
+            The video you're looking for doesn't exist.
           </p>
           <Button asChild className="mt-4">
-            <Link to="/courses">Back to Courses</Link>
+            <Link to="/videos">Back to Videos</Link>
           </Button>
         </div>
         <Footer />
@@ -282,32 +280,32 @@ export default function CourseDetails() {
   }
 
   const handleEnroll = async () => {
-    if (!user || !userData || !course || !id) return;
+    if (!user || !userData || !video || !id) return;
 
     try {
-      // Update user's enrolled courses
+      // Update user's enrolled videos
       const userDocRef = doc(db, "users", user.uid);
       await updateDoc(userDocRef, {
         enrolledCourses: arrayUnion(id),
       });
 
-      // Increment course student count
-      const courseDocRef = doc(db, "courses", id);
-      await updateDoc(courseDocRef, {
+      // Increment video student count
+      const videoDocRef = doc(db, "videos", id);
+      await updateDoc(videoDocRef, {
         students: increment(1),
       });
 
       // Update local state
-      setCourse((prev) =>
+      setVideo((prev) =>
         prev ? { ...prev, students: prev.students + 1 } : null,
       );
 
       toast({
         title: "Enrolled successfully! 🎉",
-        description: `You're now enrolled in "${course.title}"`,
+        description: `You're now enrolled in "${video.title}"`,
       });
     } catch (error) {
-      console.error("Error enrolling in course:", error);
+      console.error("Error enrolling in video:", error);
       toast({
         title: "Enrollment failed",
         description: "Please try again later.",
@@ -318,7 +316,7 @@ export default function CourseDetails() {
 
   const learningPoints = [
     "Understand core concepts and best practices",
-    "Get lifetime access to course materials",
+    "Get lifetime access to video materials",
     "Access to exclusive community",
     "Regular updates with new content",
   ];
@@ -329,7 +327,7 @@ export default function CourseDetails() {
     user &&
     userData &&
     !userData.hasPaid &&
-    !course.enrolled &&
+    !video.enrolled &&
     !isInstructor
   ) {
     return (
@@ -343,12 +341,10 @@ export default function CourseDetails() {
             </div>
           </div>
 
-          <h1 className="text-3xl font-bold font-heading mb-4">
-            Course Locked
-          </h1>
+          <h1 className="text-3xl font-bold font-heading mb-4">Video Locked</h1>
           <p className="text-muted-foreground max-w-md mb-8">
             You need to make a one-time payment to unlock access to "
-            {course.title}" and all other premium courses on Apex Tutorials.
+            {video.title}" and all other premium videos on Apex Tutorials.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4">
@@ -360,7 +356,7 @@ export default function CourseDetails() {
               Back to Dashboard
             </Button>
             <Button variant="outline" size="lg" asChild>
-              <Link to="/courses">Browse Other Courses</Link>
+              <Link to="/videos">Browse Other Videos</Link>
             </Button>
           </div>
         </main>
@@ -377,46 +373,46 @@ export default function CourseDetails() {
       <section className="relative overflow-hidden gradient-hero border-b border-border">
         <div className="container mx-auto px-4 py-12 overflow-hidden">
           <Button variant="ghost" size="sm" asChild className="mb-6">
-            <Link to="/courses">
+            <Link to="/videos">
               <ArrowLeft className="h-4 w-4" />
-              Back to Courses
+              Back to Videos
             </Link>
           </Button>
 
           <div className="grid gap-8 lg:grid-cols-3">
-            {/* Course Info */}
+            {/* Video Info */}
             <div className="lg:col-span-2 animate-fade-in">
               <Badge variant="outline" className="mb-4">
-                {course.category}
+                {video.category}
               </Badge>
               <h1 className="mb-4 font-heading text-3xl font-bold md:text-4xl">
-                {course.title}
+                {video.title}
               </h1>
               <p className="mb-6 text-lg text-muted-foreground">
-                {course.description}
+                {video.description}
               </p>
 
               {/* Stats */}
               <div className="mb-6 flex flex-wrap items-center gap-6">
                 <div className="flex items-center gap-1">
                   <Star className="h-5 w-5 fill-amber-400 text-amber-400" />
-                  <span className="font-semibold">{course.rating}</span>
+                  <span className="font-semibold">{video.rating}</span>
                   <span className="text-muted-foreground">rating</span>
                 </div>
                 <div className="flex items-center gap-1 text-muted-foreground">
                   <Users className="h-4 w-4" />
-                  <span>{course.students.toLocaleString()} students</span>
+                  <span>{video.students.toLocaleString()} students</span>
                 </div>
                 <div className="flex items-center gap-1 text-muted-foreground">
                   <Clock className="h-4 w-4" />
-                  <span>{course.duration}</span>
+                  <span>{video.duration}</span>
                 </div>
                 <div className="flex items-center gap-1 text-muted-foreground">
-                  <Video className="h-4 w-4" />
+                  <VideoIcon className="h-4 w-4" />
                   <span>{modules.length} modules</span>
                 </div>
                 <Badge className="bg-primary/10 text-primary border-primary/20">
-                  {course.level}
+                  {video.level}
                 </Badge>
               </div>
 
@@ -424,14 +420,14 @@ export default function CourseDetails() {
               <div className="flex items-center gap-3">
                 <Avatar className="h-12 w-12">
                   <AvatarImage
-                    src={course.instructorAvatar}
-                    alt={course.instructor}
+                    src={video.instructorAvatar}
+                    alt={video.instructor}
                   />
-                  <AvatarFallback>{course.instructor.charAt(0)}</AvatarFallback>
+                  <AvatarFallback>{video.instructor.charAt(0)}</AvatarFallback>
                 </Avatar>
                 <div>
                   <p className="text-sm text-muted-foreground">Instructor</p>
-                  <p className="font-semibold">{course.instructor}</p>
+                  <p className="font-semibold">{video.instructor}</p>
                 </div>
               </div>
             </div>
@@ -448,11 +444,11 @@ export default function CourseDetails() {
                           ? modules[currentModuleIndex].videoUrl
                           : "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4"
                       }
-                      poster={course.thumbnail}
+                      poster={video.thumbnail}
                       title={
                         modules.length > 0
                           ? `${modules[currentModuleIndex]?.title || `Lesson ${currentModuleIndex + 1}`}`
-                          : `Introduction to ${course.title}`
+                          : `Introduction to ${video.title}`
                       }
                     />
                     {modules.length > 1 && (
@@ -497,8 +493,8 @@ export default function CourseDetails() {
                 ) : (
                   <div className="aspect-video overflow-hidden">
                     <img
-                      src={course.thumbnail}
-                      alt={course.title}
+                      src={video.thumbnail}
+                      alt={video.title}
                       className="h-full w-full object-cover"
                     />
                   </div>
@@ -506,17 +502,17 @@ export default function CourseDetails() {
                 <CardContent className="p-6">
                   {isEnrolled ? (
                     <>
-                      {course.progress !== undefined && (
+                      {video.progress !== undefined && (
                         <div className="mb-6">
                           <div className="mb-2 flex items-center justify-between text-sm">
                             <span className="text-muted-foreground">
                               Your Progress
                             </span>
                             <span className="font-semibold text-primary">
-                              {course.progress}%
+                              {video.progress}%
                             </span>
                           </div>
-                          <Progress value={course.progress} className="h-3" />
+                          <Progress value={video.progress} className="h-3" />
                         </div>
                       )}
                       <Button
@@ -558,7 +554,7 @@ export default function CourseDetails() {
                   <Separator className="my-6" />
 
                   <div className="space-y-3">
-                    <h4 className="font-semibold">This course includes:</h4>
+                    <h4 className="font-semibold">This video includes:</h4>
                     <div className="space-y-2 text-sm">
                       <div className="flex items-center gap-2 text-muted-foreground">
                         <PlayCircle className="h-4 w-4" />
@@ -573,7 +569,7 @@ export default function CourseDetails() {
         </div>
       </section>
 
-      {/* Course Content */}
+      {/* Video Content */}
       <section className="container mx-auto px-4 py-12">
         <div className="grid gap-8 lg:grid-cols-3">
           <div className="lg:col-span-2 space-y-12">
@@ -601,7 +597,7 @@ export default function CourseDetails() {
                 style={{ animationDelay: "0.1s" }}
               >
                 <h2 className="mb-6 font-heading text-2xl font-bold">
-                  Course Curriculum
+                  Video Curriculum
                 </h2>
                 <div className="space-y-3">
                   {modules.map((module, index) => (
@@ -628,7 +624,7 @@ export default function CourseDetails() {
                             )}
                           </div>
                         </div>
-                        <Video className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+                        <VideoIcon className="h-5 w-5 text-muted-foreground flex-shrink-0" />
                       </CardContent>
                     </Card>
                   ))}
@@ -637,14 +633,14 @@ export default function CourseDetails() {
             )}
 
             {/* Module Management for Instructors */}
-            {isInstructor && course.instructorId === user?.uid && (
+            {isInstructor && video.instructorId === user?.uid && (
               <div
                 className="animate-fade-in"
                 style={{ animationDelay: "0.2s" }}
               >
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="font-heading text-2xl font-bold">
-                    Course Modules
+                    Video Modules
                   </h2>
                   <Button
                     onClick={() => setIsAddingModule(true)}
@@ -659,10 +655,10 @@ export default function CourseDetails() {
                   {modules.length === 0 ? (
                     <Card className="border-border/50 border-dashed">
                       <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-                        <Video className="h-12 w-12 text-muted-foreground mb-4" />
+                        <VideoIcon className="h-12 w-12 text-muted-foreground mb-4" />
                         <h3 className="font-semibold mb-2">No modules yet</h3>
                         <p className="text-sm text-muted-foreground mb-4">
-                          Start building your course by adding video modules
+                          Start building your video by adding video modules
                         </p>
                         <Button
                           onClick={() => setIsAddingModule(true)}
@@ -702,7 +698,7 @@ export default function CourseDetails() {
                                     )}
                                     {module.videoUrl && (
                                       <span className="flex items-center gap-1">
-                                        <Video className="h-3 w-3" />
+                                        <VideoIcon className="h-3 w-3" />
                                         Video uploaded
                                       </span>
                                     )}
@@ -759,17 +755,17 @@ export default function CourseDetails() {
                     <AvatarImage
                       src={
                         instructorProfile?.avatarBase64 ||
-                        course.instructorAvatar
+                        video.instructorAvatar
                       }
-                      alt={course.instructor}
+                      alt={video.instructor}
                       className="object-cover"
                     />
                     <AvatarFallback>
-                      {course.instructor.charAt(0)}
+                      {video.instructor.charAt(0)}
                     </AvatarFallback>
                   </Avatar>
                   <div>
-                    <p className="font-semibold">{course.instructor}</p>
+                    <p className="font-semibold">{video.instructor}</p>
                     <p className="text-sm text-muted-foreground">
                       Expert Instructor
                     </p>

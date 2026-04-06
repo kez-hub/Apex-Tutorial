@@ -37,8 +37,8 @@ interface Quiz {
   id: string;
   title: string;
   description: string;
-  courseId?: string;
-  courseTitle?: string;
+  videoId?: string;
+  videoTitle?: string;
   noteId?: string;
   noteTitle?: string;
   questions: number;
@@ -269,7 +269,7 @@ export default function QuizDetails() {
                   <div>
                     <CardTitle className="text-2xl">{quiz.title}</CardTitle>
                     <p className="text-sm text-muted-foreground mt-1">
-                      {quiz.courseTitle || quiz.noteTitle} • {quiz.duration} min
+                      {quiz.videoTitle || quiz.noteTitle} • {quiz.duration} min
                       • {quiz.questions} questions
                     </p>
                   </div>

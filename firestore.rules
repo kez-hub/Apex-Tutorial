@@ -32,13 +32,24 @@ service cloud.firestore {
         request.auth.uid == resource.data.userId;
     }
     match /courses/{courseId} {
-      // Allow everyone to read courses
+      // Allow everyone to read videos
       allow read: if true;
-      // Allow instructors to update their own courses (including modules)
+      // Allow instructors to update their own videos (including modules)
       allow update: if request.auth != null && 
         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'instructor' &&
         resource.data.instructorId == request.auth.uid;
-      // Allow anyone to write courses (for initial seeding)
+      // Allow anyone to write videos (for initial seeding)
+      // TODO: Restrict this to admin users only in production
+      allow write: if true;
+    }
+    match /videos/{videoId} {
+      // Allow everyone to read videos
+      allow read: if true;
+      // Allow instructors to update their own videos (including modules)
+      allow update: if request.auth != null && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'instructor' &&
+        resource.data.instructorId == request.auth.uid;
+      // Allow anyone to write videos (for initial seeding)
       // TODO: Restrict this to admin users only in production
       allow write: if true;
     }

@@ -97,7 +97,7 @@ export function Navbar({ isAuthenticated = false }: NavbarProps) {
   const navLinks = isAuthed
     ? ([
         { href: "/dashboard", label: "Dashboard" },
-        { href: "/courses", label: "Courses" },
+        { href: "/videos", label: "Videos" },
         userData?.role === "instructor"
           ? { href: "/quiz", label: "Quiz" }
           : { href: "/messages", label: "Messages" },
@@ -106,12 +106,12 @@ export function Navbar({ isAuthenticated = false }: NavbarProps) {
         userData?.role === "student" && { href: "/quiz", label: "Quiz" },
         userData?.role === "student" && {
           href: "/schedule",
-          label: "Schedule",
+          label: "Events",
         },
       ].filter(Boolean) as { href: string; label: string }[])
     : [
         { href: "/", label: "Home" },
-        { href: "/courses", label: "Courses" },
+        { href: "/videos", label: "Videos" },
       ];
 
   const isActive = (path: string) => location.pathname === path;

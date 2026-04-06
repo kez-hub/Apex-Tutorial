@@ -9,7 +9,7 @@ export function useVideos() {
 
   useEffect(() => {
     const unsubscribe = onSnapshot(
-      collection(db, "courses"),
+      collection(db, "videos"),
       (snapshot) => {
         const fetchedVideos = snapshot.docs.map((doc) => ({
           ...doc.data(),

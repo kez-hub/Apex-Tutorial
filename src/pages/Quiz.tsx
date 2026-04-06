@@ -22,8 +22,8 @@ interface Quiz {
   id: string;
   title: string;
   description: string;
-  courseId?: string;
-  courseTitle?: string;
+  videoId?: string;
+  videoTitle?: string;
   noteId?: string;
   noteTitle?: string;
   questions: number;
@@ -118,7 +118,7 @@ export default function Quiz() {
                           {quiz.title}
                         </CardTitle>
                         <p className="text-sm text-muted-foreground">
-                          {quiz.courseTitle || quiz.noteTitle}
+                          {quiz.videoTitle || quiz.noteTitle}
                         </p>
                       </div>
                       <Badge className="bg-primary/10 text-primary border-primary/20">
@@ -179,7 +179,7 @@ export default function Quiz() {
         <div className="mb-8">
           <h1 className="font-heading text-3xl font-bold mb-2">Quiz Center</h1>
           <p className="text-muted-foreground">
-            Test your knowledge and track your progress across all courses.
+            Test your knowledge and track your progress across all videos.
           </p>
         </div>
 
@@ -281,7 +281,7 @@ export default function Quiz() {
                               {quiz.title}
                             </CardTitle>
                             <p className="text-sm text-muted-foreground mb-3">
-                              {quiz.courseTitle || quiz.noteTitle}
+                              {quiz.videoTitle || quiz.noteTitle}
                             </p>
                           </div>
                           <Badge
@@ -334,7 +334,7 @@ export default function Quiz() {
                           {quiz.title}
                         </CardTitle>
                         <p className="text-sm text-muted-foreground mb-3">
-                          {quiz.courseTitle || quiz.noteTitle}
+                          {quiz.videoTitle || quiz.noteTitle}
                         </p>
                       </div>
                       <Badge className="bg-green-500/10 text-green-600 border-green-200">
@@ -385,7 +385,7 @@ export default function Quiz() {
               No Quizzes Available
             </h3>
             <p className="text-muted-foreground max-w-md">
-              Complete courses to unlock quizzes and test your knowledge.
+              Complete videos to unlock quizzes and test your knowledge.
             </p>
           </div>
         )}

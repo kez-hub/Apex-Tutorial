@@ -15,58 +15,49 @@ import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/AuthContext";
 import { useVideos } from "@/hooks/useVideos";
 import { Video, categories } from "@/lib/data";
-import { AddCourseModal } from "@/components/courses/AddCourseModal";
-import { CourseCard } from "@/components/courses/CourseCard";
+import { AddVideoModal } from "@/components/videos/AddVideoModal";
+import { VideoCard } from "@/components/videos/VideoCard";
 
-export default function Courses() {
+export default function Videos() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [selectedLevel, setSelectedLevel] = useState("All Levels");
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [courseToEdit, setCourseToEdit] = useState<Video | null>(null);
+  const [videoToEdit, setVideoToEdit] = useState<Video | null>(null);
   const { videos, loading } = useVideos();
-  const { user, userData } = useAuth();
 
   const levels = ["All Levels", "Beginner", "Intermediate", "Advanced"];
 
-  const filteredCourses = videos.filter((course) => {
+  const filteredVideos = videos.filter((video) => {
     const matchesSearch =
-      course.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      course.instructor.toLowerCase().includes(searchQuery.toLowerCase());
+      video.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      video.instructor.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory =
-      selectedCategory === "All" || course.category === selectedCategory;
+      selectedCategory === "All" || video.category === selectedCategory;
     const matchesLevel =
-      selectedLevel === "All Levels" || course.level === selectedLevel;
-    const matchesInstructor =
-      userData?.role !== "instructor" || course.instructorId === user?.uid;
-    return (
-      matchesSearch && matchesCategory && matchesLevel && matchesInstructor
-    );
+      selectedLevel === "All Levels" || video.level === selectedLevel;
+    return matchesSearch && matchesCategory && matchesLevel;
   });
 
   return (
     <div className="min-h-screen bg-background">
       <Navbar isAuthenticated />
 
-      <AddCourseModal
+      <AddVideoModal
         isOpen={isAddModalOpen}
         onOpenChange={(open) => {
           setIsAddModalOpen(open);
-          if (!open) setCourseToEdit(null);
+          if (!open) setVideoToEdit(null);
         }}
-        initialData={courseToEdit}
+        initialData={videoToEdit}
       />
 
       <main className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-8 animate-fade-in">
-          <h1 className="font-heading text-3xl font-bold">
-            {userData?.role === "instructor" ? "My Videos" : "Explore Courses"}
-          </h1>
+          <h1 className="font-heading text-3xl font-bold">Explore Videos</h1>
           <p className="mt-2 text-muted-foreground">
-            {userData?.role === "instructor"
-              ? "Manage and view your uploaded videos"
-              : "Discover courses to help you reach your goals"}
+            Discover videos to help you reach your goals
           </p>
         </div>
 
@@ -80,7 +71,7 @@ export default function Courses() {
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               type="text"
-              placeholder="Search courses or instructors..."
+              placeholder="Search videos or instructors..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-10"
@@ -170,53 +161,46 @@ export default function Courses() {
           className="mb-6 text-sm text-muted-foreground animate-fade-in"
           style={{ animationDelay: "0.3s" }}
         >
-          Showing {filteredCourses.length}{" "}
-          {userData?.role === "instructor" ? "video" : "course"}
-          {filteredCourses.length !== 1 ? "s" : ""}
+          Showing {filteredVideos.length} video
+          {filteredVideos.length !== 1 ? "s" : ""}
         </p>
 
         {/* Course Grid */}
-        {filteredCourses.length === 0 ? (
+        {filteredVideos.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-center">
             <div className="mb-4 rounded-full bg-muted p-6">
               <Search className="h-8 w-8 text-muted-foreground" />
             </div>
             <h3 className="font-heading text-xl font-semibold">
-              {userData?.role === "instructor"
-                ? "No videos found"
-                : "No courses found"}
+              No videos found
             </h3>
             <p className="mt-2 text-muted-foreground">
-              {userData?.role === "instructor"
-                ? "You haven't uploaded any videos yet"
-                : "Try adjusting your search or filter criteria"}
+              Try adjusting your search or filter criteria
             </p>
-            {userData?.role !== "instructor" && (
-              <Button
-                variant="outline"
-                className="mt-4"
-                onClick={() => {
-                  setSearchQuery("");
-                  setSelectedCategory("All");
-                  setSelectedLevel("All Levels");
-                }}
-              >
-                Clear Filters
-              </Button>
-            )}
+            <Button
+              variant="outline"
+              className="mt-4"
+              onClick={() => {
+                setSearchQuery("");
+                setSelectedCategory("All");
+                setSelectedLevel("All Levels");
+              }}
+            >
+              Clear Filters
+            </Button>
           </div>
         ) : (
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {filteredCourses.map((course, index) => (
+            {filteredVideos.map((video, index) => (
               <div
-                key={course.id}
+                key={video.id}
                 className="animate-fade-in"
                 style={{ animationDelay: `${index * 0.05}s` }}
               >
-                <CourseCard
-                  course={course}
+                <VideoCard
+                  video={video}
                   onEdit={(c) => {
-                    setCourseToEdit(c);
+                    setVideoToEdit(c);
                     setIsAddModalOpen(true);
                   }}
                 />

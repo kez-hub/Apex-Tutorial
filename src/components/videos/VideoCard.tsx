@@ -14,7 +14,7 @@ import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Course } from "@/lib/data";
+import { Video } from "@/lib/data";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useEffect } from "react";
@@ -27,22 +27,22 @@ import {
 import { doc, deleteDoc, getDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 
-interface CourseCardProps {
-  course: Course;
-  onEdit?: (course: Course) => void;
+interface VideoCardProps {
+  video: Video;
+  onEdit?: (video: Video) => void;
 }
 
-export function CourseCard({ course, onEdit }: CourseCardProps) {
+export function VideoCard({ video, onEdit }: VideoCardProps) {
   const { user, userData } = useAuth();
   const { toast } = useToast();
   const [instructorAvatar, setInstructorAvatar] = useState(
-    course.instructorAvatar,
+    video.instructorAvatar,
   );
 
   // Fetch instructor profile picture from Firestore
   useEffect(() => {
-    if (course.instructorId) {
-      getDoc(doc(db, "users", course.instructorId))
+    if (video.instructorId) {
+      getDoc(doc(db, "users", video.instructorId))
         .then((docSnap) => {
           if (docSnap.exists()) {
             const instructorData = docSnap.data();
@@ -55,25 +55,25 @@ export function CourseCard({ course, onEdit }: CourseCardProps) {
           console.error("Error fetching instructor avatar:", error);
         });
     }
-  }, [course.instructorId]);
+  }, [video.instructorId]);
 
-  const handleCourseClick = (e: React.MouseEvent) => {
+  const handleVideoClick = (e: React.MouseEvent) => {
     // Instructors bypass the payment check
     if (userData?.role === "instructor") return;
 
-    if (!userData?.hasPaid && !course.enrolled) {
+    if (!userData?.hasPaid && !video.enrolled) {
       e.preventDefault();
       toast({
         title: "Payment Required ₦",
         description:
-          "You need to unlock all courses to access this content. Check your dashboard for the 'Pay Now' button.",
+          "You need to unlock all videos to access this content. Check your dashboard for the 'Pay Now' button.",
         variant: "destructive",
       });
     }
   };
 
   const isOwner =
-    userData?.role === "instructor" && course.instructorId === user?.uid;
+    userData?.role === "instructor" && video.instructorId === user?.uid;
 
   const handleDelete = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -81,23 +81,23 @@ export function CourseCard({ course, onEdit }: CourseCardProps) {
 
     if (
       !window.confirm(
-        "Are you sure you want to delete this course? This action cannot be undone.",
+        "Are you sure you want to delete this video? This action cannot be undone.",
       )
     )
       return;
 
     try {
-      await deleteDoc(doc(db, "courses", course.id));
+      await deleteDoc(doc(db, "videos", video.id));
       toast({
-        title: "Course Deleted",
+        title: "Video Deleted",
         description:
-          "The course has been successfully removed from the platform.",
+          "The video has been successfully removed from the platform.",
       });
     } catch (err) {
-      console.error("Error deleting course:", err);
+      console.error("Error deleting video:", err);
       toast({
         title: "Deletion Failed",
-        description: "You don't have permission to delete this course.",
+        description: "You don't have permission to delete this video.",
         variant: "destructive",
       });
     }
@@ -106,7 +106,7 @@ export function CourseCard({ course, onEdit }: CourseCardProps) {
   const handleEditClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (onEdit) onEdit(course);
+    if (onEdit) onEdit(video);
   };
 
   const levelColors = {
@@ -116,23 +116,23 @@ export function CourseCard({ course, onEdit }: CourseCardProps) {
   };
 
   return (
-    <Link to={`/courses/${course.id}`} onClick={handleCourseClick}>
+    <Link to={`/videos/${video.id}`} onClick={handleVideoClick}>
       <Card className="group h-full overflow-hidden border-border/50 bg-card shadow-card transition-all duration-300 hover:shadow-elevated hover:-translate-y-1">
         {/* Thumbnail */}
         <div className="relative aspect-video overflow-hidden">
           <img
-            src={course.thumbnail}
-            alt={course.title}
+            src={video.thumbnail}
+            alt={video.title}
             className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-foreground/20 to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
           <Badge
-            className={`absolute left-3 top-3 ${levelColors[course.level as keyof typeof levelColors]}`}
+            className={`absolute left-3 top-3 ${levelColors[video.level as keyof typeof levelColors]}`}
             variant="outline"
           >
-            {course.level}
+            {video.level}
           </Badge>
-          {course.enrolled && (
+          {video.enrolled && (
             <Badge className="absolute right-3 top-3 bg-accent text-accent-foreground">
               Enrolled
             </Badge>
@@ -142,12 +142,12 @@ export function CourseCard({ course, onEdit }: CourseCardProps) {
         <CardContent className="p-4">
           {/* Category */}
           <p className="mb-2 text-xs font-medium uppercase tracking-wider text-primary">
-            {course.category}
+            {video.category}
           </p>
 
           {/* Title */}
           <h3 className="mb-3 font-heading text-lg font-semibold leading-tight text-foreground line-clamp-2 group-hover:text-primary transition-colors">
-            {course.title}
+            {video.title}
           </h3>
 
           {/* Instructor */}
@@ -155,13 +155,13 @@ export function CourseCard({ course, onEdit }: CourseCardProps) {
             <Avatar className="h-6 w-6">
               <AvatarImage
                 src={instructorAvatar}
-                alt={course.instructor}
+                alt={video.instructor}
                 className="object-cover"
               />
-              <AvatarFallback>{course.instructor.charAt(0)}</AvatarFallback>
+              <AvatarFallback>{video.instructor.charAt(0)}</AvatarFallback>
             </Avatar>
             <span className="text-sm text-muted-foreground">
-              {course.instructor}
+              {video.instructor}
             </span>
           </div>
 
@@ -169,11 +169,11 @@ export function CourseCard({ course, onEdit }: CourseCardProps) {
           <div className="mb-3 flex items-center gap-4 text-xs text-muted-foreground">
             <div className="flex items-center gap-1">
               <Clock className="h-3.5 w-3.5" />
-              <span>{course.duration}</span>
+              <span>{video.duration}</span>
             </div>
             <div className="flex items-center gap-1">
               <BookOpen className="h-3.5 w-3.5" />
-              <span>{course.lessons} lessons</span>
+              <span>{video.lessons} lessons</span>
             </div>
           </div>
 
@@ -181,12 +181,12 @@ export function CourseCard({ course, onEdit }: CourseCardProps) {
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-1">
                 <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
-                <span className="text-sm font-medium">{course.rating}</span>
+                <span className="text-sm font-medium">{video.rating}</span>
               </div>
               <div className="flex items-center gap-1 text-muted-foreground">
                 <Users className="h-3.5 w-3.5" />
                 <span className="text-xs">
-                  {course.students.toLocaleString()}
+                  {video.students.toLocaleString()}
                 </span>
               </div>
             </div>
@@ -230,23 +230,23 @@ export function CourseCard({ course, onEdit }: CourseCardProps) {
         </CardContent>
 
         {/* Progress (if enrolled) */}
-        {course.enrolled && course.progress !== undefined && (
+        {video.enrolled && video.progress !== undefined && (
           <CardFooter className="border-t border-border/50 bg-muted/30 px-4 py-3">
             <div className="w-full">
               <div className="mb-1 flex items-center justify-between text-xs">
                 <span className="text-muted-foreground">Progress</span>
                 <span className="font-medium text-primary">
-                  {course.progress}%
+                  {video.progress}%
                 </span>
               </div>
-              <Progress value={course.progress} className="h-1.5" />
+              <Progress value={video.progress} className="h-1.5" />
             </div>
           </CardFooter>
         )}
 
         {/* Message Icon for Students */}
         {userData?.role === "student" &&
-          userData?.enrolledCourses?.includes(course.id) && (
+          userData?.enrolledCourses?.includes(video.id) && (
             <div className="absolute bottom-3 right-3">
               <Button
                 variant="secondary"
@@ -256,7 +256,7 @@ export function CourseCard({ course, onEdit }: CourseCardProps) {
                   e.preventDefault();
                   e.stopPropagation();
                   // Navigate to messages with instructor
-                  window.location.href = `/messages?instructor=${course.instructorId}`;
+                  window.location.href = `/messages?instructor=${video.instructorId}`;
                 }}
               >
                 <MessageCircle className="h-4 w-4" />

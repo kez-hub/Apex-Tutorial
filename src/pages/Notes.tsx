@@ -8,6 +8,7 @@ import {
   Search,
   Filter,
   ChevronDown,
+  MessageCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -299,7 +300,7 @@ export default function Notes() {
             filteredNotes.map((note) => (
               <Card
                 key={note.id}
-                className="hover:shadow-lg transition-shadow group"
+                className="hover:shadow-lg transition-shadow group relative"
               >
                 <div className="aspect-video w-full overflow-hidden rounded-t-xl bg-muted">
                   <img
@@ -342,7 +343,7 @@ export default function Notes() {
                     <Button
                       size="sm"
                       variant="outline"
-                      className="w-full"
+                      className="flex-1"
                       onClick={() => handleViewPdf(note.pdfUrl, note.title)}
                     >
                       <Eye className="h-4 w-4 mr-2" />
@@ -350,6 +351,25 @@ export default function Notes() {
                     </Button>
                   </div>
                 </CardContent>
+
+                {/* Message Icon for Students */}
+                {userData?.role === "student" && (
+                  <div className="absolute bottom-3 right-3">
+                    <Button
+                      variant="secondary"
+                      size="icon"
+                      className="h-8 w-8 rounded-full shadow-md hover:shadow-lg transition-shadow bg-background/90 backdrop-blur-sm"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        // Navigate to messages with instructor
+                        window.location.href = `/messages?instructor=${note.instructorId}`;
+                      }}
+                    >
+                      <MessageCircle className="h-4 w-4" />
+                    </Button>
+                  </div>
+                )}
               </Card>
             ))
           )}

@@ -1,6 +1,6 @@
 # Cloud Functions for Apex Tutorial
 
-This directory contains Cloud Functions that handle backend logic for the Apex Tutorial app, including notifications when instructors publish courses.
+This directory contains Cloud Functions that handle backend logic for the Apex Tutorial app, including notifications when instructors publish videos.
 
 ## Setup & Deployment
 
@@ -32,8 +32,8 @@ npm run build
 - **Trigger**: Fires when a new document is created in the `courses` collection
 - **Action**: Automatically creates notification documents for all students
 - **Notification Fields**:
-  - `courseId`: ID of the new course
-  - `courseTitle`: Name of the course
+  - `courseId`: ID of the new video
+  - `courseTitle`: Name of the video
   - `instructorName`: Name of the instructor
   - `type`: "course_published"
   - `read`: false (unread notification)

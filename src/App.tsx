@@ -11,8 +11,8 @@ import Auth from "./pages/Auth";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import Dashboard from "./pages/Dashboard";
-import Courses from "./pages/Courses";
-import CourseDetails from "./pages/CourseDetails";
+import Videos from "./pages/Videos";
+import VideoDetails from "./pages/VideoDetails";
 import Profile from "./pages/Profile";
 import Schedule from "./pages/Schedule";
 import NotFound from "./pages/NotFound";
@@ -89,8 +89,8 @@ const App = () => (
                 </ProtectedRoute>
               }
             />
-            <Route path="/courses" element={<Courses />} />
-            <Route path="/courses/:id" element={<CourseDetails />} />
+            <Route path="/videos" element={<Videos />} />
+            <Route path="/videos/:id" element={<VideoDetails />} />
             <Route
               path="/quiz"
               element={

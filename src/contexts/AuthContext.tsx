@@ -36,7 +36,7 @@ export interface UserData {
   department?: string;
   whatsapp?: string;
   tutorialId: string;
-  enrolledCourses: string[];
+  enrolledVideos: string[];
   hoursLearned: number;
   learningStreak: number;
   alarms: LearningAlarm[];
@@ -116,7 +116,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           } else {
             setUserData({
               tutorialId: "",
-              enrolledCourses: [],
+              enrolledVideos: [],
               hoursLearned: 0,
               learningStreak: 0,
               alarms: [],
@@ -212,7 +212,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         tutorialId, // Empty string for instructors
         department: department || "",
         whatsapp: whatsapp || "",
-        enrolledCourses: [],
+        enrolledVideos: [],
         hoursLearned: 0,
         learningStreak: 0,
         alarms: [],

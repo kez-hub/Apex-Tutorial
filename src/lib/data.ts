@@ -1,4 +1,4 @@
-export interface Course {
+export interface Video {
   id: string;
   title: string;
   instructor: string;
@@ -14,10 +14,10 @@ export interface Course {
   instructorId?: string;
   progress?: number;
   enrolled?: boolean;
-  modules?: CourseModule[];
+  modules?: VideoModule[];
 }
 
-export interface CourseModule {
+export interface VideoModule {
   id: string;
   title: string;
   description?: string;
@@ -32,7 +32,7 @@ export interface User {
   name: string;
   email: string;
   avatar: string;
-  enrolledCourses: string[];
+  enrolledVideos: string[];
   learningSchedule?: {
     time: string;
     days: string[];
@@ -44,11 +44,11 @@ export interface LearningAlarm {
   id: string;
   time: string;
   days: string[];
-  courseId?: string;
+  videoId?: string;
   enabled: boolean;
 }
 
-export const courses: Course[] = [
+export const videos: Video[] = [
   {
     id: "1",
     title: "Introduction to Web Development",
@@ -335,7 +335,7 @@ export const currentUser: User = {
   email: "alex.johnson@email.com",
   avatar:
     "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200&h=200&fit=crop",
-  enrolledCourses: ["1", "2", "5"],
+  enrolledVideos: ["1", "2", "5"],
   learningSchedule: {
     time: "09:00",
     days: ["Monday", "Wednesday", "Friday"],

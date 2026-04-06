@@ -17,7 +17,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
-import { courses } from "@/lib/data";
+import { videos } from "@/lib/data";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { doc, updateDoc } from "firebase/firestore";
@@ -41,26 +41,24 @@ export default function Profile() {
   );
   const [bannerUrl, setBannerUrl] = useState(userData?.bannerBase64 || "");
 
-  // Certificate logic: Count enrolled courses that are 100% completed
-  const enrolledCourseIds = userData?.enrolledCourses || [];
-  const enrolledCourses = courses.filter((course) =>
-    enrolledCourseIds.includes(course.id),
+  // Certificate logic: Count enrolled videos that are 100% completed
+  const enrolledVideoIds = userData?.enrolledVideos || [];
+  const enrolledVideos = videos.filter((video) =>
+    enrolledVideoIds.includes(video.id),
   );
-  const certificatesCount = enrolledCourses.filter(
-    (c) => (c.progress || 0) >= 100,
+  const certificatesCount = enrolledVideos.filter(
+    (v) => (v.progress || 0) >= 100,
   ).length;
   const totalProgress =
-    enrolledCourses.length > 0
-      ? enrolledCourses.reduce(
-          (sum, course) => sum + (course.progress || 0),
-          0,
-        ) / enrolledCourses.length
+    enrolledVideos.length > 0
+      ? enrolledVideos.reduce((sum, video) => sum + (video.progress || 0), 0) /
+        enrolledVideos.length
       : 0;
 
   const stats = [
     {
-      label: "Courses Enrolled",
-      value: enrolledCourses.length,
+      label: "Videos Enrolled",
+      value: enrolledVideos.length,
       icon: BookOpen,
     },
     { label: "Hours Learned", value: userData?.hoursLearned || 0, icon: Clock },
@@ -311,7 +309,7 @@ export default function Profile() {
               ))}
             </div>
 
-            {/* Enrolled Courses */}
+            {/* Enrolled Videos */}
             <Card
               className="border-border/50 shadow-card animate-fade-in"
               style={{ animationDelay: "0.2s" }}
@@ -319,30 +317,30 @@ export default function Profile() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <BookOpen className="h-5 w-5 text-primary" />
-                  Enrolled Courses
+                  Enrolled Videos
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {enrolledCourses.map((course) => (
+                  {enrolledVideos.map((video) => (
                     <div
-                      key={course.id}
+                      key={video.id}
                       className="flex flex-col sm:flex-row sm:items-center gap-4 rounded-lg border border-border/50 p-4 transition-colors hover:bg-muted/50"
                     >
                       <img
-                        src={course.thumbnail}
-                        alt={course.title}
+                        src={video.thumbnail}
+                        alt={video.title}
                         className="h-32 w-full sm:h-16 sm:w-24 rounded-lg object-cover"
                       />
                       <div className="flex-1 min-w-0">
                         <Link
-                          to={`/courses/${course.id}`}
+                          to={`/videos/${video.id}`}
                           className="font-semibold hover:text-primary transition-colors line-clamp-2"
                         >
-                          {course.title}
+                          {video.title}
                         </Link>
                         <p className="text-sm text-muted-foreground">
-                          {course.instructor}
+                          {video.instructor}
                         </p>
                         <div className="mt-2">
                           <div className="mb-1 flex items-center justify-between text-xs">
@@ -350,10 +348,10 @@ export default function Profile() {
                               Progress
                             </span>
                             <span className="font-medium text-primary">
-                              {course.progress}%
+                              {video.progress}%
                             </span>
                           </div>
-                          <Progress value={course.progress} className="h-1.5" />
+                          <Progress value={video.progress} className="h-1.5" />
                         </div>
                       </div>
                       <Button
@@ -362,7 +360,7 @@ export default function Profile() {
                         className="w-full sm:w-auto"
                         asChild
                       >
-                        <Link to={`/courses/${course.id}`}>Continue</Link>
+                        <Link to={`/videos/${video.id}`}>Continue</Link>
                       </Button>
                     </div>
                   ))}
@@ -423,25 +421,6 @@ export default function Profile() {
             </Card>
 
             {/* Learning Schedule */}
-            <Card
-              className="border-border/50 shadow-card animate-fade-in"
-              style={{ animationDelay: "0.4s" }}
-            >
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-lg">
-                  <Calendar className="h-5 w-5 text-primary" />
-                  Learning Schedule
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground">
-                  Set up your learning schedule to receive reminders.
-                </p>
-                <Button variant="outline" className="mt-4 w-full" asChild>
-                  <Link to="/schedule">Manage Schedule</Link>
-                </Button>
-              </CardContent>
-            </Card>
           </div>
         </div>
       </main>
