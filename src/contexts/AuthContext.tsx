@@ -88,9 +88,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const unsubscribeAuth = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
-
-      if (!currentUser) {
+      if (currentUser) {
+        setUser(currentUser);
+        // Don't set loading to false here - wait for userData to load
+      } else {
+        setUser(null);
         setUserData(null);
         setLoading(false);
       }
@@ -101,6 +103,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (user) {
+      // Reset userData when user changes to ensure fresh data loads
+      setUserData(null);
+      
       const unsubscribeDoc = onSnapshot(
         doc(db, "users", user.uid),
         (docSnap) => {

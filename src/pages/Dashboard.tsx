@@ -496,7 +496,12 @@ export default function Dashboard() {
               type="button"
               className="flex h-14 w-14 items-center justify-center rounded-full bg-green-500 text-white shadow-elevated hover:scale-110 active:scale-95 transition-all duration-300 animate-fade-in"
               title="Join WhatsApp Group"
-              onClick={() => window.open('https://chat.whatsapp.com/KPOMeE4fhz9FwsXn3FF7eO?mode=gi_t', '_blank')}
+              onClick={() =>
+                window.open(
+                  "https://chat.whatsapp.com/KPOMeE4fhz9FwsXn3FF7eO?mode=gi_t",
+                  "_blank",
+                )
+              }
             >
               <MessageCircle className="h-6 w-6" />
             </button>
