@@ -29,7 +29,7 @@ interface PaymentModalProps {
 const isMobileDevice = () => {
   if (typeof window === "undefined") return false;
   return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-    navigator.userAgent
+    navigator.userAgent,
   );
 };
 
@@ -43,10 +43,18 @@ export function PaymentModal({ isOpen, onClose }: PaymentModalProps) {
     const script = document.createElement("script");
     script.src = "https://js.paystack.co/v1/inline.js";
     script.async = true;
+    script.onload = () => {
+      console.log("Paystack script loaded successfully");
+    };
+    script.onerror = () => {
+      console.error("Failed to load Paystack script");
+    };
     document.body.appendChild(script);
 
     return () => {
-      document.body.removeChild(script);
+      if (document.body.contains(script)) {
+        document.body.removeChild(script);
+      }
     };
   }, []);
 
@@ -84,39 +92,60 @@ export function PaymentModal({ isOpen, onClose }: PaymentModalProps) {
   const handlePayment = () => {
     if (!user || !userData) return;
 
+    // Check if Paystack is loaded
+    if (!window.PaystackPop) {
+      toast({
+        title: "Payment Service Loading",
+        description: "Please wait a moment and try again.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsProcessing(true);
 
-    // Determine display mode: use 'page' on mobile for better UX, 'modal' on desktop
-    const isOnMobile = isMobileDevice();
-    const displayMode = isOnMobile ? "page" : "modal";
+    try {
+      const isOnMobile = isMobileDevice();
 
-    const handler = window.PaystackPop.setup({
-      key: import.meta.env.VITE_PAYSTACK_PUBLIC_KEY || "pk_test_placeholder",
-      email: user.email,
-      amount: 10050 * 100,
-      currency: "NGN",
-      ref: `APEX-${user.uid.slice(0, 8)}-${Date.now()}`,
-      display: displayMode, // Use page mode on mobile for better touch interaction
-      callback: (response: any) => {
-        // Payment successful - call internal async handler
-        onPaymentSuccess(response);
-      },
-      onClose: () => {
-        setIsProcessing(false);
-        toast({
-          title: "Payment Cancelled",
-          description:
-            "You need to complete the payment to access your courses.",
-          variant: "default",
-        });
-      },
-    });
+      const handler = window.PaystackPop.setup({
+        key: import.meta.env.VITE_PAYSTACK_PUBLIC_KEY || "pk_test_placeholder",
+        email: user.email,
+        amount: 10050 * 100,
+        currency: "NGN",
+        ref: `APEX-${user.uid.slice(0, 8)}-${Date.now()}`,
+        callback: (response: any) => {
+          onPaymentSuccess(response);
+        },
+        onClose: () => {
+          setIsProcessing(false);
+          toast({
+            title: "Payment Cancelled",
+            description:
+              "You need to complete the payment to access your courses.",
+            variant: "default",
+          });
+        },
+      });
 
-    // Use openIframe for modal, pay for page
-    if (isOnMobile) {
-      handler.pay();
-    } else {
-      handler.openIframe();
+      // On mobile, close dialog first for better UX with full-page modal
+      if (isOnMobile) {
+        onClose();
+        // Give dialog time to close before opening Paystack
+        setTimeout(() => {
+          handler.openIframe();
+        }, 200);
+      } else {
+        // On desktop, open directly in the modal
+        handler.openIframe();
+      }
+    } catch (error) {
+      console.error("Payment error:", error);
+      setIsProcessing(false);
+      toast({
+        title: "Payment Error",
+        description: "Failed to initialize payment. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
