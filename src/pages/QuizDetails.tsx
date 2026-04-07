@@ -404,7 +404,7 @@ export default function QuizDetails() {
             {/* Retake Quiz Button */}
             <div className="flex justify-center mt-8">
               <Button
-                onClick={() => navigate(`/take-quiz/${quiz.id}?shuffle=true`)}
+                onClick={() => navigate(`/quiz/${quiz.id}/take?shuffle=true`)}
                 className="px-8 py-3 text-lg font-semibold"
                 size="lg"
               >

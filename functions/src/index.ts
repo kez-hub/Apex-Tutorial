@@ -189,6 +189,16 @@ export const onPaymentCompleted = functions.firestore
         console.log(`Generated tutorial ID: ${tutorialId} for user: ${userId}`);
 
         // Send payment confirmation email using EmailJS REST API
+        const emailParams = {
+          email: afterData.email,
+          tutorialId,
+          fulName: afterData.full_name || "Student",
+          paymentReference: afterData.paymentReference || "MANUAL",
+          amount: "10,300",
+          whatsapp: afterData.whatsapp || "",
+          department: afterData.department || "",
+        };
+
         const emailData = {
           service_id: "service_29d3d1f",
           template_id: "template_e9171bm",

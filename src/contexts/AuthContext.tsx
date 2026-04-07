@@ -78,6 +78,7 @@ interface AuthContextType {
     newPassword: string,
   ) => Promise<{ error: Error | null }>;
   generateTutorialId: (userId: string) => Promise<string>;
+  generateTutorialIdForPaidUsers: () => Promise<void>;
   sendPaymentConfirmationEmail: (
     email: string,
     tutorialId: string,
@@ -433,7 +434,71 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const generateTutorialId = async (userId: string): Promise<string> => {
+  const generateTutorialIdForPaidUsers = async (): Promise<void> => {
+    try {
+      // Get all users who have hasPaid = true but no tutorialId
+      const usersRef = collection(db, "users");
+      const q = query(
+        usersRef,
+        where("hasPaid", "==", true),
+        where("tutorialId", "==", "")
+      );
+      const querySnapshot = await getDocs(q);
+
+      if (querySnapshot.empty) {
+        console.log("No users found who need tutorial IDs");
+        return;
+      }
+
+      console.log(`Found ${querySnapshot.size} users who need tutorial IDs`);
+
+      const counterDocRef = doc(db, "metadata", "counters");
+
+      // Process each user
+      for (const userDoc of querySnapshot.docs) {
+        const userData = userDoc.data();
+        const userId = userDoc.id;
+
+        // Generate tutorial ID
+        const counterDoc = await getDoc(counterDocRef);
+        let currentCount = 0;
+
+        if (counterDoc.exists()) {
+          currentCount = counterDoc.data().userCount || 0;
+        }
+
+        const newCount = currentCount + 1;
+        const tutorialId = "APEX-" + String(newCount).padStart(3, "0");
+
+        // Update user with tutorial ID
+        await updateDoc(userDoc.ref, { tutorialId });
+
+        // Update counter
+        await setDoc(counterDocRef, { userCount: newCount }, { merge: true });
+
+        console.log(`Generated tutorial ID ${tutorialId} for user ${userId}`);
+
+        // Send payment confirmation email
+        const emailResult = await sendPaymentConfirmationEmail(
+          userData.email || "",
+          tutorialId,
+          userData.full_name || "Student",
+          userData.paymentReference || "MANUAL",
+          userData.whatsapp || "",
+          userData.department || "",
+        );
+
+        if (!emailResult) {
+          console.error(`Failed to send email for user ${userId}`);
+        }
+      }
+
+      console.log("Tutorial ID generation completed");
+    } catch (error) {
+      console.error("Error generating tutorial IDs:", error);
+      throw error;
+    }
+  };
     const userDocRef = doc(db, "users", userId);
     const counterDocRef = doc(db, "metadata", "counters");
 
@@ -504,6 +569,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         verifyResetCode,
         resetPassword,
         generateTutorialId,
+        generateTutorialIdForPaidUsers,
         sendPaymentConfirmationEmail,
       }}
     >

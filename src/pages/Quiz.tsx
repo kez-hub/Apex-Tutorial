@@ -8,6 +8,7 @@ import {
   Play,
   CheckCircle,
   ArrowRight,
+  RotateCcw,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -399,17 +400,30 @@ export default function Quiz() {
                         {quiz.duration} min
                       </div>
                     </div>
-                    <Button
-                      variant="outline"
-                      className="w-full"
-                      size="sm"
-                      asChild
-                    >
-                      <Link to={`/quiz/${quiz.id}?review=true`}>
-                        Review Answers
-                        <ArrowRight className="h-4 w-4 ml-2" />
-                      </Link>
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        className="flex-1"
+                        size="sm"
+                        asChild
+                      >
+                        <Link to={`/quiz/${quiz.id}?review=true`}>
+                          Review Answers
+                          <ArrowRight className="h-4 w-4 ml-2" />
+                        </Link>
+                      </Button>
+                      <Button
+                        variant="default"
+                        className="flex-1"
+                        size="sm"
+                        asChild
+                      >
+                        <Link to={`/quiz/${quiz.id}/take?shuffle=true`}>
+                          Retake Quiz
+                          <RotateCcw className="h-4 w-4 ml-2" />
+                        </Link>
+                      </Button>
+                    </div>
                   </CardContent>
                 </Card>
               ))}
