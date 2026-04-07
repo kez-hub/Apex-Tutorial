@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import {
   doc,
   onSnapshot,
@@ -48,6 +48,7 @@ interface Quiz {
 export default function TakeQuiz() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { user, userData } = useAuth();
   const { toast } = useToast();
 
@@ -58,6 +59,9 @@ export default function TakeQuiz() {
   const [timeLeft, setTimeLeft] = useState(0);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [score, setScore] = useState(0);
+  const [shuffledQuestions, setShuffledQuestions] = useState<QuizQuestion[]>(
+    [],
+  );
 
   // Check if user has paid
   if (userData && !userData.hasPaid && userData.role === "student") {
@@ -119,6 +123,24 @@ export default function TakeQuiz() {
     return () => unsubscribe();
   }, [id, toast]);
 
+  // Shuffle questions if shuffle parameter is present
+  useEffect(() => {
+    if (quiz && quiz.questionItems) {
+      const shouldShuffle = searchParams.get("shuffle") === "true";
+      if (shouldShuffle) {
+        // Fisher-Yates shuffle algorithm
+        const shuffled = [...quiz.questionItems];
+        for (let i = shuffled.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+        }
+        setShuffledQuestions(shuffled);
+      } else {
+        setShuffledQuestions(quiz.questionItems);
+      }
+    }
+  }, [quiz, searchParams]);
+
   // Timer countdown
   useEffect(() => {
     if (!quiz || isSubmitted || timeLeft <= 0) return;
@@ -138,13 +160,13 @@ export default function TakeQuiz() {
 
   // Auto-submit when time runs out
   useEffect(() => {
-    if (isSubmitted || timeLeft > 0 || !quiz || !quiz.questionItems?.length)
+    if (isSubmitted || timeLeft > 0 || !quiz || !shuffledQuestions.length)
       return;
     handleSubmitQuiz();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [timeLeft, isSubmitted, quiz]);
+  }, [timeLeft, isSubmitted, quiz, shuffledQuestions]);
 
-  const questions = quiz?.questionItems || [];
+  const questions = shuffledQuestions;
   const currentQuestion = questions[currentQuestionIndex];
 
   const handleSelectAnswer = (optionId: string) => {

@@ -297,108 +297,122 @@ export default function QuizDetails() {
           </div>
         ) : isReviewMode ? (
           /* Review Mode */
-          <div className="space-y-6">
-            {userQuizResult && (
-              <Card className="border-green-200 bg-green-50/50">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="font-heading text-lg font-semibold">
-                      Your Score
-                    </h3>
-                    <Badge className="bg-green-500/10 text-green-600 border-green-200">
-                      {userQuizResult.score}% ({userQuizResult.correctAnswers}/
-                      {userQuizResult.totalQuestions} correct)
-                    </Badge>
-                  </div>
-                  <Progress value={userQuizResult.score} className="h-3" />
-                </CardContent>
-              </Card>
-            )}
-
-            {quiz.questionItems?.map((question, index) => {
-              const userAnswer = userAnswers[question.id];
-              const correctOption = question.options.find(
-                (opt) => opt.isCorrect,
-              );
-              const userSelectedOption = question.options.find(
-                (opt) => opt.id === userAnswer,
-              );
-              const selectedOption = question.options.find(
-                (opt) => opt.id === userAnswer,
-              );
-              const isCorrect = selectedOption?.isCorrect || false;
-
-              return (
-                <Card key={question.id} className="border-border/60">
-                  <CardHeader>
-                    <CardTitle className="flex items-start gap-3">
-                      <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary font-semibold text-sm">
-                        {index + 1}
-                      </span>
-                      <div className="flex-1">
-                        <p className="text-lg">{question.question}</p>
-                        <div className="flex items-center gap-2 mt-2">
-                          {isCorrect ? (
-                            <Badge className="bg-green-500/10 text-green-600 border-green-200">
-                              <CheckCircle className="h-3 w-3 mr-1" />
-                              Correct
-                            </Badge>
-                          ) : (
-                            <Badge className="bg-red-500/10 text-red-600 border-red-200">
-                              <AlertCircle className="h-3 w-3 mr-1" />
-                              Incorrect
-                            </Badge>
-                          )}
-                        </div>
-                      </div>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-3">
-                      {question.options.map((option) => {
-                        const isUserAnswer = option.id === userAnswer;
-                        const isCorrectAnswer = option.isCorrect;
-
-                        let optionClass =
-                          "p-3 rounded-lg border transition-colors ";
-                        if (isCorrectAnswer) {
-                          optionClass +=
-                            "bg-green-50 border-green-200 text-green-800";
-                        } else if (isUserAnswer && !isCorrectAnswer) {
-                          optionClass +=
-                            "bg-red-50 border-red-200 text-red-800";
-                        } else {
-                          optionClass += "bg-muted/50 border-border";
-                        }
-
-                        return (
-                          <div key={option.id} className={optionClass}>
-                            <div className="flex items-center gap-3">
-                              <div
-                                className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
-                                  isUserAnswer
-                                    ? "border-primary bg-primary"
-                                    : "border-muted-foreground"
-                                }`}
-                              >
-                                {isUserAnswer && (
-                                  <div className="w-2 h-2 bg-white rounded-full" />
-                                )}
-                              </div>
-                              <span className="flex-1">{option.text}</span>
-                              {isCorrectAnswer && (
-                                <CheckCircle className="h-4 w-4 text-green-600" />
-                              )}
-                            </div>
-                          </div>
-                        );
-                      })}
+          <>
+            <div className="space-y-6">
+              {userQuizResult && (
+                <Card className="border-green-200 bg-green-50/50">
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="font-heading text-lg font-semibold">
+                        Your Score
+                      </h3>
+                      <Badge className="bg-green-500/10 text-green-600 border-green-200">
+                        {userQuizResult.score}% ({userQuizResult.correctAnswers}
+                        /{userQuizResult.totalQuestions} correct)
+                      </Badge>
                     </div>
+                    <Progress value={userQuizResult.score} className="h-3" />
                   </CardContent>
                 </Card>
-              );
-            })}
-          </div>
+              )}
+
+              {quiz.questionItems?.map((question, index) => {
+                const userAnswer = userAnswers[question.id];
+                const correctOption = question.options.find(
+                  (opt) => opt.isCorrect,
+                );
+                const userSelectedOption = question.options.find(
+                  (opt) => opt.id === userAnswer,
+                );
+                const selectedOption = question.options.find(
+                  (opt) => opt.id === userAnswer,
+                );
+                const isCorrect = selectedOption?.isCorrect || false;
+
+                return (
+                  <Card key={question.id} className="border-border/60">
+                    <CardHeader>
+                      <CardTitle className="flex items-start gap-3">
+                        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary font-semibold text-sm">
+                          {index + 1}
+                        </span>
+                        <div className="flex-1">
+                          <p className="text-lg">{question.question}</p>
+                          <div className="flex items-center gap-2 mt-2">
+                            {isCorrect ? (
+                              <Badge className="bg-green-500/10 text-green-600 border-green-200">
+                                <CheckCircle className="h-3 w-3 mr-1" />
+                                Correct
+                              </Badge>
+                            ) : (
+                              <Badge className="bg-red-500/10 text-red-600 border-red-200">
+                                <AlertCircle className="h-3 w-3 mr-1" />
+                                Incorrect
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-3">
+                        {question.options.map((option) => {
+                          const isUserAnswer = option.id === userAnswer;
+                          const isCorrectAnswer = option.isCorrect;
+
+                          let optionClass =
+                            "p-3 rounded-lg border transition-colors ";
+                          if (isCorrectAnswer) {
+                            optionClass +=
+                              "bg-green-50 border-green-200 text-green-800";
+                          } else if (isUserAnswer && !isCorrectAnswer) {
+                            optionClass +=
+                              "bg-red-50 border-red-200 text-red-800";
+                          } else {
+                            optionClass += "bg-muted/50 border-border";
+                          }
+
+                          return (
+                            <div key={option.id} className={optionClass}>
+                              <div className="flex items-center gap-3">
+                                <div
+                                  className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
+                                    isUserAnswer
+                                      ? "border-primary bg-primary"
+                                      : "border-muted-foreground"
+                                  }`}
+                                >
+                                  {isUserAnswer && (
+                                    <div className="w-2 h-2 bg-white rounded-full" />
+                                  )}
+                                </div>
+                                <span className="flex-1">{option.text}</span>
+                                {isCorrectAnswer && (
+                                  <CheckCircle className="h-4 w-4 text-green-600" />
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+
+            {/* Retake Quiz Button */}
+            <div className="flex justify-center mt-8">
+              <Button
+                onClick={() => navigate(`/take-quiz/${quiz.id}?shuffle=true`)}
+                className="px-8 py-3 text-lg font-semibold"
+                size="lg"
+              >
+                Retake Quiz
+                <ArrowLeft className="h-5 w-5 ml-2 rotate-180" />
+              </Button>
+            </div>
+          </>
         ) : (
           /* Instructor Edit Mode */
           <div className="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
