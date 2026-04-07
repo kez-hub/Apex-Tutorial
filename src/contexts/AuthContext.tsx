@@ -105,7 +105,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (user) {
       // Reset userData when user changes to ensure fresh data loads
       setUserData(null);
-      
+
       const unsubscribeDoc = onSnapshot(
         doc(db, "users", user.uid),
         (docSnap) => {
@@ -182,7 +182,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     department?: string,
     whatsapp?: string,
     passwordHash?: string,
-  ) => {
+  ): Promise<{ verificationCode: string; tutorialId: string }> => {
     const userDocRef = doc(db, "users", userObj.uid);
     const counterDocRef = doc(db, "metadata", "counters");
 
@@ -190,6 +190,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const verificationCode = Math.floor(
       100000 + Math.random() * 900000,
     ).toString();
+
+    let tutorialId = "";
 
     await runTransaction(db, async (transaction) => {
       const counterDoc = await transaction.get(counterDocRef);
@@ -200,7 +202,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       // Only generate tutorial ID for students, not instructors
-      let tutorialId = "";
       if (role === "student") {
         const newCount = currentCount + 1;
         tutorialId = "APEX-" + String(newCount).padStart(3, "0");
@@ -230,7 +231,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
     });
 
-    return verificationCode;
+    return { verificationCode, tutorialId };
   };
 
   const signUp = async (
@@ -255,7 +256,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       await updateProfile(userObj, { displayName: fullName });
 
-      const vCode = await createUserDataAtomic(
+      const result = await createUserDataAtomic(
         userObj,
         fullName,
         email,
@@ -265,11 +266,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         passwordHash, // Pass the hashed password
       );
 
-      // Get the created user data to get the correct tutorialId
-      const userDocRef = doc(db, "users", userObj.uid);
-      const userDoc = await getDoc(userDocRef);
-      const userData = userDoc.data();
-      const tutorialId = userData?.tutorialId || "";
+      const vCode = result.verificationCode;
+      const tutorialId = result.tutorialId;
 
       const emailParams = {
         passcode: vCode,
@@ -313,7 +311,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const docSnap = await getDoc(docRef);
 
       if (!docSnap.exists()) {
-        await createUserDataAtomic(
+        const result = await createUserDataAtomic(
           userObj,
           userObj.displayName || "Google User",
           userObj.email || "",
