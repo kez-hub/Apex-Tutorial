@@ -77,6 +77,14 @@ interface AuthContextType {
     code: string,
     newPassword: string,
   ) => Promise<{ error: Error | null }>;
+  sendPaymentConfirmationEmail: (
+    email: string,
+    tutorialId: string,
+    fullName: string,
+    paymentReference: string,
+    whatsapp: string,
+    department: string,
+  ) => Promise<{ error: Error | null }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -276,8 +284,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           minute: "2-digit",
         }),
         email: email,
-        tutorialId: role === "student" ? tutorialId : "N/A", // Only show tutorial ID for students
-      };
+      }; // Verification email - no tutorial ID
 
       try {
         await emailjs.send(
@@ -357,9 +364,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           minute: "2-digit",
         }),
         email: email,
-        tutorialId:
-          userData.role === "student" ? userData.tutorialId || "" : "N/A",
-      };
+      }; // Password reset email - no tutorial ID
 
       try {
         await emailjs.send(
@@ -444,6 +449,43 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const sendPaymentConfirmationEmail = async (
+    email: string,
+    tutorialId: string,
+    fullName: string,
+    paymentReference: string,
+    whatsapp: string,
+    department: string,
+  ) => {
+    try {
+      const emailParams = {
+        email,
+        tutorialId,
+        fullName,
+        paymentReference,
+        amount: "10,300",
+        whatsapp,
+        department,
+      };
+
+      await emailjs.send(
+        "service_29d3d1f",
+        "template_e9171bm",
+        emailParams,
+        "SVWb5wSsyH14FfE4I",
+      );
+      console.log("Payment confirmation email sent successfully.");
+      return { error: null };
+    } catch (err) {
+      console.error("Failed to send payment confirmation email", err);
+      return {
+        error: new Error(
+          "Failed to send payment confirmation email. Please try again.",
+        ),
+      };
+    }
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -457,6 +499,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         sendPasswordResetCode,
         verifyResetCode,
         resetPassword,
+        sendPaymentConfirmationEmail,
       }}
     >
       {children}

@@ -34,7 +34,7 @@ const isMobileDevice = () => {
 };
 
 export function PaymentModal({ isOpen, onClose }: PaymentModalProps) {
-  const { user, userData } = useAuth();
+  const { user, userData, sendPaymentConfirmationEmail } = useAuth();
   const { toast } = useToast();
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -59,7 +59,7 @@ export function PaymentModal({ isOpen, onClose }: PaymentModalProps) {
   }, []);
 
   const onPaymentSuccess = async (response: any) => {
-    if (!user) return;
+    if (!user || !userData) return;
     try {
       const userDocRef = doc(db, "users", user.uid);
       await updateDoc(userDocRef, {
@@ -67,6 +67,20 @@ export function PaymentModal({ isOpen, onClose }: PaymentModalProps) {
         paymentReference: response.reference,
         paidAt: new Date().toISOString(),
       });
+
+      // Send payment confirmation email with tutorial ID
+      const emailResult = await sendPaymentConfirmationEmail(
+        user.email || "",
+        userData.tutorialId || "",
+        userData.full_name || "Student",
+        response.reference,
+        userData.whatsapp || "",
+        userData.department || "",
+      );
+
+      if (emailResult.error) {
+        console.error("Email send error:", emailResult.error);
+      }
 
       toast({
         title: "Payment Successful! 🎉",
