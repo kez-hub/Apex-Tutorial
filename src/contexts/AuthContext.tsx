@@ -77,14 +77,15 @@ interface AuthContextType {
     code: string,
     newPassword: string,
   ) => Promise<{ error: Error | null }>;
+  generateTutorialId: (userId: string) => Promise<string>;
   sendPaymentConfirmationEmail: (
     email: string,
     tutorialId: string,
-    fullName: string,
+    fulName: string,
     paymentReference: string,
     whatsapp: string,
     department: string,
-  ) => Promise<{ error: Error | null }>;
+  ) => Promise<boolean>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -199,31 +200,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       100000 + Math.random() * 900000,
     ).toString();
 
-    let tutorialId = "";
+    // Tutorial ID will be generated when payment is made, not at signup
+    const tutorialId = "";
 
     await runTransaction(db, async (transaction) => {
-      const counterDoc = await transaction.get(counterDocRef);
-      let currentCount = 0;
-
-      if (counterDoc.exists()) {
-        currentCount = counterDoc.data().userCount || 0;
-      }
-
-      // Only generate tutorial ID for students, not instructors
-      if (role === "student") {
-        const newCount = currentCount + 1;
-        tutorialId = "APEX-" + String(newCount).padStart(3, "0");
-        transaction.set(
-          counterDocRef,
-          { userCount: newCount },
-          { merge: true },
-        );
-      }
-
       transaction.set(userDocRef, {
         email,
         full_name: fullName,
-        tutorialId, // Empty string for instructors
+        tutorialId, // Empty string - will be generated on payment
         department: department || "",
         whatsapp: whatsapp || "",
         enrolledVideos: [],
@@ -449,19 +433,43 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const generateTutorialId = async (userId: string): Promise<string> => {
+    const userDocRef = doc(db, "users", userId);
+    const counterDocRef = doc(db, "metadata", "counters");
+
+    let tutorialId = "";
+
+    await runTransaction(db, async (transaction) => {
+      const counterDoc = await transaction.get(counterDocRef);
+      let currentCount = 0;
+
+      if (counterDoc.exists()) {
+        currentCount = counterDoc.data().userCount || 0;
+      }
+
+      const newCount = currentCount + 1;
+      tutorialId = "APEX-" + String(newCount).padStart(3, "0");
+
+      transaction.set(counterDocRef, { userCount: newCount }, { merge: true });
+      transaction.update(userDocRef, { tutorialId });
+    });
+
+    return tutorialId;
+  };
+
   const sendPaymentConfirmationEmail = async (
     email: string,
     tutorialId: string,
-    fullName: string,
+    fulName: string,
     paymentReference: string,
     whatsapp: string,
     department: string,
-  ) => {
+  ): Promise<boolean> => {
     try {
       const emailParams = {
         email,
         tutorialId,
-        fullName,
+        fulName,
         paymentReference,
         amount: "10,300",
         whatsapp,
@@ -475,14 +483,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         "SVWb5wSsyH14FfE4I",
       );
       console.log("Payment confirmation email sent successfully.");
-      return { error: null };
+      return true;
     } catch (err) {
       console.error("Failed to send payment confirmation email", err);
-      return {
-        error: new Error(
-          "Failed to send payment confirmation email. Please try again.",
-        ),
-      };
+      return false;
     }
   };
 
@@ -499,6 +503,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         sendPasswordResetCode,
         verifyResetCode,
         resetPassword,
+        generateTutorialId,
         sendPaymentConfirmationEmail,
       }}
     >

@@ -34,7 +34,8 @@ const isMobileDevice = () => {
 };
 
 export function PaymentModal({ isOpen, onClose }: PaymentModalProps) {
-  const { user, userData, sendPaymentConfirmationEmail } = useAuth();
+  const { user, userData, sendPaymentConfirmationEmail, generateTutorialId } =
+    useAuth();
   const { toast } = useToast();
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -61,25 +62,29 @@ export function PaymentModal({ isOpen, onClose }: PaymentModalProps) {
   const onPaymentSuccess = async (response: any) => {
     if (!user || !userData) return;
     try {
+      // Generate tutorial ID for the user
+      const tutorialId = await generateTutorialId(user.uid);
+
       const userDocRef = doc(db, "users", user.uid);
       await updateDoc(userDocRef, {
         hasPaid: true,
         paymentReference: response.reference,
         paidAt: new Date().toISOString(),
+        tutorialId, // Update with generated tutorial ID
       });
 
       // Send payment confirmation email with tutorial ID
       const emailResult = await sendPaymentConfirmationEmail(
         user.email || "",
-        userData.tutorialId || "",
+        tutorialId,
         userData.full_name || "Student",
         response.reference,
         userData.whatsapp || "",
         userData.department || "",
       );
 
-      if (emailResult.error) {
-        console.error("Email send error:", emailResult.error);
+      if (!emailResult) {
+        console.error("Failed to send payment confirmation email");
       }
 
       toast({

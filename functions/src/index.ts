@@ -146,3 +146,84 @@ export const cleanupOldNotifications = functions.pubsub
       throw error;
     }
   });
+
+/**
+ * Cloud Function triggered when a user's hasPaid field changes to true.
+ * Generates tutorial ID and sends payment confirmation email.
+ */
+export const onPaymentCompleted = functions.firestore
+  .document("users/{userId}")
+  .onUpdate(async (change, context) => {
+    const userId = context.params.userId;
+    const beforeData = change.before.data();
+    const afterData = change.after.data();
+
+    // Check if hasPaid changed from false to true
+    if (!beforeData?.hasPaid && afterData?.hasPaid) {
+      console.log(`Payment completed for user: ${userId}`);
+
+      try {
+        // Generate tutorial ID
+        const counterDocRef = db.collection("metadata").doc("counters");
+        let tutorialId = "";
+
+        await db.runTransaction(async (transaction) => {
+          const counterDoc = await transaction.get(counterDocRef);
+          let currentCount = 0;
+
+          if (counterDoc.exists) {
+            currentCount = counterDoc.data()?.userCount || 0;
+          }
+
+          const newCount = currentCount + 1;
+          tutorialId = "APEX-" + String(newCount).padStart(3, "0");
+
+          transaction.set(
+            counterDocRef,
+            { userCount: newCount },
+            { merge: true },
+          );
+          transaction.update(change.after.ref, { tutorialId });
+        });
+
+        console.log(`Generated tutorial ID: ${tutorialId} for user: ${userId}`);
+
+        // Send payment confirmation email using EmailJS REST API
+        const emailData = {
+          service_id: "service_29d3d1f",
+          template_id: "template_e9171bm",
+          user_id: "SVWb5wSsyH14FfE4I",
+          template_params: emailParams,
+        };
+
+        const emailResponse = await fetch(
+          "https://api.emailjs.com/api/v1.0/email/send",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(emailData),
+          },
+        );
+
+        if (!emailResponse.ok) {
+          console.error("Failed to send email:", await emailResponse.text());
+          throw new Error("Email sending failed");
+        }
+
+        console.log("Payment confirmation email sent successfully");
+
+        return {
+          success: true,
+          tutorialId,
+          emailSent: true,
+        };
+      } catch (error) {
+        console.error("Error processing payment completion:", error);
+        throw error;
+      }
+    }
+
+    return null;
+  });
