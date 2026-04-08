@@ -499,6 +499,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       throw error;
     }
   };
+
+  const generateTutorialId = async (userId: string): Promise<string> => {
     const userDocRef = doc(db, "users", userId);
     const counterDocRef = doc(db, "metadata", "counters");
 
