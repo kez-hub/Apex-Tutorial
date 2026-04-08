@@ -129,7 +129,7 @@ export function PaymentModal({ isOpen, onClose }: PaymentModalProps) {
       const handler = window.PaystackPop.setup({
         key: import.meta.env.VITE_PAYSTACK_PUBLIC_KEY || "pk_test_placeholder",
         email: user.email,
-        amount: 10,300 * 100,
+        amount: 10300 * 100,
         currency: "NGN",
         ref: `APEX-${user.uid.slice(0, 8)}-${Date.now()}`,
         callback: (response: any) => {
