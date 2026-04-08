@@ -194,7 +194,7 @@ export const onPaymentCompleted = functions.firestore
           tutorialId,
           fulName: afterData.full_name || "Student",
           paymentReference: afterData.paymentReference || "MANUAL",
-          amount: "10,300",
+          amount: "100",
           whatsapp: afterData.whatsapp || "",
           department: afterData.department || "",
         };

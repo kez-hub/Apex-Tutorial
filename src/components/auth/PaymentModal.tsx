@@ -207,7 +207,7 @@ export function PaymentModal({ isOpen, onClose }: PaymentModalProps) {
             <p className="text-muted-foreground text-sm uppercase tracking-wider font-semibold mb-1">
               One-Time Payment
             </p>
-            <h3 className="text-4xl font-bold text-foreground">₦10,300</h3>
+            <h3 className="text-4xl font-bold text-foreground">₦100</h3>
             <p className="text-xs text-muted-foreground mt-2 flex items-center justify-center gap-1">
               <ShieldCheck className="h-3 w-3" /> Secure Payment via Paystack
             </p>

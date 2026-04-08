@@ -21,6 +21,7 @@ import {
   onSnapshot,
   runTransaction,
   updateDoc,
+  setDoc,
   collection,
   query,
   where,
@@ -538,7 +539,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         tutorialId,
         fulName,
         paymentReference,
-        amount: "10,300",
+        amount: "100",
         whatsapp,
         department,
       };

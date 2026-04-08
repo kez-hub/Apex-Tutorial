@@ -63,7 +63,7 @@ export default function TakeQuiz() {
     [],
   );
 
-  // Check if user has paid
+  // Check if user has paid - moved after all hooks
   if (userData && !userData.hasPaid && userData.role === "student") {
     return (
       <div className="min-h-screen bg-background">
