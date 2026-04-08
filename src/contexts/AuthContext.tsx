@@ -539,7 +539,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         tutorialId,
         fulName,
         paymentReference,
-        amount: "100",
+        amount: "10,300",
         whatsapp,
         department,
       };
