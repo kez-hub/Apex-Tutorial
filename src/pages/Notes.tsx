@@ -9,6 +9,9 @@ import {
   Filter,
   ChevronDown,
   MessageCircle,
+  MoreVertical,
+  Pencil,
+  Trash2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -31,7 +34,10 @@ import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNotes } from "@/hooks/useNotes";
+import { useToast } from "@/hooks/use-toast";
 import { categories } from "@/lib/data";
+import { db } from "@/lib/firebase";
+import { doc, deleteDoc } from "firebase/firestore";
 
 interface Note {
   id: string;
@@ -151,6 +157,29 @@ export default function Notes() {
       alert("Failed to download PDF. Please try again.");
     }
   };
+
+  const handleDeleteNote = async (noteId: string) => {
+    if (!window.confirm("Are you sure you want to delete this note? This action cannot be undone.")) {
+      return;
+    }
+
+    try {
+      await deleteDoc(doc(db, "notes", noteId));
+      toast({
+        title: "Note deleted",
+        description: "Your note has been successfully deleted.",
+      });
+    } catch (error) {
+      console.error("Error deleting note:", error);
+      toast({
+        title: "Error",
+        description: "Failed to delete note. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const { toast } = useToast();
 
   return (
     <div className="min-h-screen bg-background">
@@ -318,6 +347,45 @@ export default function Notes() {
                       </Badge>
                       <Badge variant="outline">{note.category}</Badge>
                     </div>
+                    {/* Instructor Menu */}
+                    {userData?.role === "instructor" && note.instructorId === user?.uid && (
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild onClick={(e) => e.preventDefault()}>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              // TODO: Open edit modal with note data
+                            }}
+                            className="cursor-pointer gap-2"
+                          >
+                            <Pencil className="h-4 w-4" />
+                            Edit
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              handleDeleteNote(note.id);
+                            }}
+                            className="cursor-pointer gap-2 text-destructive focus:text-destructive"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                            Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    )}
                   </div>
                   <CardTitle className="text-lg line-clamp-2 group-hover:text-primary transition-colors">
                     {note.title}
@@ -340,7 +408,7 @@ export default function Notes() {
                   </div>
 
                   <div className="flex gap-2">
-                    {userData?.hasPaid ? (
+                    {userData?.hasPaid || userData?.role === "instructor" ? (
                       <Button
                         size="sm"
                         variant="outline"

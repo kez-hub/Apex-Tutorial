@@ -321,7 +321,7 @@ export default function Quiz() {
                             {quiz.duration} min
                           </div>
                         </div>
-                        {userData?.hasPaid ? (
+                        {userData?.hasPaid || userData?.role === "instructor" ? (
                           <Button className="w-full" size="sm" asChild>
                             <Link to={`/quiz/${quiz.id}/take`}>
                               <Play className="h-4 w-4 mr-2" />
