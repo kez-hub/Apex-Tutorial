@@ -24,6 +24,7 @@ import {
   MoreVertical,
   LogOut,
   Bell,
+  Download,
 } from "lucide-react";
 import {
   Dialog,
@@ -374,6 +375,75 @@ export default function AdminPanel() {
     }
   };
 
+  const handleDownloadExcel = async () => {
+    try {
+      const { utils, writeFile } = await import("xlsx");
+
+      // Filter students based on current filters
+      const studentsToExport = filteredUsers
+        .filter((u) => u.role === "student")
+        .sort((a, b) => {
+          if (a.hasPaid !== b.hasPaid) {
+            return a.hasPaid ? -1 : 1;
+          }
+          const idA = a.tutorialId || "";
+          const idB = b.tutorialId || "";
+          return idA.localeCompare(idB, undefined, {
+            numeric: true,
+            sensitivity: "base",
+          });
+        });
+
+      // Map students data to export format
+      const exportData = studentsToExport.map((student, index) => ({
+        "S/N": index + 1,
+        Name: student.full_name,
+        Email: student.email,
+        Department: student.department || "N/A",
+        WhatsApp: student.whatsapp || "N/A",
+        "Tutorial ID": student.tutorialId || "None",
+        "Payment Status": student.hasPaid ? "Paid" : "Non-Paid",
+        Verified: student.isVerified ? "Yes" : "No",
+        "Hours Learned": student.hoursLearned || 0,
+        "Learning Streak": student.learningStreak || 0,
+        "Date Joined": student.createdAt || "",
+      }));
+
+      // Create workbook and worksheet
+      const workbook = utils.book_new();
+      const worksheet = utils.json_to_sheet(exportData);
+
+      // Set column widths
+      const maxWidth = 20;
+      const wscols = Array(11)
+        .fill(0)
+        .map(() => ({ wch: maxWidth }));
+      worksheet["!cols"] = wscols;
+
+      utils.book_append_sheet(workbook, worksheet, "Students");
+
+      // Generate filename with timestamp
+      const timestamp = new Date().toISOString().split("T")[0];
+      const filename = `students-data-${timestamp}.xlsx`;
+
+      // Write Excel file
+      writeFile(workbook, filename);
+
+      toast({
+        title: "Success",
+        description: `Downloaded ${studentsToExport.length} student records.`,
+      });
+    } catch (error) {
+      console.error("Error downloading Excel:", error);
+      toast({
+        title: "Error",
+        description:
+          "Failed to download Excel file. Please ensure xlsx library is installed.",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar isAuthenticated />
@@ -576,6 +646,14 @@ export default function AdminPanel() {
                           className="pl-10"
                         />
                       </div>
+                      <Button
+                        onClick={handleDownloadExcel}
+                        className="w-full md:w-auto gap-2"
+                        variant="outline"
+                      >
+                        <Download className="h-4 w-4" />
+                        Export Excel
+                      </Button>
                     </div>
                   </div>
                 </CardHeader>
