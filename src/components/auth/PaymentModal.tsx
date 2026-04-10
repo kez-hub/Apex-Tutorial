@@ -62,8 +62,10 @@ export function PaymentModal({ isOpen, onClose }: PaymentModalProps) {
   const onPaymentSuccess = async (response: any) => {
     if (!user || !userData) return;
     try {
+      console.log("✅ Payment successful, processing...", response);
       // Generate tutorial ID for the user
       const tutorialId = await generateTutorialId(user.uid);
+      console.log("📝 Generated Tutorial ID:", tutorialId);
 
       const userDocRef = doc(db, "users", user.uid);
       await updateDoc(userDocRef, {
@@ -72,6 +74,7 @@ export function PaymentModal({ isOpen, onClose }: PaymentModalProps) {
         paidAt: new Date().toISOString(),
         tutorialId, // Update with generated tutorial ID
       });
+      console.log("✅ Firestore updated with payment info and tutorialId");
 
       // Send payment confirmation email with tutorial ID
       const emailResult = await sendPaymentConfirmationEmail(
@@ -84,7 +87,9 @@ export function PaymentModal({ isOpen, onClose }: PaymentModalProps) {
       );
 
       if (!emailResult) {
-        console.error("Failed to send payment confirmation email");
+        console.error("❌ Failed to send payment confirmation email");
+      } else {
+        console.log("✅ Payment confirmation email sent");
       }
 
       toast({
@@ -95,7 +100,7 @@ export function PaymentModal({ isOpen, onClose }: PaymentModalProps) {
 
       onClose();
     } catch (error) {
-      console.error("Error updating payment status:", error);
+      console.error("❌ Error updating payment status:", error);
       toast({
         title: "Database Sync Error",
         description:

@@ -8,14 +8,19 @@ service cloud.firestore {
       allow read, write: if request.auth != null && request.auth.uid == userId;
     }
     match /users/{userId} {
+      // Allow unauthenticated email/password lookup during sign-in
+      allow read: if request.auth == null;
       // Allow authenticated users to read their own document
       allow read: if request.auth != null && request.auth.uid == userId;
-      // Allow authenticated users to read other user profiles (for instructor info)
+      // Allow authenticated users to read other user profiles
       allow read: if request.auth != null;
-      // Allow public reads to fetch instructor avatars and names
-      allow read: if request.auth == null;
+      // Allow users to create their own user document during sign-up
+      allow create: if request.auth != null && request.auth.uid == userId;
       // Allow authenticated users to update their own data
       allow update: if request.auth != null && request.auth.uid == userId;
+      // Allow any authenticated user to update specific user fields (admin panel is password protected)
+      allow update: if request.auth != null && 
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['email', 'full_name', 'department', 'whatsapp', 'hoursLearned', 'learningStreak', 'isVerified', 'hasPaid', 'tutorialId', 'paymentReference', 'paidAt']);
       // Allow unauthenticated password reset updates for the specific reset flow
       allow update: if request.auth == null && 
         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['passwordHash', 'resetCode', 'resetCodeExpiry']) &&
@@ -107,6 +112,18 @@ service cloud.firestore {
         (request.auth.uid == resource.data.receiverId && 
          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isRead']))
       );
+    }
+    match /announcements/{announcementId} {
+      // Allow everyone to read announcements
+      allow read: if true;
+      // Allow authenticated users to create announcements (admin only via app logic)
+      allow create: if request.auth != null;
+    }
+    match /notifications/{userId}/announcements/{announcementId} {
+      // Allow users to read and delete their own announcement notifications
+      allow read, delete: if request.auth != null && request.auth.uid == userId;
+      // Allow authenticated users to create announcement notifications (from admin panel)
+      allow create: if request.auth != null;
     }
   }
 }

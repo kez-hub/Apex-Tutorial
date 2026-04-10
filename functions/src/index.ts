@@ -163,27 +163,17 @@ export const onPaymentCompleted = functions.firestore
       console.log(`Payment completed for user: ${userId}`);
 
       try {
-        // Generate tutorial ID
-        const counterDocRef = db.collection("metadata").doc("counters");
-        let tutorialId = "";
+        // Generate tutorial ID using timestamp + random format
+        const timestamp = Date.now().toString(36).toUpperCase();
+        const randomChars = Math.random()
+          .toString(36)
+          .substring(2, 6)
+          .toUpperCase();
+        const tutorialId = `APEX-${timestamp}-${randomChars}`;
 
-        await db.runTransaction(async (transaction) => {
-          const counterDoc = await transaction.get(counterDocRef);
-          let currentCount = 0;
-
-          if (counterDoc.exists) {
-            currentCount = counterDoc.data()?.userCount || 0;
-          }
-
-          const newCount = currentCount + 1;
-          tutorialId = "APEX-" + String(newCount).padStart(3, "0");
-
-          transaction.set(
-            counterDocRef,
-            { userCount: newCount },
-            { merge: true },
-          );
-          transaction.update(change.after.ref, { tutorialId });
+        // Update user document with tutorial ID
+        await db.collection("users").doc(userId).update({
+          tutorialId: tutorialId,
         });
 
         console.log(`Generated tutorial ID: ${tutorialId} for user: ${userId}`);

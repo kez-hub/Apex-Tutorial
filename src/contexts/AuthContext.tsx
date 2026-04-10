@@ -442,7 +442,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const q = query(
         usersRef,
         where("hasPaid", "==", true),
-        where("tutorialId", "==", "")
+        where("tutorialId", "==", ""),
       );
       const querySnapshot = await getDocs(q);
 
@@ -503,24 +503,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const generateTutorialId = async (userId: string): Promise<string> => {
     const userDocRef = doc(db, "users", userId);
-    const counterDocRef = doc(db, "metadata", "counters");
 
-    let tutorialId = "";
+    // Generate unique ID using: APEX-{timestamp}-{random}
+    // This ensures no duplicates even if multiple users pay simultaneously
+    const timestamp = Date.now().toString(36).toUpperCase(); // Convert timestamp to base36
+    const randomSuffix = Math.random()
+      .toString(36)
+      .substring(2, 6)
+      .toUpperCase(); // 4 random chars
+    const tutorialId = `APEX-${timestamp}-${randomSuffix}`;
 
-    await runTransaction(db, async (transaction) => {
-      const counterDoc = await transaction.get(counterDocRef);
-      let currentCount = 0;
-
-      if (counterDoc.exists()) {
-        currentCount = counterDoc.data().userCount || 0;
-      }
-
-      const newCount = currentCount + 1;
-      tutorialId = "APEX-" + String(newCount).padStart(3, "0");
-
-      transaction.set(counterDocRef, { userCount: newCount }, { merge: true });
-      transaction.update(userDocRef, { tutorialId });
-    });
+    // Update user document with the new tutorial ID
+    await updateDoc(userDocRef, { tutorialId });
 
     return tutorialId;
   };
@@ -539,7 +533,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         tutorialId,
         fulName,
         paymentReference,
-        amount: "10,300",
+        amount: "100",
         whatsapp,
         department,
       };

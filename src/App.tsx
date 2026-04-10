@@ -31,6 +31,7 @@ import QuizDetails from "./pages/QuizDetails";
 import TakeQuiz from "./pages/TakeQuiz";
 import Notes from "./pages/Notes";
 import Messages from "./pages/Messages";
+import AdminPanel from "./pages/AdminPanel";
 import { PaymentModal } from "@/components/auth/PaymentModal";
 import { useAuth } from "@/contexts/AuthContext";
 import React from "react";
@@ -152,6 +153,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <Notifications />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin-panel"
+              element={
+                <ProtectedRoute>
+                  <AdminPanel />
                 </ProtectedRoute>
               }
             />
