@@ -43,6 +43,13 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { db } from "@/lib/firebase";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   collection,
   getDocs,
   query,
@@ -92,6 +99,9 @@ export default function AdminPanel() {
     notes: 0,
   });
   const [searchTerm, setSearchTerm] = useState("");
+  const [paymentFilter, setPaymentFilter] = useState<"all" | "paid" | "unpaid">(
+    "all",
+  );
   const [loading, setLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [passwordInput, setPasswordInput] = useState("");
@@ -308,9 +318,13 @@ export default function AdminPanel() {
 
   const filteredUsers = users.filter(
     (u) =>
-      u.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      u.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (u.tutorialId?.toLowerCase().includes(searchTerm.toLowerCase()) ?? false),
+      (u.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        u.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (u.tutorialId?.toLowerCase().includes(searchTerm.toLowerCase()) ??
+          false)) &&
+      (paymentFilter === "all" ||
+        (paymentFilter === "paid" && u.hasPaid) ||
+        (paymentFilter === "unpaid" && !u.hasPaid)),
   );
 
   const handleDeleteUser = async (userId: string) => {
@@ -533,16 +547,35 @@ export default function AdminPanel() {
             <TabsContent value="students">
               <Card>
                 <CardHeader>
-                  <div className="flex items-center justify-between">
+                  <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                     <CardTitle>Students Management</CardTitle>
-                    <div className="relative w-64">
-                      <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                      <Input
-                        placeholder="Search students..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="pl-10"
-                      />
+                    <div className="flex flex-col gap-2 md:gap-3 md:flex-row md:items-center w-full md:w-auto">
+                      <Select
+                        value={paymentFilter}
+                        onValueChange={(val) =>
+                          setPaymentFilter(val as "all" | "paid" | "unpaid")
+                        }
+                      >
+                        <SelectTrigger className="w-full md:w-40">
+                          <SelectValue placeholder="Filter by payment" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All Students</SelectItem>
+                          <SelectItem value="paid">Paid Students</SelectItem>
+                          <SelectItem value="unpaid">
+                            Non-Paid Students
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <div className="relative flex-1 md:flex-none md:w-64">
+                        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                        <Input
+                          placeholder="Search students..."
+                          value={searchTerm}
+                          onChange={(e) => setSearchTerm(e.target.value)}
+                          className="pl-10"
+                        />
+                      </div>
                     </div>
                   </div>
                 </CardHeader>
@@ -573,7 +606,10 @@ export default function AdminPanel() {
                             filteredUsers
                               .filter((u) => u.role === "student")
                               .sort((a, b) => {
-                                // Sort by tutorial ID in ascending order
+                                // Sort by payment status first (paid first), then by tutorial ID
+                                if (a.hasPaid !== b.hasPaid) {
+                                  return a.hasPaid ? -1 : 1;
+                                }
                                 const idA = a.tutorialId || "";
                                 const idB = b.tutorialId || "";
                                 return idA.localeCompare(idB, undefined, {
