@@ -12,12 +12,15 @@ import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { cn } from "@/lib/utils";
 import { getYouTubeEmbedUrl, isYouTubeUrl } from "@/lib/videoUtils";
+import { useVideoWatchTime } from "@/hooks/useVideoWatchTime";
 
 interface VideoPlayerProps {
   src: string;
   poster?: string;
   title?: string;
   className?: string;
+  userId?: string;
+  videoId?: string;
 }
 
 export function VideoPlayer({
@@ -25,6 +28,8 @@ export function VideoPlayer({
   poster,
   title,
   className,
+  userId,
+  videoId,
 }: VideoPlayerProps) {
   const isYouTube = isYouTubeUrl(src);
   const embedUrl = isYouTube ? getYouTubeEmbedUrl(src) : null;
@@ -59,6 +64,8 @@ export function VideoPlayer({
       poster={poster}
       title={title}
       className={className}
+      userId={userId}
+      videoId={videoId}
     />
   );
 }
@@ -68,6 +75,8 @@ function VideoPlayerRegular({
   poster,
   title,
   className,
+  userId,
+  videoId,
 }: VideoPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -79,6 +88,16 @@ function VideoPlayerRegular({
   const [volume, setVolume] = useState(1);
   const [isMuted, setIsMuted] = useState(false);
   const [showControls, setShowControls] = useState(true);
+
+  // Track video watch time
+  useVideoWatchTime({
+    userId,
+    videoId,
+    isPlaying,
+    currentTime,
+    duration,
+    enabled: !!userId && !!videoId,
+  });
 
   // Auto-hide controls when playing
   useEffect(() => {

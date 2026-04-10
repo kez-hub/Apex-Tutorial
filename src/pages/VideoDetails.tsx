@@ -509,6 +509,8 @@ export default function VideoDetails() {
                           ? `${modules[currentModuleIndex]?.title || `Lesson ${currentModuleIndex + 1}`}`
                           : `Introduction to ${video.title}`
                       }
+                      userId={user?.uid}
+                      videoId={id}
                     />
                     {modules.length > 1 && (
                       <div className="flex items-center justify-between px-4 py-2 bg-muted/50">

@@ -21,11 +21,11 @@ service cloud.firestore {
       allow read: if request.auth != null;
       // Allow users to create their own user document during sign-up
       allow create: if request.auth != null && request.auth.uid == userId;
-      // Allow authenticated users to update their own data
+      // Allow authenticated users to update their own data (including watch time and streak tracking)
       allow update: if request.auth != null && request.auth.uid == userId;
       // Allow any authenticated user to update specific user fields (admin panel is password protected)
       allow update: if request.auth != null && 
-        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['email', 'full_name', 'department', 'whatsapp', 'hoursLearned', 'learningStreak', 'isVerified', 'hasPaid', 'tutorialId', 'paymentReference', 'paidAt']);
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['email', 'full_name', 'department', 'whatsapp', 'hoursLearned', 'learningStreak', 'isVerified', 'hasPaid', 'tutorialId', 'paymentReference', 'paidAt', 'lastActiveDate']);
       // Allow unauthenticated password reset updates for the specific reset flow
       allow update: if request.auth == null && 
         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['passwordHash', 'resetCode', 'resetCodeExpiry']) &&
