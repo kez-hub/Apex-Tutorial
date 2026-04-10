@@ -207,7 +207,7 @@ export default function AdminPanel() {
         batch.set(notificationRef, {
           type: "announcement",
           title: announcementTitle,
-          content: announcementContent,
+          message: announcementContent,
           announcementId: announcementRef.id,
           isRead: false,
           createdAt: timestamp,
