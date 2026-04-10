@@ -194,13 +194,13 @@ export default function AdminPanel() {
       studentsSnapshot.docs.forEach((studentDoc) => {
         const studentId = studentDoc.id;
         const notificationId = doc(
-          collection(db, "notifications", studentId, "notifications"),
+          collection(db, "users", studentId, "notifications"),
         ).id;
         const notificationRef = doc(
           db,
-          "notifications",
+          "users",
           studentId,
-          "announcements",
+          "notifications",
           notificationId,
         );
 
@@ -209,7 +209,7 @@ export default function AdminPanel() {
           title: announcementTitle,
           content: announcementContent,
           announcementId: announcementRef.id,
-          read: false,
+          isRead: false,
           createdAt: timestamp,
           updatedAt: timestamp,
         });
