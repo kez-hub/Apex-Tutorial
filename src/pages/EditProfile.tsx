@@ -51,6 +51,7 @@ const departments = [
   "Anatomy",
   "Physiology",
   "Medicine and Surgery",
+  "Pharmacy",
   "Faculty of Engineering",
   "Civil Engineering",
   "Electrical/Electronic Engineering",

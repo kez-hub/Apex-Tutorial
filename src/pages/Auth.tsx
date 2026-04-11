@@ -301,6 +301,7 @@ export default function Auth() {
                     <SelectItem value="Medicine and Surgery">
                       Medicine and Surgery
                     </SelectItem>
+                    <SelectItem value="Pharmacy">Pharmacy</SelectItem>
                     <SelectItem value="Faculty of Engineering">
                       Faculty of Engineering
                     </SelectItem>
