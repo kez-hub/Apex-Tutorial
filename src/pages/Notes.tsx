@@ -104,18 +104,38 @@ export default function Notes() {
     }
   };
 
+  const buildInlinePdfUrl = (pdfUrl: string, title: string) => {
+    const separator = pdfUrl.includes("?") ? "&" : "?";
+    return `${pdfUrl}${separator}response-content-disposition=inline; filename="${encodeURIComponent(
+      title.replace(/\s+/g, "_"),
+    )}.pdf"&response-content-type=application/pdf`;
+  };
+
+  const isIOSDevice = () => {
+    if (typeof window === "undefined") return false;
+    return /iPad|iPhone|iPod/.test(window.navigator.userAgent);
+  };
+
   const handleViewPdf = (pdfUrl: string, title: string) => {
     try {
+      const inlinePdfUrl = buildInlinePdfUrl(pdfUrl, title);
+
+      // iOS Safari has limited PDF interaction in embedded modal viewers.
+      // Open directly for native scrolling/zoom behavior on iPhones/iPads.
+      if (isIOSDevice()) {
+        const directUrl = `${inlinePdfUrl}#toolbar=0&navpanes=0&scrollbar=1&view=FitH`;
+        const openedWindow = window.open(directUrl, "_blank", "noopener,noreferrer");
+        if (!openedWindow) {
+          window.location.href = directUrl;
+        }
+        return;
+      }
+
       setPdfViewerError("");
       setIsPdfLoading(true);
       setActivePdfTitle(title);
       setIsPdfViewerOpen(true);
 
-      // Force inline rendering when supported by storage response handling.
-      const separator = pdfUrl.includes("?") ? "&" : "?";
-      const inlinePdfUrl = `${pdfUrl}${separator}response-content-disposition=inline; filename="${encodeURIComponent(
-        title.replace(/\s+/g, "_"),
-      )}.pdf"&response-content-type=application/pdf`;
       const viewerUrl = `${inlinePdfUrl}#toolbar=0&navpanes=0&scrollbar=1&view=FitH`;
 
       setActivePdfUrl(viewerUrl);
@@ -452,7 +472,7 @@ export default function Notes() {
               Previewing the selected study note PDF in an embedded viewer.
             </DialogDescription>
           </DialogHeader>
-          <div className="relative h-full w-full bg-muted rounded-md overflow-hidden">
+          <div className="relative h-full w-full bg-muted rounded-md overflow-auto [webkit-overflow-scrolling:touch]">
             <div className="pointer-events-none absolute left-0 right-0 top-0 z-10 bg-gradient-to-b from-black/55 to-transparent px-4 py-2">
               <p className="line-clamp-1 text-sm text-white">{activePdfTitle || "PDF Preview"}</p>
             </div>
