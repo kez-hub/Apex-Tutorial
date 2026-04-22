@@ -376,4 +376,5 @@ export const categories = [
   "BIO 102",
   "BIO 108",
   "MTH 102",
+  "French 102",
 ];

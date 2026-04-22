@@ -30,6 +30,13 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { useAuth } from "@/contexts/AuthContext";
@@ -60,6 +67,11 @@ export default function Notes() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [selectedLevel, setSelectedLevel] = useState("All Levels");
+  const [isPdfViewerOpen, setIsPdfViewerOpen] = useState(false);
+  const [activePdfUrl, setActivePdfUrl] = useState("");
+  const [activePdfTitle, setActivePdfTitle] = useState("");
+  const [isPdfLoading, setIsPdfLoading] = useState(false);
+  const [pdfViewerError, setPdfViewerError] = useState("");
 
   const levels = ["All Levels", "Beginner", "Intermediate", "Advanced"];
 
@@ -94,67 +106,29 @@ export default function Notes() {
 
   const handleViewPdf = (pdfUrl: string, title: string) => {
     try {
-      // Check if it's a data URL
-      if (pdfUrl.startsWith("data:")) {
-        // Convert data URL to blob
-        const arr = pdfUrl.split(",");
-        const mimeMatch = arr[0].match(/:(.*?);/);
-        const mime = mimeMatch ? mimeMatch[1] : "application/pdf";
-        const bstr = atob(arr[1]);
-        const n = bstr.length;
-        const u8arr = new Uint8Array(n);
-        for (let i = 0; i < n; i++) {
-          u8arr[i] = bstr.charCodeAt(i);
-        }
-        const blob = new Blob([u8arr], { type: mime });
-        const blobUrl = URL.createObjectURL(blob);
-        window.open(blobUrl, "_blank");
-        // Clean up the blob URL after a delay
-        setTimeout(() => URL.revokeObjectURL(blobUrl), 100);
-      } else {
-        // Regular URL
-        window.open(pdfUrl, "_blank");
-      }
+      setPdfViewerError("");
+      setIsPdfLoading(true);
+      setActivePdfTitle(title);
+      setIsPdfViewerOpen(true);
+
+      // Force inline rendering when supported by storage response handling.
+      const separator = pdfUrl.includes("?") ? "&" : "?";
+      const inlinePdfUrl = `${pdfUrl}${separator}response-content-disposition=inline; filename="${encodeURIComponent(
+        title.replace(/\s+/g, "_"),
+      )}.pdf"&response-content-type=application/pdf`;
+      const viewerUrl = `${inlinePdfUrl}#toolbar=0&navpanes=0&scrollbar=1&view=FitH`;
+
+      setActivePdfUrl(viewerUrl);
     } catch (error) {
       console.error("Error opening PDF:", error);
-      alert("Failed to open PDF. Please try downloading instead.");
-    }
-  };
-
-  const handleDownloadPdf = (pdfUrl: string, title: string) => {
-    try {
-      const link = document.createElement("a");
-
-      if (pdfUrl.startsWith("data:")) {
-        // Convert data URL to blob for data URLs
-        const arr = pdfUrl.split(",");
-        const mimeMatch = arr[0].match(/:(.*?);/);
-        const mime = mimeMatch ? mimeMatch[1] : "application/pdf";
-        const bstr = atob(arr[1]);
-        const n = bstr.length;
-        const u8arr = new Uint8Array(n);
-        for (let i = 0; i < n; i++) {
-          u8arr[i] = bstr.charCodeAt(i);
-        }
-        const blob = new Blob([u8arr], { type: mime });
-        link.href = URL.createObjectURL(blob);
-      } else {
-        // Regular URL
-        link.href = pdfUrl;
-      }
-
-      link.download = `${title.replace(/[^a-z0-9]/gi, "_").toLowerCase()}.pdf`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-
-      // Clean up blob URL if it was created
-      if (pdfUrl.startsWith("data:")) {
-        setTimeout(() => URL.revokeObjectURL(link.href), 100);
-      }
-    } catch (error) {
-      console.error("Error downloading PDF:", error);
-      alert("Failed to download PDF. Please try again.");
+      setPdfViewerError("Unable to load this PDF preview. Please try again.");
+      toast({
+        title: "Preview failed",
+        description: "Unable to load this PDF preview. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsPdfLoading(false);
     }
   };
 
@@ -459,6 +433,55 @@ export default function Notes() {
           )}
         </div>
       </main>
+      <Dialog
+        open={isPdfViewerOpen}
+        onOpenChange={(open) => {
+          setIsPdfViewerOpen(open);
+          if (!open) {
+            setActivePdfUrl("");
+            setActivePdfTitle("");
+            setPdfViewerError("");
+            setIsPdfLoading(false);
+          }
+        }}
+      >
+        <DialogContent className="w-[95vw] max-w-5xl h-[85vh] p-0 overflow-hidden border-0 bg-transparent shadow-none">
+          <DialogHeader className="sr-only">
+            <DialogTitle>{activePdfTitle || "PDF Preview"}</DialogTitle>
+            <DialogDescription>
+              Previewing the selected study note PDF in an embedded viewer.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="relative h-full w-full bg-muted rounded-md overflow-hidden">
+            <div className="pointer-events-none absolute left-0 right-0 top-0 z-10 bg-gradient-to-b from-black/55 to-transparent px-4 py-2">
+              <p className="line-clamp-1 text-sm text-white">{activePdfTitle || "PDF Preview"}</p>
+            </div>
+            {isPdfLoading ? (
+              <div className="h-full w-full flex items-center justify-center text-sm text-muted-foreground">
+                Loading PDF preview...
+              </div>
+            ) : pdfViewerError ? (
+              <div className="h-full w-full flex items-center justify-center px-6 text-sm text-destructive text-center">
+                {pdfViewerError}
+              </div>
+            ) : activePdfUrl ? (
+              <object
+                data={activePdfUrl}
+                type="application/pdf"
+                className="h-full w-full"
+                aria-label={activePdfTitle || "PDF Preview"}
+              >
+                <iframe
+                  src={activePdfUrl}
+                  title={activePdfTitle || "PDF Preview"}
+                  className="h-full w-full border-0"
+                  referrerPolicy="no-referrer"
+                />
+              </object>
+            ) : null}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <Footer />
     </div>

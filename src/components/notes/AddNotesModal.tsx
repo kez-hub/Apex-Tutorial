@@ -215,7 +215,9 @@ export function AddNotesModal({
         const thumbnailPath = `notes/${user.uid}/${noteId}/thumbnail`;
         const thumbnailRef = ref(storage, thumbnailPath);
         
-        await uploadBytes(thumbnailRef, thumbnailFile);
+        await uploadBytes(thumbnailRef, thumbnailFile, {
+          contentType: thumbnailFile.type,
+        });
         thumbnailDownloadUrl = await getDownloadURL(thumbnailRef);
       }
 
@@ -225,7 +227,11 @@ export function AddNotesModal({
         const pdfRef = ref(storage, pdfPath);
         
         // Upload with real-time progress tracking
-        const uploadTask = uploadBytesResumable(pdfRef, pdfFile);
+        const uploadTask = uploadBytesResumable(pdfRef, pdfFile, {
+          contentType: "application/pdf",
+          contentDisposition: `inline; filename="${encodeURIComponent(pdfFile.name)}"`,
+          cacheControl: "private, max-age=3600",
+        });
 
         await new Promise((resolve, reject) => {
           uploadTask.on(
