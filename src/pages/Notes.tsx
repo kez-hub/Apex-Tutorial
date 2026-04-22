@@ -56,6 +56,7 @@ interface Note {
   description: string;
   thumbnail: string;
   pdfUrl: string;
+  pdfPath?: string;
   instructor: string;
   instructorId: string;
   instructorAvatar: string;
@@ -116,7 +117,7 @@ export default function Notes() {
     )}.pdf"&response-content-type=application/pdf`;
   };
 
-  const handleViewPdf = async (pdfUrl: string, title: string) => {
+  const handleViewPdf = async (pdfUrl: string, title: string, pdfPath?: string) => {
     try {
       const inlinePdfUrl = buildInlinePdfUrl(pdfUrl, title);
       setPdfViewerError("");
@@ -126,7 +127,21 @@ export default function Notes() {
       setIsPdfViewerOpen(true);
 
       if (userData?.role === "student") {
-        const pdfDoc = await getDocument(inlinePdfUrl).promise;
+        if (!user) {
+          throw new Error("Not authenticated");
+        }
+
+        const idToken = await user.getIdToken();
+        const proxyUrl = `/api/notes/pdf?${pdfPath ? `path=${encodeURIComponent(pdfPath)}` : `url=${encodeURIComponent(pdfUrl)}`}`;
+        const response = await fetch(proxyUrl, {
+          headers: { Authorization: `Bearer ${idToken}` },
+        });
+        if (!response.ok) {
+          throw new Error(`Proxy fetch failed (${response.status})`);
+        }
+
+        const pdfBytes = await response.arrayBuffer();
+        const pdfDoc = await getDocument({ data: pdfBytes }).promise;
         const renderedPages: string[] = [];
 
         for (let pageNumber = 1; pageNumber <= pdfDoc.numPages; pageNumber += 1) {
@@ -428,7 +443,7 @@ export default function Notes() {
                         size="sm"
                         variant="outline"
                         className="flex-1"
-                        onClick={() => handleViewPdf(note.pdfUrl, note.title)}
+                        onClick={() => handleViewPdf(note.pdfUrl, note.title, note.pdfPath)}
                       >
                         <Eye className="h-4 w-4 mr-2" />
                         View PDF

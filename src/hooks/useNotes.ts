@@ -8,6 +8,7 @@ interface Note {
   description: string;
   thumbnail: string;
   pdfUrl: string;
+  pdfPath?: string;
   instructor: string;
   instructorId: string;
   instructorAvatar: string;

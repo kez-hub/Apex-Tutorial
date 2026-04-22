@@ -39,6 +39,7 @@ interface Note {
   description: string;
   thumbnail: string;
   pdfUrl: string;
+  pdfPath?: string;
   instructor: string;
   instructorId: string;
   instructorAvatar: string;
@@ -209,6 +210,7 @@ export function AddNotesModal({
     try {
       let pdfDownloadUrl = formData.pdfUrl;
       let thumbnailDownloadUrl = formData.thumbnail;
+      let pdfStoragePath: string | undefined = initialData?.pdfPath;
 
       // Upload new Thumbnail to Cloud Storage if selected
       if (thumbnailFile) {
@@ -225,6 +227,7 @@ export function AddNotesModal({
       if (pdfFile) {
         const pdfPath = `notes/${user.uid}/${noteId}/${pdfFile.name}`;
         const pdfRef = ref(storage, pdfPath);
+        pdfStoragePath = pdfPath;
         
         // Upload with real-time progress tracking
         const uploadTask = uploadBytesResumable(pdfRef, pdfFile, {
@@ -274,6 +277,7 @@ export function AddNotesModal({
           thumbnailDownloadUrl ||
           "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&h=450&fit=crop",
         pdfUrl: pdfDownloadUrl,
+        pdfPath: pdfStoragePath,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       };
