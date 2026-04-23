@@ -150,91 +150,95 @@ export function Navbar({ isAuthenticated = false }: NavbarProps) {
             ))}
           </div>
 
+          {/* Icons */}
+          {isAuthed && (
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="relative text-foreground hover:text-primary transition-colors"
+                asChild
+              >
+                <Link to="/notifications">
+                  <Bell className="h-5 w-5" />
+                  {unreadNotifications > 0 && (
+                    <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-red-500 text-white text-xs flex items-center justify-center font-bold">
+                      {unreadNotifications > 99 ? "99+" : unreadNotifications}
+                    </span>
+                  )}
+                </Link>
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="relative text-foreground hover:text-primary transition-colors"
+                asChild
+              >
+                <Link to="/messages">
+                  <MessageCircle className="h-5 w-5" />
+                  {unreadMessages > 0 && (
+                    <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-red-500 text-white text-xs flex items-center justify-center font-bold">
+                      {unreadMessages > 99 ? "99+" : unreadMessages}
+                    </span>
+                  )}
+                </Link>
+              </Button>
+            </div>
+          )}
+
           {/* Desktop Auth/User */}
           <div className="hidden items-center gap-4 md:flex">
             {isAuthed ? (
-              <>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="relative text-foreground hover:text-primary transition-colors"
-                  asChild
-                >
-                  <Link to="/notifications">
-                    <Bell className="h-5 w-5" />
-                    {unreadNotifications > 0 && (
-                      <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-red-500 text-white text-xs flex items-center justify-center font-bold">
-                        {unreadNotifications > 99 ? "99+" : unreadNotifications}
-                      </span>
-                    )}
-                  </Link>
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="relative text-foreground hover:text-primary transition-colors"
-                  asChild
-                >
-                  <Link to="/messages">
-                    <MessageCircle className="h-5 w-5" />
-                    {unreadMessages > 0 && (
-                      <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-red-500 text-white text-xs flex items-center justify-center font-bold">
-                        {unreadMessages > 99 ? "99+" : unreadMessages}
-                      </span>
-                    )}
-                  </Link>
-                </Button>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      className="relative h-9 w-9 rounded-full"
-                    >
-                      <Avatar className="h-9 w-9">
-                        <AvatarImage src={userAvatar} alt={userName} />
-                        <AvatarFallback>
-                          {userName.charAt(0).toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-56">
-                    <div className="flex items-center gap-2 p-2">
-                      <Avatar className="h-8 w-8">
-                        <AvatarImage src={userAvatar} alt={userName} />
-                        <AvatarFallback>
-                          {userName.charAt(0).toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="flex flex-col">
-                        <p className="text-sm font-medium">{userName}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {userEmail}
-                        </p>
-                      </div>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    className="relative h-9 w-9 rounded-full"
+                  >
+                    <Avatar className="h-9 w-9">
+                      <AvatarImage src={userAvatar} alt={userName} />
+                      <AvatarFallback>
+                        {userName.charAt(0).toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <div className="flex items-center gap-2 p-2">
+                    <Avatar className="h-8 w-8">
+                      <AvatarImage src={userAvatar} alt={userName} />
+                      <AvatarFallback>
+                        {userName.charAt(0).toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex flex-col">
+                      <p className="text-sm font-medium">{userName}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {userEmail}
+                      </p>
                     </div>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem asChild>
-                      <Link
-                        to="/profile"
-                        className="flex items-center gap-2 cursor-pointer"
-                      >
-                        <User className="h-4 w-4" />
-                        Profile
-                      </Link>
-                    </DropdownMenuItem>
-
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem
-                      onClick={handleLogout}
-                      className="flex items-center gap-2 cursor-pointer text-destructive"
+                  </div>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link
+                      to="/profile"
+                      className="flex items-center gap-2 cursor-pointer"
                     >
-                      <LogOut className="h-4 w-4" />
-                      Log out
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </>
+                      <User className="h-4 w-4" />
+                      Profile
+                    </Link>
+                  </DropdownMenuItem>
+
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    onClick={handleLogout}
+                    className="flex items-center gap-2 cursor-pointer text-destructive"
+                  >
+                    <LogOut className="h-4 w-4" />
+                    Log out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             ) : (
               <>
                 <Button variant="ghost" asChild>
