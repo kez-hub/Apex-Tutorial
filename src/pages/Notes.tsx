@@ -131,6 +131,16 @@ export default function Notes() {
     const query = pdfPath
       ? `path=${encodeURIComponent(pdfPath)}`
       : `url=${encodeURIComponent(pdfUrl)}`;
+    const isLocalhost =
+      typeof window !== "undefined" &&
+      (window.location.hostname === "localhost" ||
+        window.location.hostname === "127.0.0.1");
+
+    // In production, use same-origin Hosting rewrite to avoid mobile CORS issues.
+    if (!isLocalhost) {
+      return `/api/notes/pdf?${query}`;
+    }
+
     const projectId = import.meta.env.VITE_FIREBASE_PROJECT_ID as string | undefined;
     const region =
       (import.meta.env.VITE_FIREBASE_FUNCTIONS_REGION as string | undefined) ||

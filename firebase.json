@@ -21,6 +21,10 @@
     "public": "dist",
     "rewrites": [
       {
+        "source": "/api/notes/pdf",
+        "function": "notesPdfProxy"
+      },
+      {
         "source": "**",
         "destination": "/index.html"
       }
