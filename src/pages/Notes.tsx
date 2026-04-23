@@ -1,7 +1,5 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { GlobalWorkerOptions, getDocument } from "pdfjs-dist";
-import pdfWorker from "pdfjs-dist/build/pdf.worker.min.mjs?url";
 import {
   FileText,
   Eye,
@@ -48,15 +46,12 @@ import { categories } from "@/lib/data";
 import { db } from "@/lib/firebase";
 import { doc, deleteDoc } from "firebase/firestore";
 
-GlobalWorkerOptions.workerSrc = pdfWorker;
-
 interface Note {
   id: string;
   title: string;
   description: string;
   thumbnail: string;
   pdfUrl: string;
-  pdfPath?: string;
   instructor: string;
   instructorId: string;
   instructorAvatar: string;
@@ -77,7 +72,6 @@ export default function Notes() {
   const [activePdfTitle, setActivePdfTitle] = useState("");
   const [isPdfLoading, setIsPdfLoading] = useState(false);
   const [pdfViewerError, setPdfViewerError] = useState("");
-  const [pdfPageImages, setPdfPageImages] = useState<string[]>([]);
 
   const levels = ["All Levels", "Beginner", "Intermediate", "Advanced"];
 
@@ -122,101 +116,13 @@ export default function Notes() {
     return /iPad|iPhone|iPod/.test(window.navigator.userAgent);
   };
 
-  const isAndroidDevice = () => {
-    if (typeof window === "undefined") return false;
-    return /Android/i.test(window.navigator.userAgent);
-  };
-
-  const getNotesPdfProxyUrl = (pdfUrl: string, pdfPath?: string) => {
-    const query = pdfPath
-      ? `path=${encodeURIComponent(pdfPath)}`
-      : `url=${encodeURIComponent(pdfUrl)}`;
-    const isLocalhost =
-      typeof window !== "undefined" &&
-      (window.location.hostname === "localhost" ||
-        window.location.hostname === "127.0.0.1");
-
-    // In production, use same-origin Hosting rewrite to avoid mobile CORS issues.
-    if (!isLocalhost) {
-      return `/api/notes/pdf?${query}`;
-    }
-
-    const projectId = import.meta.env.VITE_FIREBASE_PROJECT_ID as string | undefined;
-    const region =
-      (import.meta.env.VITE_FIREBASE_FUNCTIONS_REGION as string | undefined) ||
-      "us-central1";
-
-    if (!projectId) {
-      return "";
-    }
-
-    return `https://${region}-${projectId}.cloudfunctions.net/notesPdfProxy?${query}`;
-  };
-
-  const showAndroidDebugAlert = (title: string, details: string) => {
-    if (!isAndroidDevice()) return;
-    // Temporary debug helper for real-device troubleshooting.
-    alert(`${title}\n\n${details}`);
-  };
-
-  const handleViewPdf = async (pdfUrl: string, title: string, pdfPath?: string) => {
+  const handleViewPdf = (pdfUrl: string, title: string) => {
     try {
       const inlinePdfUrl = buildInlinePdfUrl(pdfUrl, title);
       setPdfViewerError("");
       setIsPdfLoading(true);
       setActivePdfTitle(title);
-      setPdfPageImages([]);
       setIsPdfViewerOpen(true);
-
-      if (userData?.role === "student") {
-        if (!user) {
-          throw new Error("Not authenticated");
-        }
-
-        const proxyUrl = getNotesPdfProxyUrl(pdfUrl, pdfPath);
-        if (!proxyUrl) {
-          throw new Error("Missing Firebase project configuration");
-        }
-
-        const idToken = await user.getIdToken();
-        const response = await fetch(proxyUrl, {
-          headers: { Authorization: `Bearer ${idToken}` },
-        });
-
-        if (!response.ok) {
-          const errorBody = await response.text().catch(() => "");
-          throw new Error(
-            `Proxy fetch failed (${response.status}) ${response.statusText} ${errorBody}`.trim(),
-          );
-        }
-
-        const pdfBytes = await response.arrayBuffer();
-        const pdfDoc = await getDocument({ data: pdfBytes }).promise;
-        const renderedPages: string[] = [];
-        const mobileScale = isAndroidDevice() ? 0.95 : 1.35;
-        const jpegQuality = isAndroidDevice() ? 0.82 : 0.9;
-
-        for (let pageNumber = 1; pageNumber <= pdfDoc.numPages; pageNumber += 1) {
-          const page = await pdfDoc.getPage(pageNumber);
-          const viewport = page.getViewport({ scale: mobileScale });
-          const canvas = document.createElement("canvas");
-          const context = canvas.getContext("2d");
-
-          if (!context) {
-            throw new Error("Canvas render context unavailable");
-          }
-
-          canvas.width = viewport.width;
-          canvas.height = viewport.height;
-          await page.render({ canvasContext: context, viewport }).promise;
-          renderedPages.push(canvas.toDataURL("image/jpeg", jpegQuality));
-          // Progressive rendering helps low-memory devices display pages earlier.
-          setPdfPageImages([...renderedPages]);
-        }
-
-        setActivePdfUrl("");
-        return;
-      }
 
       // iOS Safari has limited PDF interaction in embedded modal viewers.
       // Open directly for native scrolling/zoom behavior on iPhones/iPads.
@@ -237,23 +143,10 @@ export default function Notes() {
       setActivePdfUrl(viewerUrl);
     } catch (error) {
       console.error("Error opening PDF:", error);
-      const errorMessage =
-        error instanceof Error ? error.message : "Unknown rendering error";
-      showAndroidDebugAlert(
-        "Notes Debug Error",
-        `Message: ${errorMessage}\nRole: ${userData?.role || "unknown"}\nPDF: ${activePdfTitle || "N/A"}`,
-      );
-      setPdfViewerError(
-        userData?.role === "student"
-          ? "Unable to render this note right now. Please try again."
-          : "Unable to load this PDF preview. Please try again.",
-      );
+      setPdfViewerError("Unable to load this PDF preview. Please try again.");
       toast({
         title: "Preview failed",
-        description:
-          userData?.role === "student"
-            ? "Unable to render this note right now. Please try again."
-            : "Unable to load this PDF preview. Please try again.",
+        description: "Unable to load this PDF preview. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -516,9 +409,7 @@ export default function Notes() {
                         size="sm"
                         variant="outline"
                         className="flex-1"
-                        onClick={() =>
-                          handleViewPdf(note.pdfUrl, note.title, note.pdfPath)
-                        }
+                        onClick={() => handleViewPdf(note.pdfUrl, note.title)}
                       >
                         <Eye className="h-4 w-4 mr-2" />
                         View PDF
@@ -571,7 +462,6 @@ export default function Notes() {
           if (!open) {
             setActivePdfUrl("");
             setActivePdfTitle("");
-            setPdfPageImages([]);
             setPdfViewerError("");
             setIsPdfLoading(false);
           }
@@ -595,26 +485,6 @@ export default function Notes() {
             ) : pdfViewerError ? (
               <div className="h-full w-full flex items-center justify-center px-6 text-sm text-destructive text-center">
                 {pdfViewerError}
-              </div>
-            ) : userData?.role === "student" ? (
-              <div className="h-full w-full overflow-y-auto [webkit-overflow-scrolling:touch] p-3 sm:p-4">
-                {pdfPageImages.length > 0 ? (
-                  <div className="mx-auto flex max-w-4xl flex-col gap-4">
-                    {pdfPageImages.map((pageImage, index) => (
-                      <img
-                        key={`page-${index + 1}`}
-                        src={pageImage}
-                        alt={`${activePdfTitle || "Note"} page ${index + 1}`}
-                        className="w-full rounded-md bg-white shadow-sm"
-                        loading="lazy"
-                      />
-                    ))}
-                  </div>
-                ) : (
-                  <div className="h-full w-full flex items-center justify-center text-sm text-muted-foreground">
-                    Rendering note pages...
-                  </div>
-                )}
               </div>
             ) : activePdfUrl ? (
               <object
