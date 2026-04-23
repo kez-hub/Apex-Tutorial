@@ -1,11 +1,104 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.onPaymentCompleted = exports.cleanupOldNotifications = exports.notifyStudentsOnNewCourse = void 0;
+exports.onPaymentCompleted = exports.cleanupOldNotifications = exports.notifyStudentsOnNewCourse = exports.notesPdfProxy = void 0;
 const admin = require("firebase-admin");
 const functions = require("firebase-functions");
 // Initialize Firebase Admin SDK
 admin.initializeApp();
 const db = admin.firestore();
+const bucket = admin.storage().bucket();
+function setCorsHeaders(req, res) {
+    const origin = req.headers.origin;
+    res.setHeader("Access-Control-Allow-Origin", origin || "*");
+    res.setHeader("Vary", "Origin");
+    res.setHeader("Access-Control-Allow-Headers", "Authorization, Content-Type");
+    res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
+}
+async function requirePaidOrInstructor(uid) {
+    const userSnap = await db.collection("users").doc(uid).get();
+    if (!userSnap.exists) {
+        throw new functions.https.HttpsError("permission-denied", "User not found");
+    }
+    const data = userSnap.data();
+    const role = data?.role || "student";
+    const hasPaid = !!data?.hasPaid;
+    if (role === "instructor" || data?.isAdmin === true)
+        return;
+    if (role === "student" && hasPaid)
+        return;
+    throw new functions.https.HttpsError("permission-denied", "Payment required");
+}
+function parseStoragePathFromUrl(pdfUrl) {
+    try {
+        const url = new URL(pdfUrl);
+        const match = url.pathname.match(/\/o\/(.+)$/);
+        if (!match)
+            return null;
+        return decodeURIComponent(match[1]);
+    }
+    catch {
+        return null;
+    }
+}
+/**
+ * Proxy a notes PDF from Storage with auth gating.
+ * This avoids browser CORS issues for pdf.js and prevents exposing direct Storage URLs in the viewer.
+ *
+ * Query:
+ * - path: storage object path (preferred)
+ * - url: fallback download URL to parse into a path
+ */
+exports.notesPdfProxy = functions.https.onRequest(async (req, res) => {
+    setCorsHeaders(req, res);
+    if (req.method === "OPTIONS") {
+        res.status(204).send("");
+        return;
+    }
+    if (req.method !== "GET") {
+        res.status(405).send("Method Not Allowed");
+        return;
+    }
+    try {
+        const authHeader = req.headers.authorization || "";
+        const tokenMatch = authHeader.match(/^Bearer (.+)$/);
+        if (!tokenMatch) {
+            res.status(401).send("Missing Authorization");
+            return;
+        }
+        const decoded = await admin.auth().verifyIdToken(tokenMatch[1]);
+        await requirePaidOrInstructor(decoded.uid);
+        const pathFromQuery = req.query.path || "";
+        const urlFromQuery = req.query.url || "";
+        const objectPath = pathFromQuery ||
+            parseStoragePathFromUrl(urlFromQuery) ||
+            "";
+        if (!objectPath || typeof objectPath !== "string") {
+            res.status(400).send("Missing PDF path");
+            return;
+        }
+        const file = bucket.file(objectPath);
+        const [exists] = await file.exists();
+        if (!exists) {
+            res.status(404).send("Not Found");
+            return;
+        }
+        res.setHeader("Content-Type", "application/pdf");
+        res.setHeader("Content-Disposition", "inline");
+        res.setHeader("Cache-Control", "private, max-age=600");
+        file
+            .createReadStream()
+            .on("error", (err) => {
+            console.error("Stream error:", err);
+            if (!res.headersSent)
+                res.status(500).send("Stream error");
+        })
+            .pipe(res);
+    }
+    catch (err) {
+        console.error("notesPdfProxy error:", err);
+        res.status(403).send("Forbidden");
+    }
+});
 /**
  * Cloud Function triggered when a new course is created.
  * Creates notification documents for all students.
@@ -118,19 +211,16 @@ exports.onPaymentCompleted = functions.firestore
     if (!beforeData?.hasPaid && afterData?.hasPaid) {
         console.log(`Payment completed for user: ${userId}`);
         try {
-            // Generate tutorial ID
-            const counterDocRef = db.collection("metadata").doc("counters");
-            let tutorialId = "";
-            await db.runTransaction(async (transaction) => {
-                const counterDoc = await transaction.get(counterDocRef);
-                let currentCount = 0;
-                if (counterDoc.exists) {
-                    currentCount = counterDoc.data()?.userCount || 0;
-                }
-                const newCount = currentCount + 1;
-                tutorialId = "APEX-" + String(newCount).padStart(3, "0");
-                transaction.set(counterDocRef, { userCount: newCount }, { merge: true });
-                transaction.update(change.after.ref, { tutorialId });
+            // Generate tutorial ID using timestamp + random format
+            const timestamp = Date.now().toString(36).toUpperCase();
+            const randomChars = Math.random()
+                .toString(36)
+                .substring(2, 6)
+                .toUpperCase();
+            const tutorialId = `APEX-${timestamp}-${randomChars}`;
+            // Update user document with tutorial ID
+            await db.collection("users").doc(userId).update({
+                tutorialId: tutorialId,
             });
             console.log(`Generated tutorial ID: ${tutorialId} for user: ${userId}`);
             // Send payment confirmation email using EmailJS REST API
