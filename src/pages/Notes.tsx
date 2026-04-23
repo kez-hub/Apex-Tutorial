@@ -153,6 +153,12 @@ export default function Notes() {
     return `https://${region}-${projectId}.cloudfunctions.net/notesPdfProxy?${query}`;
   };
 
+  const showAndroidDebugAlert = (title: string, details: string) => {
+    if (!isAndroidDevice()) return;
+    // Temporary debug helper for real-device troubleshooting.
+    alert(`${title}\n\n${details}`);
+  };
+
   const handleViewPdf = async (pdfUrl: string, title: string, pdfPath?: string) => {
     try {
       const inlinePdfUrl = buildInlinePdfUrl(pdfUrl, title);
@@ -178,7 +184,10 @@ export default function Notes() {
         });
 
         if (!response.ok) {
-          throw new Error(`Proxy fetch failed (${response.status})`);
+          const errorBody = await response.text().catch(() => "");
+          throw new Error(
+            `Proxy fetch failed (${response.status}) ${response.statusText} ${errorBody}`.trim(),
+          );
         }
 
         const pdfBytes = await response.arrayBuffer();
@@ -228,6 +237,12 @@ export default function Notes() {
       setActivePdfUrl(viewerUrl);
     } catch (error) {
       console.error("Error opening PDF:", error);
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown rendering error";
+      showAndroidDebugAlert(
+        "Notes Debug Error",
+        `Message: ${errorMessage}\nRole: ${userData?.role || "unknown"}\nPDF: ${activePdfTitle || "N/A"}`,
+      );
       setPdfViewerError(
         userData?.role === "student"
           ? "Unable to render this note right now. Please try again."
