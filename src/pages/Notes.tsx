@@ -122,6 +122,11 @@ export default function Notes() {
     return /iPad|iPhone|iPod/.test(window.navigator.userAgent);
   };
 
+  const isAndroidDevice = () => {
+    if (typeof window === "undefined") return false;
+    return /Android/i.test(window.navigator.userAgent);
+  };
+
   const getNotesPdfProxyUrl = (pdfUrl: string, pdfPath?: string) => {
     const query = pdfPath
       ? `path=${encodeURIComponent(pdfPath)}`
@@ -169,10 +174,12 @@ export default function Notes() {
         const pdfBytes = await response.arrayBuffer();
         const pdfDoc = await getDocument({ data: pdfBytes }).promise;
         const renderedPages: string[] = [];
+        const mobileScale = isAndroidDevice() ? 0.95 : 1.35;
+        const jpegQuality = isAndroidDevice() ? 0.82 : 0.9;
 
         for (let pageNumber = 1; pageNumber <= pdfDoc.numPages; pageNumber += 1) {
           const page = await pdfDoc.getPage(pageNumber);
-          const viewport = page.getViewport({ scale: 1.35 });
+          const viewport = page.getViewport({ scale: mobileScale });
           const canvas = document.createElement("canvas");
           const context = canvas.getContext("2d");
 
@@ -183,11 +190,12 @@ export default function Notes() {
           canvas.width = viewport.width;
           canvas.height = viewport.height;
           await page.render({ canvasContext: context, viewport }).promise;
-          renderedPages.push(canvas.toDataURL("image/jpeg", 0.9));
+          renderedPages.push(canvas.toDataURL("image/jpeg", jpegQuality));
+          // Progressive rendering helps low-memory devices display pages earlier.
+          setPdfPageImages([...renderedPages]);
         }
 
         setActivePdfUrl("");
-        setPdfPageImages(renderedPages);
         return;
       }
 
